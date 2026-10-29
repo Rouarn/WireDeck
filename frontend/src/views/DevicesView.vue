@@ -21,6 +21,7 @@ const services = ref<model.MDNSService[]>([])
 const showPairing = ref(false)
 const pairingRef = ref<HTMLElement | null>(null)
 const qrShow = ref(false)
+const paired = ref(false)
 
 async function onPaired() {
   await store.refresh()
@@ -72,6 +73,7 @@ async function pair() {
       code: pairCode.value.trim(),
     })
     if (res.ok) {
+      paired.value = true
       pairHint.value = '配对成功。现在填写无线调试主页显示的「IP 地址和端口」中的端口，点击连接。'
       message.success('配对成功')
     } else {
@@ -204,17 +206,15 @@ onMounted(async () => {
     </NSpin>
 
     <section v-if="showPairing" ref="pairingRef" class="pairing">
-      <div class="panel-head">
-        <h3>无线调试配对</h3>
-        <span class="hint">Android 11+</span>
+      <div class="pairing-head">
+        <div>
+          <h3>无线调试配对</h3>
+          <p class="pairing-sub">手机停留在「无线调试」页面，并与电脑处于同一局域网</p>
+        </div>
+        <NButton size="small" type="primary" @click="qrShow = true">扫码配对</NButton>
       </div>
-      <div class="panel-body">
-        <ol class="steps">
-          <li>手机打开 设置 → 开发者选项 → 无线调试，并保持页面开启。</li>
-          <li>点击「使用配对码配对设备」，记下页面上的 IP、配对端口和 6 位配对码。</li>
-          <li>先配对，再用「IP 地址和端口」中的连接端口建立连接。</li>
-        </ol>
 
+      <div class="pairing-body">
         <div v-if="services.length" class="services">
           <span class="services-label">发现的服务</span>
           <button
@@ -228,29 +228,47 @@ onMounted(async () => {
           </button>
         </div>
 
-        <div class="pair-form">
-          <NInput v-model:value="host" size="small" placeholder="IP 地址" style="width: 150px" />
-          <NInput v-model:value="pairPort" size="small" placeholder="配对端口" style="width: 120px" />
-          <NInput
-            v-model:value="pairCode"
-            size="small"
-            placeholder="配对码"
-            maxlength="6"
-            style="width: 120px"
-          />
-          <NButton size="small" :loading="busy" @click="pair">配对</NButton>
-          <NButton size="small" @click="qrShow = true">扫码配对</NButton>
+        <div class="pair-step" :class="{ done: paired }">
+          <div class="step-head">
+            <span class="step-no">{{ paired ? '✓' : '1' }}</span>
+            <span class="step-title">配对</span>
+            <span class="step-hint">手机「使用配对码配对设备」中的 IP、端口与 6 位配对码</span>
+          </div>
+          <div class="pair-fields">
+            <label class="field">
+              <span>IP 地址</span>
+              <NInput v-model:value="host" size="small" placeholder="192.168.1.23" />
+            </label>
+            <label class="field">
+              <span>配对端口</span>
+              <NInput v-model:value="pairPort" size="small" placeholder="37123" />
+            </label>
+            <label class="field">
+              <span>配对码</span>
+              <NInput v-model:value="pairCode" size="small" placeholder="6 位数字" maxlength="6" />
+            </label>
+          </div>
+          <div class="step-actions">
+            <NButton size="small" type="primary" :loading="busy" @click="pair">配对</NButton>
+          </div>
         </div>
 
-        <div class="pair-form">
-          <NInput
-            v-model:value="connectPort"
-            size="small"
-            placeholder="连接端口"
-            style="width: 120px"
-          />
-          <NButton size="small" type="primary" :loading="busy" @click="connect">连接</NButton>
-          <NButton size="small" quaternary :loading="busy" @click="discover">重新发现</NButton>
+        <div class="pair-step">
+          <div class="step-head">
+            <span class="step-no">2</span>
+            <span class="step-title">连接</span>
+            <span class="step-hint">无线调试主页「IP 地址和端口」中的端口</span>
+          </div>
+          <div class="pair-fields single">
+            <label class="field">
+              <span>连接端口</span>
+              <NInput v-model:value="connectPort" size="small" placeholder="40123" />
+            </label>
+          </div>
+          <div class="step-actions">
+            <NButton size="small" :loading="busy" @click="connect">连接</NButton>
+            <NButton size="small" quaternary :loading="busy" @click="discover">重新发现</NButton>
+          </div>
         </div>
 
         <p v-if="pairHint" class="pair-hint">{{ pairHint }}</p>
@@ -420,61 +438,110 @@ onMounted(async () => {
   box-shadow: var(--shadow-sm);
 }
 
-.panel-head {
+.pairing-head {
   display: flex;
   align-items: center;
-  gap: 8px;
+  gap: 12px;
   padding: 14px 16px;
   border-bottom: 1px solid var(--border);
 }
 
-.panel-head h3 {
+.pairing-head h3 {
   margin: 0;
   font-size: 13px;
   font-weight: 600;
 }
 
-.panel-head .hint {
-  margin-left: auto;
+.pairing-sub {
+  margin: 3px 0 0;
   color: var(--text-tertiary);
   font-size: 11px;
 }
 
-.panel-body {
+.pairing-head .n-button {
+  margin-left: auto;
+}
+
+.pairing-body {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
   padding: 16px;
 }
 
-.steps {
-  display: grid;
-  gap: 8px;
-  margin: 0 0 14px;
-  padding: 0;
-  list-style: none;
-  counter-reset: step;
+.pair-step {
+  padding: 12px 14px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  background: var(--surface-inset);
 }
 
-.steps li {
+.pair-step.done {
+  border-color: var(--success);
+}
+
+.step-head {
   display: flex;
-  align-items: flex-start;
-  gap: 10px;
-  color: var(--text-secondary);
-  font-size: 12px;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 10px;
 }
 
-.steps li::before {
-  counter-increment: step;
-  content: counter(step);
+.step-no {
   display: flex;
   align-items: center;
   justify-content: center;
-  flex: 0 0 18px;
-  width: 18px;
-  height: 18px;
+  width: 20px;
+  height: 20px;
   border-radius: 50%;
   background: var(--primary-soft);
   color: var(--primary-ink);
   font-size: 10px;
+  font-weight: 700;
+}
+
+.pair-step.done .step-no {
+  background: var(--success-soft);
+  color: var(--success);
+}
+
+.step-title {
+  font-size: 12px;
   font-weight: 600;
+}
+
+.step-hint {
+  margin-left: auto;
+  color: var(--text-tertiary);
+  font-size: 10px;
+}
+
+.pair-fields {
+  display: grid;
+  grid-template-columns: 1.4fr 1fr 1fr;
+  gap: 10px;
+}
+
+.pair-fields.single {
+  grid-template-columns: 1fr;
+}
+
+.field {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.field > span {
+  color: var(--text-tertiary);
+  font-size: 10px;
+}
+
+.step-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 8px;
+  margin-top: 10px;
 }
 
 .services {
@@ -482,7 +549,6 @@ onMounted(async () => {
   flex-wrap: wrap;
   align-items: center;
   gap: 8px;
-  margin-bottom: 12px;
 }
 
 .services-label {
@@ -498,13 +564,6 @@ onMounted(async () => {
   color: var(--primary-ink);
   font-size: 11px;
   cursor: pointer;
-}
-
-.pair-form {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  margin-top: 8px;
 }
 
 .pair-hint {
