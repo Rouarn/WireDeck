@@ -182,13 +182,42 @@ function onDone(r: InstallResultPayload) {
   task.ok = r.ok
   task.code = r.code
   task.advice = r.advice
-  task.percent = 100
-  task.message = r.ok ? `安装成功 · ${(r.durationMs / 1000).toFixed(1)}s` : '安装失败'
+
   if (r.ok) {
+    task.percent = 100
+    task.message = `安装成功 · ${(r.durationMs / 1000).toFixed(1)}s`
     message.success(`${task.name} 安装成功`)
+  } else if (isCanceled(task)) {
+    task.message = '已取消'
+    message.info(`${task.name} 已取消`)
   } else {
+    task.message = '安装失败'
     message.error(`${task.name} 安装失败`)
   }
+}
+
+function isCanceled(task: TaskRow) {
+  return task.code === 'CANCELED'
+}
+
+function statusText(task: TaskRow) {
+  if (task.ok) {
+    return '已安装'
+  }
+  if (isCanceled(task)) {
+    return '已取消'
+  }
+  return '安装失败'
+}
+
+function statusType(task: TaskRow): 'success' | 'default' | 'error' {
+  if (task.ok) {
+    return 'success'
+  }
+  if (isCanceled(task)) {
+    return 'default'
+  }
+  return 'error'
 }
 
 onMounted(() => {
@@ -267,7 +296,13 @@ onMounted(() => {
             <td><span class="file-name">{{ task.name }}</span></td>
             <td>{{ task.deviceLabel }}</td>
             <td>
-              <div class="progress">
+              <div
+                class="progress"
+                :class="{
+                  failed: task.done && !task.ok && !isCanceled(task),
+                  canceled: task.done && isCanceled(task),
+                }"
+              >
                 <i :style="{ width: `${task.percent >= 0 ? task.percent : 35}%` }"></i>
               </div>
               <div class="hint-text">{{ task.message }}</div>
@@ -277,18 +312,24 @@ onMounted(() => {
                 <NTag
                   v-if="task.done"
                   size="small"
-                  :type="task.ok ? 'success' : 'error'"
+                  :type="statusType(task)"
                   :bordered="false"
                 >
-                  {{ task.ok ? '已安装' : '安装失败' }}
+                  {{ statusText(task) }}
                 </NTag>
                 <template v-else>
                   <NTag size="small" type="info" :bordered="false">进行中</NTag>
                   <NButton size="tiny" quaternary @click="cancel(task.taskId)">取消</NButton>
                 </template>
               </div>
-              <div v-if="task.done && !task.ok && task.code" class="hint-text">
-                {{ task.code }}<br />{{ task.advice }}
+              <div v-if="task.done && !task.ok && task.advice" class="hint-text">
+                {{ task.advice }}
+              </div>
+              <div
+                v-if="task.done && !task.ok && task.code && !isCanceled(task)"
+                class="hint-text code"
+              >
+                错误码：{{ task.code }}
               </div>
             </td>
           </tr>
@@ -506,6 +547,19 @@ onMounted(() => {
   border-radius: 3px;
   background: var(--primary);
   transition: width 0.3s ease;
+}
+
+.progress.failed > i {
+  background: var(--danger);
+}
+
+.progress.canceled > i {
+  background: var(--text-tertiary);
+}
+
+.hint-text.code {
+  color: var(--text-tertiary);
+  font-size: 10px;
 }
 
 .hint-text {
