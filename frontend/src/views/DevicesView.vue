@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { computed, onMounted, ref } from 'vue'
+import { computed, nextTick, onMounted, ref } from 'vue'
 import { NAlert, NButton, NEmpty, NIcon, NInput, NSpin, NTag, useMessage } from 'naive-ui'
 import { AddOutline, InformationCircleOutline, PhonePortraitOutline } from '@vicons/ionicons5'
 import { ConnectDevice, DisconnectDevice, DiscoverServices, PairDevice } from '../../wailsjs/go/main/App'
@@ -17,7 +17,15 @@ const busy = ref(false)
 const error = ref('')
 const pairHint = ref('')
 const services = ref<model.MDNSService[]>([])
-const showPairing = ref(true)
+const showPairing = ref(false)
+const pairingRef = ref<HTMLElement | null>(null)
+
+function togglePairing() {
+  showPairing.value = !showPairing.value
+  if (showPairing.value) {
+    void nextTick(() => pairingRef.value?.scrollIntoView({ behavior: 'smooth', block: 'start' }))
+  }
+}
 
 const devices = computed(() => store.list)
 
@@ -172,7 +180,7 @@ onMounted(discover)
           </div>
         </article>
 
-        <button class="add-card" @click="showPairing = !showPairing">
+        <button class="add-card" @click="togglePairing">
           <NIcon :size="18"><AddOutline /></NIcon>
           <strong>添加设备</strong>
           <span>无线配对或插入数据线</span>
@@ -186,7 +194,7 @@ onMounted(discover)
       />
     </NSpin>
 
-    <section v-if="showPairing" class="pairing">
+    <section v-if="showPairing" ref="pairingRef" class="pairing">
       <div class="panel-head">
         <h3>无线调试配对</h3>
         <span class="hint">Android 11+</span>
