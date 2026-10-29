@@ -211,6 +211,10 @@ sudo scutil --set HostName ""         # 恢复</pre>
 }
 
 .row code {
+  flex: 1;
+  min-width: 0;
+  overflow-wrap: anywhere;
+  word-break: break-all;
   color: var(--text);
 }
 
