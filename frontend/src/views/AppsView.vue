@@ -57,6 +57,18 @@ const moreOptions = [
   { label: '清除数据', key: 'clear' },
 ]
 
+const showAllPerms = ref(false)
+
+const visiblePerms = computed(() => {
+  const perms = detail.value?.permissions ?? []
+  return showAllPerms.value ? perms : perms.slice(0, 6)
+})
+
+function avatarLetter(value: model.AppDetail) {
+  const text = value.label || value.package
+  return (text[0] || '?').toUpperCase()
+}
+
 async function load() {
   if (!store.current) {
     apps.value = []
@@ -119,6 +131,11 @@ async function uninstall(pkg: string) {
   } catch (e) {
     message.error(e instanceof Error ? e.message : String(e))
   }
+}
+
+async function uninstallAndClose(pkg: string) {
+  showDetail.value = false
+  await uninstall(pkg)
 }
 
 async function onMore(key: string, pkg: string) {
@@ -234,46 +251,67 @@ onMounted(load)
       </NSpin>
     </section>
 
-    <NDrawer v-model:show="showDetail" :width="560">
-      <NDrawerContent title="应用详情" closable>
+    <NDrawer v-model:show="showDetail" :width="600">
+      <NDrawerContent title="应用详情" closable :native-scrollbar="false">
         <NSpin :show="detailLoading">
-          <div v-if="detail" class="detail-list">
-            <div class="detail-row">
-              <span class="detail-label">应用名称</span>
-              <span class="detail-value">{{ detail.label || '—' }}</span>
-            </div>
-            <div class="detail-row">
-              <span class="detail-label">包名</span>
-              <span class="detail-value mono">{{ detail.package }}</span>
-            </div>
-            <div class="detail-row">
-              <span class="detail-label">版本</span>
-              <span class="detail-value">{{ detail.versionName }} ({{ detail.versionCode }})</span>
-            </div>
-            <div class="detail-row">
-              <span class="detail-label">SDK</span>
-              <span class="detail-value">min {{ detail.minSdk }} / target {{ detail.targetSdk }}</span>
-            </div>
-            <div class="detail-row">
-              <span class="detail-label">首次安装</span>
-              <span class="detail-value">{{ detail.firstInstall || '—' }}</span>
-            </div>
-            <div class="detail-row">
-              <span class="detail-label">最近更新</span>
-              <span class="detail-value">{{ detail.lastUpdate || '—' }}</span>
-            </div>
-            <div class="detail-row">
-              <span class="detail-label">数据目录</span>
-              <span class="detail-value mono">{{ detail.dataDir || '—' }}</span>
-            </div>
-            <div class="detail-row">
-              <span class="detail-label">已授予权限</span>
-              <div class="detail-value">
-                <div v-if="!detail.permissions.length">—</div>
-                <ul v-else class="perm-list">
-                  <li v-for="perm in detail.permissions" :key="perm">{{ perm }}</li>
-                </ul>
+          <div v-if="detail" class="detail">
+            <div class="detail-hero">
+              <div class="hero-avatar">{{ avatarLetter(detail) }}</div>
+              <div class="hero-main">
+                <div class="hero-name">{{ detail.label || detail.package }}</div>
+                <div class="hero-pkg">{{ detail.package }}</div>
               </div>
+              <div class="hero-actions">
+                <NButton size="small" @click="onMore('launch', detail.package)">启动</NButton>
+                <NButton size="small" @click="exportApp(detail.package)">导出</NButton>
+                <NPopconfirm @positive-click="uninstallAndClose(detail.package)">
+                  <template #trigger>
+                    <NButton size="small" type="error" ghost>卸载</NButton>
+                  </template>
+                  确认卸载 {{ detail.package }}？此操作不可撤销。
+                </NPopconfirm>
+              </div>
+            </div>
+
+            <div class="detail-grid">
+              <div class="grid-item">
+                <span class="grid-label">版本</span>
+                <span class="grid-value">{{ detail.versionName }} ({{ detail.versionCode }})</span>
+              </div>
+              <div class="grid-item">
+                <span class="grid-label">SDK</span>
+                <span class="grid-value">min {{ detail.minSdk }} · target {{ detail.targetSdk }}</span>
+              </div>
+              <div class="grid-item">
+                <span class="grid-label">首次安装</span>
+                <span class="grid-value">{{ detail.firstInstall || '—' }}</span>
+              </div>
+              <div class="grid-item">
+                <span class="grid-label">最近更新</span>
+                <span class="grid-value">{{ detail.lastUpdate || '—' }}</span>
+              </div>
+              <div class="grid-item wide">
+                <span class="grid-label">数据目录</span>
+                <span class="grid-value mono">{{ detail.dataDir || '—' }}</span>
+              </div>
+            </div>
+
+            <div class="detail-section">
+              <div class="section-header">
+                <span>已授予权限 <em>{{ detail.permissions.length }}</em></span>
+                <NButton
+                  v-if="detail.permissions.length > 6"
+                  text
+                  size="tiny"
+                  @click="showAllPerms = !showAllPerms"
+                >
+                  {{ showAllPerms ? '收起' : '展开全部' }}
+                </NButton>
+              </div>
+              <ul v-if="detail.permissions.length" class="perm-list">
+                <li v-for="perm in visiblePerms" :key="perm">{{ perm }}</li>
+              </ul>
+              <div v-else class="empty-perm">该应用没有已授予的运行时权限</div>
             </div>
           </div>
         </NSpin>
@@ -380,44 +418,107 @@ onMounted(load)
   text-align: center;
 }
 
-.detail-list {
-  overflow: hidden;
-  border: 1px solid var(--border);
-  border-radius: var(--radius-sm);
-}
-
-.detail-row {
+.detail-hero {
   display: flex;
-  gap: 12px;
-  padding: 10px 12px;
-  border-bottom: 1px solid var(--border);
-  font-size: 12px;
+  align-items: center;
+  gap: 14px;
+  padding: 16px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  background: linear-gradient(135deg, var(--surface-inset), var(--surface));
 }
 
-.detail-row:nth-child(even) {
-  background: var(--surface-inset);
+.hero-avatar {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 48px;
+  height: 48px;
+  border-radius: 12px;
+  background: var(--primary-soft);
+  color: var(--primary-ink);
+  font-size: 20px;
+  font-weight: 700;
 }
 
-.detail-row:last-child {
-  border-bottom: none;
-}
-
-.detail-label {
-  flex: 0 0 84px;
-  color: var(--text-secondary);
-  white-space: nowrap;
-}
-
-.detail-value {
+.hero-main {
   flex: 1;
   min-width: 0;
-  color: var(--text);
+}
+
+.hero-name {
+  font-size: 15px;
+  font-weight: 600;
+}
+
+.hero-pkg {
+  margin-top: 2px;
+  color: var(--text-tertiary);
+  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+  font-size: 11px;
   word-break: break-all;
 }
 
-.detail-value.mono {
+.hero-actions {
+  display: flex;
+  gap: 8px;
+}
+
+.detail-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+  margin-top: 14px;
+}
+
+.grid-item {
+  padding: 10px 12px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  background: var(--surface);
+}
+
+.grid-item.wide {
+  grid-column: span 2;
+}
+
+.grid-label {
+  display: block;
+  color: var(--text-tertiary);
+  font-size: 10px;
+}
+
+.grid-value {
+  display: block;
+  margin-top: 3px;
+  font-size: 12px;
+  word-break: break-all;
+}
+
+.grid-value.mono {
   font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
   font-size: 11px;
+}
+
+.detail-section {
+  margin-top: 18px;
+}
+
+.section-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 8px;
+  color: var(--text);
+  font-size: 12px;
+  font-weight: 600;
+}
+
+.section-header em {
+  margin-left: 4px;
+  color: var(--text-tertiary);
+  font-style: normal;
+  font-weight: 400;
 }
 
 .perm-list {
@@ -425,12 +526,12 @@ onMounted(load)
   padding: 0;
   overflow: hidden;
   border: 1px solid var(--border);
-  border-radius: 6px;
+  border-radius: var(--radius-sm);
   list-style: none;
 }
 
 .perm-list li {
-  padding: 5px 8px;
+  padding: 6px 10px;
   border-bottom: 1px solid var(--border);
   font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
   font-size: 11px;
@@ -443,5 +544,14 @@ onMounted(load)
 
 .perm-list li:last-child {
   border-bottom: none;
+}
+
+.empty-perm {
+  padding: 16px;
+  border: 1px dashed var(--border);
+  border-radius: var(--radius-sm);
+  color: var(--text-tertiary);
+  font-size: 12px;
+  text-align: center;
 }
 </style>

@@ -2,6 +2,7 @@ package services
 
 import (
 	"context"
+	"encoding/json"
 	"fmt"
 	"os"
 	"path/filepath"
@@ -24,7 +25,55 @@ type AppService struct {
 
 // NewAppService 创建应用服务。
 func NewAppService(server *adb.Server) *AppService {
-	return &AppService{server: server, labels: make(map[string]string)}
+	service := &AppService{server: server, labels: make(map[string]string)}
+	service.loadLabels()
+	return service
+}
+
+func labelsFilePath() string {
+	dir, err := os.UserConfigDir()
+	if err != nil {
+		return ""
+	}
+	return filepath.Join(dir, "WireDeck", "app-labels.json")
+}
+
+func (s *AppService) loadLabels() {
+	path := labelsFilePath()
+	if path == "" {
+		return
+	}
+
+	data, err := os.ReadFile(path)
+	if err != nil {
+		return
+	}
+
+	var labels map[string]string
+	if err := json.Unmarshal(data, &labels); err != nil || labels == nil {
+		return
+	}
+
+	s.mu.Lock()
+	s.labels = labels
+	s.mu.Unlock()
+}
+
+func (s *AppService) persistLabels() {
+	path := labelsFilePath()
+	if path == "" {
+		return
+	}
+
+	s.mu.RLock()
+	data, err := json.MarshalIndent(s.labels, "", "  ")
+	s.mu.RUnlock()
+	if err != nil {
+		return
+	}
+
+	_ = os.MkdirAll(filepath.Dir(path), 0o755)
+	_ = os.WriteFile(path, data, 0o644)
 }
 
 func (s *AppService) cachedLabel(pkg string) string {
@@ -40,6 +89,7 @@ func (s *AppService) setLabel(pkg, label string) {
 	s.mu.Lock()
 	s.labels[pkg] = label
 	s.mu.Unlock()
+	s.persistLabels()
 }
 
 // List 读取应用列表。scope: user（第三方）、system（系统）、all。
