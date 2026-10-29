@@ -1,15 +1,27 @@
 <script setup lang="ts">
+import { onMounted, ref } from 'vue'
 import { NRadioButton, NRadioGroup } from 'naive-ui'
+import { GetHostIdentity } from '../../wailsjs/go/main/App'
+import type { model } from '../../wailsjs/go/models'
 import { useThemeStore } from '../stores/theme'
 import { useDevicesStore } from '../stores/devices'
 import type { ThemeMode } from '../stores/theme'
 
 const theme = useThemeStore()
 const devices = useDevicesStore()
+const identity = ref<model.HostIdentity | null>(null)
 
 function onChange(value: ThemeMode) {
   theme.setMode(value)
 }
+
+onMounted(async () => {
+  try {
+    identity.value = await GetHostIdentity()
+  } catch {
+    identity.value = null
+  }
+})
 </script>
 
 <template>
@@ -49,6 +61,24 @@ function onChange(value: ThemeMode) {
           <span class="label">server 端口</span>
           <span>{{ devices.adb?.serverPort || '—' }}</span>
         </div>
+      </div>
+    </section>
+
+    <section class="panel">
+      <div class="panel-head">
+        <h3>配对身份</h3>
+        <span class="hint">手机端显示</span>
+      </div>
+      <div class="panel-body">
+        <p class="desc">
+          手机「无线调试 → 已配对设备」中显示为
+          <code>{{ identity?.hostname || '—' }}@{{ identity?.lanIP || '—' }}</code>。
+          @ 前是电脑主机名，@ 后是电脑局域网 IP，不是手机信息。
+        </p>
+        <p class="desc">该标签由 adb 在配对时上报，配对后不会自动更新。如需显示为 WireDeck，可临时修改主机名：</p>
+        <pre class="cmd">sudo scutil --set HostName WireDeck   # 修改
+sudo scutil --set HostName ""         # 恢复</pre>
+        <p class="desc muted">修改后需在手机上移除旧配对记录并重新配对，才会更新显示。</p>
       </div>
     </section>
   </div>
@@ -113,5 +143,37 @@ function onChange(value: ThemeMode) {
 
 .row code {
   color: var(--text);
+}
+
+.desc {
+  margin: 0 0 10px;
+  color: var(--text-secondary);
+  font-size: 12px;
+  line-height: 1.7;
+}
+
+.desc code {
+  padding: 1px 6px;
+  border-radius: 5px;
+  background: var(--surface-inset);
+  color: var(--text);
+}
+
+.desc.muted {
+  color: var(--text-tertiary);
+  font-size: 11px;
+}
+
+.cmd {
+  margin: 0 0 10px;
+  padding: 10px 12px;
+  overflow-x: auto;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  background: var(--surface-inset);
+  color: var(--text-secondary);
+  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+  font-size: 11px;
+  line-height: 1.6;
 }
 </style>

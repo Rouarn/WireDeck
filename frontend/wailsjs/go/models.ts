@@ -18,6 +18,34 @@ export namespace model {
 	        this.ready = source["ready"];
 	    }
 	}
+	export class ApkMeta {
+	    path: string;
+	    label: string;
+	    packageName: string;
+	    versionName: string;
+	    versionCode: number;
+	    minSdk: number;
+	    targetSdk: number;
+	    abis: string[];
+	    size: number;
+	
+	    static createFrom(source: any = {}) {
+	        return new ApkMeta(source);
+	    }
+	
+	    constructor(source: any = {}) {
+	        if ('string' === typeof source) source = JSON.parse(source);
+	        this.path = source["path"];
+	        this.label = source["label"];
+	        this.packageName = source["packageName"];
+	        this.versionName = source["versionName"];
+	        this.versionCode = source["versionCode"];
+	        this.minSdk = source["minSdk"];
+	        this.targetSdk = source["targetSdk"];
+	        this.abis = source["abis"];
+	        this.size = source["size"];
+	    }
+	}
 	export class ConnectRequest {
 	    host: string;
 	    port: number;
@@ -73,6 +101,74 @@ export namespace model {
 	        this.hwSerial = source["hwSerial"];
 	        this.lastSeen = source["lastSeen"];
 	    }
+	}
+	export class HostIdentity {
+	    hostname: string;
+	    lanIP: string;
+	
+	    static createFrom(source: any = {}) {
+	        return new HostIdentity(source);
+	    }
+	
+	    constructor(source: any = {}) {
+	        if ('string' === typeof source) source = JSON.parse(source);
+	        this.hostname = source["hostname"];
+	        this.lanIP = source["lanIP"];
+	    }
+	}
+	export class InstallOptions {
+	    replace: boolean;
+	    allowDowngrade: boolean;
+	    grantPermissions: boolean;
+	    allowTest: boolean;
+	    userId?: number;
+	
+	    static createFrom(source: any = {}) {
+	        return new InstallOptions(source);
+	    }
+	
+	    constructor(source: any = {}) {
+	        if ('string' === typeof source) source = JSON.parse(source);
+	        this.replace = source["replace"];
+	        this.allowDowngrade = source["allowDowngrade"];
+	        this.grantPermissions = source["grantPermissions"];
+	        this.allowTest = source["allowTest"];
+	        this.userId = source["userId"];
+	    }
+	}
+	export class InstallRequest {
+	    serial: string;
+	    paths: string[];
+	    options: InstallOptions;
+	
+	    static createFrom(source: any = {}) {
+	        return new InstallRequest(source);
+	    }
+	
+	    constructor(source: any = {}) {
+	        if ('string' === typeof source) source = JSON.parse(source);
+	        this.serial = source["serial"];
+	        this.paths = source["paths"];
+	        this.options = this.convertValues(source["options"], InstallOptions);
+	    }
+	
+		convertValues(a: any, classs: any, asMap: boolean = false): any {
+		    if (!a) {
+		        return a;
+		    }
+		    if (a.slice && a.map) {
+		        return (a as any[]).map(elem => this.convertValues(elem, classs));
+		    } else if ("object" === typeof a) {
+		        if (asMap) {
+		            for (const key of Object.keys(a)) {
+		                a[key] = new classs(a[key]);
+		            }
+		            return a;
+		        }
+		        return new classs(a);
+		    }
+		    return a;
+		}
 	}
 	export class MDNSService {
 	    name: string;

@@ -1,5 +1,6 @@
 import { createRouter, createWebHashHistory } from 'vue-router'
 import DevicesView from '../views/DevicesView.vue'
+import InstallView from '../views/InstallView.vue'
 import PlaceholderView from '../views/PlaceholderView.vue'
 import SettingsView from '../views/SettingsView.vue'
 
@@ -9,11 +10,7 @@ const router = createRouter({
   routes: [
     { path: '/', redirect: '/devices' },
     { path: '/devices', component: DevicesView, meta: { title: '设备' } },
-    {
-      path: '/install',
-      component: PlaceholderView,
-      meta: { title: '安装台', description: 'M2 将在此实现拖拽安装、队列与失败解释。' },
-    },
+    { path: '/install', component: InstallView, meta: { title: '安装台' } },
     {
       path: '/apps',
       component: PlaceholderView,

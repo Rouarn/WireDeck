@@ -55,3 +55,57 @@ type ConnectResult struct {
 	Address string `json:"address"`
 	Message string `json:"message"`
 }
+
+// HostIdentity 是电脑在手机端"已配对设备"列表中的身份信息。
+type HostIdentity struct {
+	Hostname string `json:"hostname"` // 配对时上报的主机名
+	LANIP    string `json:"lanIP"`    // 电脑局域网 IP
+}
+
+// ApkMeta 是安装前解析出的 APK 信息。
+type ApkMeta struct {
+	Path        string   `json:"path"`
+	Label       string   `json:"label"`
+	PackageName string   `json:"packageName"`
+	VersionName string   `json:"versionName"`
+	VersionCode int      `json:"versionCode"`
+	MinSDK      int      `json:"minSdk"`
+	TargetSDK   int      `json:"targetSdk"`
+	ABIs        []string `json:"abis"`
+	Size        int64    `json:"size"`
+}
+
+// InstallOptions 是安装参数（对应 adb install 的 flags）。
+type InstallOptions struct {
+	Replace          bool `json:"replace"`          // -r
+	AllowDowngrade   bool `json:"allowDowngrade"`   // -d
+	GrantPermissions bool `json:"grantPermissions"` // -g
+	AllowTest        bool `json:"allowTest"`        // -t
+	UserID           *int `json:"userId"`           // --user
+}
+
+// InstallRequest 是一次安装请求。
+type InstallRequest struct {
+	Serial  string         `json:"serial"`
+	Paths   []string       `json:"paths"`
+	Options InstallOptions `json:"options"`
+}
+
+// TaskProgress 是安装/传输任务的阶段进度。
+type TaskProgress struct {
+	TaskID  string `json:"taskId"`
+	Stage   string `json:"stage"`   // parse | transfer | install | verify | done | error
+	Percent int    `json:"percent"` // -1 表示不可量化
+	Message string `json:"message"`
+}
+
+// InstallResult 是一次安装的最终结果。
+type InstallResult struct {
+	TaskID     string `json:"taskId"`
+	OK         bool   `json:"ok"`
+	Code       string `json:"code"`
+	Message    string `json:"message"`
+	Advice     string `json:"advice"`
+	Raw        string `json:"raw"`
+	DurationMs int64  `json:"durationMs"`
+}

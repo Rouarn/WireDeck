@@ -7,15 +7,18 @@ import (
 	"github.com/wailsapp/wails/v2/pkg/runtime"
 
 	"woyuxiaji.cn/wiredeck/internal/adb"
+	"woyuxiaji.cn/wiredeck/internal/apk"
 	"woyuxiaji.cn/wiredeck/internal/model"
+	"woyuxiaji.cn/wiredeck/internal/platform"
 	"woyuxiaji.cn/wiredeck/internal/services"
 )
 
 // App 是 Wails 绑定的根对象。导出方法会自动生成前端 TypeScript 绑定。
 type App struct {
-	ctx     context.Context
-	server  *adb.Server
-	devices *services.DeviceService
+	ctx      context.Context
+	server   *adb.Server
+	devices  *services.DeviceService
+	installs *services.InstallService
 }
 
 // NewApp 创建应用实例。
@@ -25,6 +28,7 @@ func NewApp() *App {
 		println("[adb] " + fmt.Sprintf(format, args...))
 	})
 	app.devices = services.NewDeviceService(app.server, app.emit)
+	app.installs = services.NewInstallService(app.server, app.emit)
 	return app
 }
 
@@ -32,6 +36,9 @@ func NewApp() *App {
 func (a *App) startup(ctx context.Context) {
 	a.ctx = ctx
 	a.devices.Start(ctx)
+	runtime.OnFileDrop(ctx, func(x, y int, paths []string) {
+		a.emit("files:dropped", paths)
+	})
 }
 
 // shutdown 由 Wails 在应用退出时调用。
@@ -113,5 +120,39 @@ func (a *App) DisconnectDevice(serial string) error {
 		return err
 	}
 	a.devices.RefreshAndEmit(a.context())
+	return nil
+}
+
+// GetHostIdentity 返回电脑在手机「已配对设备」列表中的显示身份。
+func (a *App) GetHostIdentity() (model.HostIdentity, error) {
+	return platform.GetHostIdentity(), nil
+}
+
+// InspectApk 解析 APK 元信息（包名、版本、SDK、ABI）。
+func (a *App) InspectApk(path string) (*model.ApkMeta, error) {
+	return apk.Inspect(path)
+}
+
+// PickApkFile 打开系统文件选择框，返回选中的 APK 路径。
+func (a *App) PickApkFile() (string, error) {
+	return runtime.OpenFileDialog(a.context(), runtime.OpenDialogOptions{
+		Title: "选择 APK",
+		Filters: []runtime.FileFilter{
+			{DisplayName: "Android 安装包 (*.apk)", Pattern: "*.apk"},
+		},
+	})
+}
+
+// StartInstall 将 APK 安装任务加入队列，返回 taskId。
+func (a *App) StartInstall(req model.InstallRequest) (string, error) {
+	if _, err := a.EnsureAdbReady(); err != nil {
+		return "", err
+	}
+	return a.installs.Start(a.context(), req)
+}
+
+// CancelInstall 取消一个安装任务。
+func (a *App) CancelInstall(taskID string) error {
+	a.installs.Cancel(taskID)
 	return nil
 }

@@ -86,6 +86,12 @@ func (r *Runner) Run(ctx context.Context, timeout time.Duration, args ...string)
 		return res, fmt.Errorf("%w: adb %s", ErrTimeout, strings.Join(args, " "))
 	}
 
+	if runCtx.Err() == context.Canceled {
+		res.ExitCode = -1
+		r.log("exec adb %s -> canceled", strings.Join(full, " "))
+		return res, fmt.Errorf("%w: adb %s", ErrCanceled, strings.Join(args, " "))
+	}
+
 	if runErr != nil {
 		var exitErr *exec.ExitError
 		if errors.As(runErr, &exitErr) {
