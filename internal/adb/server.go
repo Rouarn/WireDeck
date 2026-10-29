@@ -13,8 +13,11 @@ import (
 	"woyuxiaji.cn/wiredeck/internal/model"
 )
 
-// DefaultPort 使用独立端口，避免与 Android Studio 等工具的 5037 冲突。
-const DefaultPort = 5038
+// DefaultPort 使用 adb 标准端口，与系统其它工具共享同一个 server。
+//
+// 注意：多个 adb server 之间会争抢 USB 设备，使用独立端口时
+// 若系统已有 5037 server，USB 设备会被它独占，应用内看不到。
+const DefaultPort = 5037
 
 // Server 负责 adb 可执行文件定位、独立 server 启动与版本探测。
 type Server struct {
