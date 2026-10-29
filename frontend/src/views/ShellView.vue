@@ -183,8 +183,9 @@ async function copyAll() {
 <style scoped>
 .shell {
   display: flex;
+  flex: 1;
   flex-direction: column;
-  height: calc(100vh - 96px);
+  min-height: 0;
 }
 
 .toolbar {

@@ -33,6 +33,10 @@ const adbLabel = computed(() =>
 )
 const deviceCount = computed(() => store.list.length)
 
+// 这些页面内部自带滚动（虚拟列表），外层不再滚动，避免出现双滚动条。
+const fullHeightPages = ['/apps', '/logs', '/shell']
+const isFullHeight = computed(() => fullHeightPages.includes(route.path))
+
 onMounted(async () => {
   await store.refresh()
   EventsOn('device:changed', (devices: model.Device[]) => store.apply(devices))
@@ -89,7 +93,7 @@ onMounted(async () => {
         </button>
       </header>
 
-      <div class="content">
+      <div class="content" :class="{ 'content-full': isFullHeight }">
         <RouterView />
       </div>
     </main>
@@ -278,5 +282,12 @@ onMounted(async () => {
   flex: 1;
   overflow: auto;
   padding: 20px 24px 32px;
+}
+
+.content-full {
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  padding-bottom: 20px;
 }
 </style>
