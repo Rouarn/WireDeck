@@ -34,15 +34,15 @@ const emit = defineEmits<{
 }
 
 .seg {
-  height: 28px;
-  padding: 0 14px;
+  height: 32px;
+  padding: 0 16px;
   border: none;
   border-right: 1px solid var(--border);
   background: transparent;
   color: var(--text-secondary);
   font-family: inherit;
   font-size: 12px;
-  line-height: 28px;
+  line-height: 32px;
   cursor: pointer;
 }
 

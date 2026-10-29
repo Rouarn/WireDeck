@@ -71,9 +71,10 @@ onMounted(async () => {
     <section class="panel">
       <div class="panel-head">
         <h3>外观</h3>
-        <div class="head-action">
-          <SegmentedControl :options="themeOptions" :value="theme.mode" @update:value="onChange" />
-        </div>
+        <span class="hint">切换后立即生效</span>
+      </div>
+      <div class="panel-body">
+        <SegmentedControl :options="themeOptions" :value="theme.mode" @update:value="onChange" />
       </div>
     </section>
 
