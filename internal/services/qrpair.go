@@ -60,15 +60,10 @@ func (s *DeviceService) WaitPairing(ctx context.Context, name, password string, 
 				return res, nil
 			}
 
+			connected := s.tryAutoConnect(ctx, svc.Host, name)
 			message := "配对成功，请在手动配对里填写连接端口完成连接"
-			if _, connectSvc := s.findPairingServices(ctx, name); connectSvc != nil {
-				if conn, connErr := s.Connect(ctx, model.ConnectRequest{
-					Host: connectSvc.Host,
-					Port: connectSvc.Port,
-				}); connErr == nil && conn.OK {
-					s.RecordConnection(connectSvc.Host, connectSvc.Port, name)
-					message = "配对并连接成功"
-				}
+			if connected {
+				message = "配对并连接成功"
 			}
 
 			return model.PairResult{OK: true, Message: message, Raw: res.Raw}, nil
@@ -79,6 +74,71 @@ func (s *DeviceService) WaitPairing(ctx context.Context, name, password string, 
 		OK:      false,
 		Message: "等待超时，请确认手机已扫描二维码，并且与电脑在同一局域网",
 	}, nil
+}
+
+// tryAutoConnect 在配对成功后等待连接服务出现并建立连接。
+func (s *DeviceService) tryAutoConnect(ctx context.Context, host, name string) bool {
+	before := s.serialSet()
+
+	for i := 0; i < 15; i++ {
+		select {
+		case <-ctx.Done():
+			return false
+		case <-time.After(700 * time.Millisecond):
+		}
+
+		if svc := s.findConnectByHost(ctx, host); svc != nil {
+			if res, err := s.Connect(ctx, model.ConnectRequest{Host: svc.Host, Port: svc.Port}); err == nil && res.OK {
+				s.RecordConnection(svc.Host, svc.Port, name)
+				return true
+			}
+		}
+
+		// 新版 adb 有时会自行完成连接，这里同时观察设备列表。
+		s.RefreshAndEmit(ctx)
+		if s.hasNewDevice(before) {
+			return true
+		}
+	}
+
+	return false
+}
+
+func (s *DeviceService) serialSet() map[string]bool {
+	s.mu.RLock()
+	defer s.mu.RUnlock()
+
+	set := make(map[string]bool, len(s.devices))
+	for _, device := range s.devices {
+		set[device.Serial] = true
+	}
+	return set
+}
+
+func (s *DeviceService) hasNewDevice(before map[string]bool) bool {
+	s.mu.RLock()
+	defer s.mu.RUnlock()
+
+	for _, device := range s.devices {
+		if device.State == "device" && !before[device.Serial] {
+			return true
+		}
+	}
+	return false
+}
+
+func (s *DeviceService) findConnectByHost(ctx context.Context, host string) *model.MDNSService {
+	services, err := s.Discover(ctx)
+	if err != nil {
+		return nil
+	}
+
+	for i := range services {
+		if services[i].Kind == "connect" && services[i].Host == host {
+			return &services[i]
+		}
+	}
+	return nil
 }
 
 func randomString(n int) string {

@@ -18,6 +18,21 @@ const busy = ref(false)
 const error = ref('')
 const pairHint = ref('')
 const services = ref<model.MDNSService[]>([])
+
+// 已配对并连接的设备不再出现在「发现的服务」里。
+const visibleServices = computed(() =>
+  services.value.filter((svc) => {
+    if (svc.kind !== 'connect') {
+      return true
+    }
+    return !store.list.some(
+      (device) =>
+        device.serial === svc.name ||
+        device.serial.includes(svc.name) ||
+        svc.name.includes(device.serial),
+    )
+  }),
+)
 const showPairing = ref(false)
 const pairingRef = ref<HTMLElement | null>(null)
 const qrShow = ref(false)
@@ -215,10 +230,10 @@ onMounted(async () => {
       </div>
 
       <div class="pairing-body">
-        <div v-if="services.length" class="services">
+        <div v-if="visibleServices.length" class="services">
           <span class="services-label">发现的服务</span>
           <button
-            v-for="service in services"
+            v-for="service in visibleServices"
             :key="service.name + service.kind"
             class="service-chip"
             @click="fillFromService(service)"
