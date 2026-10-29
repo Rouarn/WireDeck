@@ -4,6 +4,7 @@ import (
 	"errors"
 	"os"
 	"path/filepath"
+	"time"
 
 	"github.com/gofrs/flock"
 )
@@ -29,15 +30,21 @@ func LockSingleInstance(appName string) (*InstanceLock, error) {
 	}
 
 	fl := flock.New(filepath.Join(dir, "instance.lock"))
-	locked, err := fl.TryLock()
-	if err != nil {
-		return nil, err
-	}
-	if !locked {
-		return nil, ErrAlreadyRunning
+
+	// Wails 在构建期会短暂启动应用以生成绑定，可能与已有实例产生竞争。
+	// 这里做有限次重试：正常情况下几毫秒即可拿到锁，异常情况下才判定为已运行。
+	for attempt := 0; attempt < 3; attempt++ {
+		locked, err := fl.TryLock()
+		if err != nil {
+			return nil, err
+		}
+		if locked {
+			return &InstanceLock{fl: fl}, nil
+		}
+		time.Sleep(500 * time.Millisecond)
 	}
 
-	return &InstanceLock{fl: fl}, nil
+	return nil, ErrAlreadyRunning
 }
 
 // Unlock 释放单实例锁。

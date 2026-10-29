@@ -4,7 +4,21 @@
 
 ## 状态
 
-**立项阶段**：仅完成开发文档，代码尚未开始。
+**M0 已完成**（2026-10-30）：Wails v2 脚手架、AdbRunner（超时/取消/双路输出）、独立 adb server（端口 5038）、adb 二进制定位、设备列表解析、单实例锁、前端状态页；已通过 `go test`、`wails build` 与启动冒烟。下一步 M1：无线配对与连接。
+
+## 快速开始
+
+```bash
+# 前置：Go 1.27+、Node 20+、Xcode Command Line Tools
+go install github.com/wailsapp/wails/v2/cmd/wails@latest
+export PATH="$PATH:$(go env GOPATH)/bin"
+
+cd frontend && pnpm install && cd ..
+
+wails dev      # 开发（热重载）
+wails build    # 构建 build/bin/WireDeck.app
+go test ./...  # 单测
+```
 
 ## 文档
 
@@ -34,7 +48,3 @@ Wails v2（系统 WebView）+ Go 1.27 后端 + Vue 3 + TypeScript + Vite + Pinia
 ## 分发
 
 首发仅 macOS，采用 ad-hoc 签名、不公证（无付费开发者账号），DMG 内附首次打开放行指引；后续有账号再升级 Developer ID + 公证。Windows 排到 v0.2 之后。
-
-## 快速开始
-
-待 M0 脚手架完成后补充。当前可先阅读开发文档确认范围与技术决策。
