@@ -71,10 +71,9 @@ onMounted(async () => {
     <section class="panel">
       <div class="panel-head">
         <h3>外观</h3>
-        <span class="hint">切换后立即生效</span>
-      </div>
-      <div class="panel-body">
-        <SegmentedControl :options="themeOptions" :value="theme.mode" @update:value="onChange" />
+        <div class="head-action">
+          <SegmentedControl :options="themeOptions" :value="theme.mode" @update:value="onChange" />
+        </div>
       </div>
     </section>
 
@@ -180,6 +179,12 @@ sudo scutil --set HostName ""         # 恢复</pre>
   margin-left: auto;
   color: var(--text-tertiary);
   font-size: 11px;
+}
+
+.panel-head .head-action {
+  display: flex;
+  align-items: center;
+  margin-left: auto;
 }
 
 .panel-body {
