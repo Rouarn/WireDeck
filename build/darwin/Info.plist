@@ -8,7 +8,14 @@
         <key>CFBundleExecutable</key>
         <string>{{.OutputFilename}}</string>
         <key>CFBundleIdentifier</key>
-        <string>com.wails.{{safeBundleID .Name}}</string>
+        <string>cn.woyuxiaji.wiredeck</string>
+        <key>CFBundleDevelopmentRegion</key>
+        <string>zh-Hans</string>
+        <key>CFBundleLocalizations</key>
+        <array>
+            <string>zh-Hans</string>
+            <string>en</string>
+        </array>
         <key>CFBundleVersion</key>
         <string>{{.Info.ProductVersion}}</string>
         <key>CFBundleGetInfoString</key>
