@@ -72,7 +72,6 @@ func (s *AppService) Detail(ctx context.Context, serial, pkg string) (*model.App
 	}
 
 	detail := &model.AppDetail{Package: pkg, Permissions: make([]string, 0)}
-	currentPerm := ""
 
 	for _, raw := range strings.Split(res.Stdout, "\n") {
 		line := strings.TrimSpace(raw)
@@ -102,11 +101,15 @@ func (s *AppService) Detail(ctx context.Context, serial, pkg string) (*model.App
 			detail.LastUpdate = strings.TrimPrefix(line, "lastUpdateTime=")
 		case strings.HasPrefix(line, "dataDir="):
 			detail.DataDir = strings.TrimPrefix(line, "dataDir=")
-		case strings.HasPrefix(line, "android.permission."):
-			currentPerm = line
-		case strings.HasPrefix(line, "granted=true") && currentPerm != "":
-			detail.Permissions = append(detail.Permissions, currentPerm)
-			currentPerm = ""
+		case strings.Contains(line, ".permission.") && strings.Contains(line, "granted=true"):
+			// 形如：android.permission.CAMERA: granted=true, flags=0x0
+			name := line
+			if idx := strings.Index(line, ":"); idx > 0 {
+				name = line[:idx]
+			}
+			if name != "" {
+				detail.Permissions = append(detail.Permissions, strings.TrimSpace(name))
+			}
 		}
 	}
 
@@ -164,7 +167,7 @@ func (s *AppService) Launch(ctx context.Context, serial, pkg string) (model.AppO
 	return model.AppOpResult{OK: ok, Message: message, Raw: raw}, nil
 }
 
-// ForceStop 强制停止应用。
+// ForceStop 强制停止应用，并检查进程是否真的退出。
 func (s *AppService) ForceStop(ctx context.Context, serial, pkg string) (model.AppOpResult, error) {
 	res, err := s.server.Run(ctx, 15*time.Second, "-s", serial, "shell", "am", "force-stop", pkg)
 	if err != nil {
@@ -172,11 +175,21 @@ func (s *AppService) ForceStop(ctx context.Context, serial, pkg string) (model.A
 	}
 
 	raw := strings.TrimSpace(res.Output())
+
+	// am force-stop 本身没有输出，用 pidof 判断进程是否还在。
+	pid := ""
+	if pidRes, pidErr := s.server.Run(ctx, 10*time.Second, "-s", serial, "shell", "pidof", pkg); pidErr == nil && pidRes != nil {
+		pid = strings.TrimSpace(pidRes.Stdout)
+	}
+
 	ok := res.ExitCode == 0
-	message := "已强制停止"
-	if !ok {
+	message := "已强制停止，进程已退出"
+	if pid != "" {
+		message = "已发送停止指令，但进程仍在运行（可能被系统立即拉起）"
+	} else if !ok {
 		message = "操作失败: " + firstLine(raw)
 	}
+
 	return model.AppOpResult{OK: ok, Message: message, Raw: raw}, nil
 }
 

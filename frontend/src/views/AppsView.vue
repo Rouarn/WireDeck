@@ -13,6 +13,7 @@ import {
   NRadioButton,
   NRadioGroup,
   NSpin,
+  useDialog,
   useMessage,
 } from 'naive-ui'
 import {
@@ -30,6 +31,7 @@ import { useDevicesStore } from '../stores/devices'
 
 const store = useDevicesStore()
 const message = useMessage()
+const dialog = useDialog()
 
 const apps = ref<model.AppSummary[]>([])
 const loading = ref(false)
@@ -121,14 +123,37 @@ async function onMore(key: string, pkg: string) {
   if (!store.current) {
     return
   }
+
+  // 清除数据不可撤销，单独二次确认。
+  if (key === 'clear') {
+    const serial = store.current.serial
+    dialog.warning({
+      title: '清除应用数据',
+      content: `确认清除 ${pkg} 的全部数据？此操作不可撤销。`,
+      positiveText: '清除数据',
+      negativeText: '取消',
+      onPositiveClick: async () => {
+        try {
+          const result = await ClearAppData(serial, pkg)
+          if (result.ok) {
+            message.success(result.message)
+          } else {
+            message.error(result.message)
+          }
+        } catch (e) {
+          message.error(e instanceof Error ? e.message : String(e))
+        }
+      },
+    })
+    return
+  }
+
   try {
     let result: model.AppOpResult
     if (key === 'launch') {
       result = await LaunchApp(store.current.serial, pkg)
-    } else if (key === 'stop') {
-      result = await ForceStopApp(store.current.serial, pkg)
     } else {
-      result = await ClearAppData(store.current.serial, pkg)
+      result = await ForceStopApp(store.current.serial, pkg)
     }
     if (result.ok) {
       message.success(result.message)

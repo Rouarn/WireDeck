@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { computed } from 'vue'
-import { NConfigProvider, NDialogProvider, NMessageProvider, darkTheme } from 'naive-ui'
+import { NConfigProvider, NDialogProvider, NMessageProvider, darkTheme, zhCN, dateZhCN } from 'naive-ui'
 import type { GlobalThemeOverrides } from 'naive-ui'
 import AppLayout from './layouts/AppLayout.vue'
 import { useThemeStore } from './stores/theme'
@@ -24,7 +24,12 @@ const overrides = computed<GlobalThemeOverrides>(() => ({
 </script>
 
 <template>
-  <NConfigProvider :theme="naiveTheme" :theme-overrides="overrides">
+  <NConfigProvider
+    :theme="naiveTheme"
+    :theme-overrides="overrides"
+    :locale="zhCN"
+    :date-locale="dateZhCN"
+  >
     <NMessageProvider>
       <NDialogProvider>
         <AppLayout />
