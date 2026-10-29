@@ -83,14 +83,27 @@ func (a *App) buildMenu() *menu.Menu {
 	})
 
 	editMenu := m.AddSubmenu("编辑")
-	// 不注册 accelerator，避免菜单抢占 ⌘C/⌘V 等按键，让 WebView 原生处理快捷键。
-	editMenu.AddText("撤销", nil, func(_ *menu.CallbackData) { a.execJS("document.execCommand('undo')") })
-	editMenu.AddText("重做", nil, func(_ *menu.CallbackData) { a.execJS("document.execCommand('redo')") })
+	// 注册快捷键并将动作落到 WebView 的编辑命令上，
+	// 避免按键被菜单拦截后没有行为。
+	editMenu.AddText("撤销", keys.CmdOrCtrl("z"), func(_ *menu.CallbackData) {
+		a.execJS("document.execCommand('undo')")
+	})
+	editMenu.AddText("重做", keys.Combo("z", keys.CmdOrCtrlKey, keys.ShiftKey), func(_ *menu.CallbackData) {
+		a.execJS("document.execCommand('redo')")
+	})
 	editMenu.AddSeparator()
-	editMenu.AddText("剪切", nil, func(_ *menu.CallbackData) { a.execJS("document.execCommand('cut')") })
-	editMenu.AddText("复制", nil, func(_ *menu.CallbackData) { a.execJS("document.execCommand('copy')") })
-	editMenu.AddText("粘贴", nil, func(_ *menu.CallbackData) { a.execJS("document.execCommand('paste')") })
-	editMenu.AddText("全选", nil, func(_ *menu.CallbackData) { a.execJS("document.execCommand('selectAll')") })
+	editMenu.AddText("剪切", keys.CmdOrCtrl("x"), func(_ *menu.CallbackData) {
+		a.execJS("document.execCommand('cut')")
+	})
+	editMenu.AddText("复制", keys.CmdOrCtrl("c"), func(_ *menu.CallbackData) {
+		a.execJS("document.execCommand('copy')")
+	})
+	editMenu.AddText("粘贴", keys.CmdOrCtrl("v"), func(_ *menu.CallbackData) {
+		a.execJS("document.execCommand('paste')")
+	})
+	editMenu.AddText("全选", keys.CmdOrCtrl("a"), func(_ *menu.CallbackData) {
+		a.execJS("document.execCommand('selectAll')")
+	})
 
 	windowMenu := m.AddSubmenu("窗口")
 	windowMenu.AddText("最小化", keys.CmdOrCtrl("m"), func(_ *menu.CallbackData) {
