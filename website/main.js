@@ -109,11 +109,3 @@ function animate() {
 }
 
 animate()
-
-// 为每个功能卡片插入一个缓慢旋转的 3D 方块，增加页面动感。
-document.querySelectorAll('.visual').forEach((el) => {
-  const cube = document.createElement('div')
-  cube.className = 'cube'
-  cube.innerHTML = '<i></i>'.repeat(6)
-  el.appendChild(cube)
-})

@@ -577,3 +577,11 @@ footer {
   from { transform: rotateX(-24deg) rotateY(0deg); }
   to { transform: rotateX(-24deg) rotateY(360deg); }
 }
+
+/* 功能卡片的 Three.js 画布 */
+.visual canvas {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+}

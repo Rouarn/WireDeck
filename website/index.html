@@ -8,7 +8,7 @@
       name="description"
       content="在电脑上无线管理安卓手机：扫码配对、应用管理、APK 安装、文件传输、实时日志与 Shell。内置 adb，免费。"
     />
-    <link rel="stylesheet" href="style.css?v=202610302" />
+    <link rel="stylesheet" href="style.css?v=202610303" />
     <link rel="icon" href="assets/icon.png" />
   </head>
   <body>
@@ -95,13 +95,7 @@ $ 手机扫描二维码 …… <span class="g">✓ 已连接 Mi 10</span></pre>
           <h3>扫码配对，一步连上</h3>
           <p>电脑显示二维码，手机扫一下即完成配对与连接；下次启动自动重连。</p>
           <div class="visual">
-            <div class="window">
-              <div class="window-bar"><i></i><i></i><i></i></div>
-              <pre>发现配对服务 adb-7dkbra
-pair …… <span class="ok">配对成功</span>
-发现连接服务 192.168.31.54:41257
-<span class="ok">✓ 已连接 Mi 10</span></pre>
-            </div>
+            <canvas class="feature-canvas" data-scene="devices"></canvas>
           </div>
         </article>
 
@@ -109,12 +103,7 @@ pair …… <span class="ok">配对成功</span>
           <h3>拖放安装 APK</h3>
           <p>把安装包拖进窗口即可推送并安装，显示真实进度，支持随时取消。</p>
           <div class="visual">
-            <div class="window">
-              <div class="window-bar"><i></i><i></i><i></i></div>
-              <pre>push app-debug.apk → /data/local/tmp
-[██████████████░░░░] <span class="acc">78%</span>
-pm install …… <span class="ok">Success</span></pre>
-            </div>
+            <canvas class="feature-canvas" data-scene="layers"></canvas>
           </div>
         </article>
 
@@ -122,12 +111,7 @@ pm install …… <span class="ok">Success</span></pre>
           <h3>应用管理</h3>
           <p>查看已安装应用与权限，卸载、启动、强制停止、清除数据、导出 APK。</p>
           <div class="visual">
-            <div class="window">
-              <div class="window-bar"><i></i><i></i><i></i></div>
-              <pre>网易大神 (com.netease.gl)   详情 导出 卸载
-哔哩哔哩 (tv.danmaku.bili)   详情 导出 卸载
-<span class="dim">共 105 个应用 · 虚拟滚动</span></pre>
-            </div>
+            <canvas class="feature-canvas" data-scene="grid"></canvas>
           </div>
         </article>
 
@@ -135,12 +119,7 @@ pm install …… <span class="ok">Success</span></pre>
           <h3>实时日志与崩溃摘要</h3>
           <p>按应用过滤 logcat，自动识别崩溃与 ANR，一键复制堆栈。</p>
           <div class="visual">
-            <div class="window">
-              <div class="window-bar"><i></i><i></i><i></i></div>
-              <pre><span class="dim">06-30 12:00:01.123</span> E AndroidRuntime: <span class="acc">FATAL EXCEPTION</span>
-<span class="dim">06-30 12:00:01.124</span> E AndroidRuntime: Process: com.example
-<span class="ok">已收集 32 行 · 复制日志</span></pre>
-            </div>
+            <canvas class="feature-canvas" data-scene="stream"></canvas>
           </div>
         </article>
       </section>
@@ -155,12 +134,7 @@ pm install …… <span class="ok">Success</span></pre>
           <h3>文件传输</h3>
           <p>截图保存到电脑，推送与拉取文件，可直接浏览手机目录选择路径。</p>
           <div class="visual">
-            <div class="window">
-              <div class="window-bar"><i></i><i></i><i></i></div>
-              <pre>/sdcard/Download    <span class="acc">推送中 64%</span>
-/sdcard/DCIM         <span class="dim">目录</span>
-/sdcard/Pictures     <span class="dim">目录</span></pre>
-            </div>
+            <canvas class="feature-canvas" data-scene="torus"></canvas>
           </div>
         </article>
 
@@ -168,12 +142,7 @@ pm install …… <span class="ok">Success</span></pre>
           <h3>Shell 控制台</h3>
           <p>常用命令快捷入口，输出与退出码清晰展示，支持复制与历史。</p>
           <div class="visual">
-            <div class="window">
-              <div class="window-bar"><i></i><i></i><i></i></div>
-              <pre>$ dumpsys battery
-  level: 72   health: 2   temp: 22.2°C
-<span class="ok">exit 0</span></pre>
-            </div>
+            <canvas class="feature-canvas" data-scene="torus"></canvas>
           </div>
         </article>
       </section>
@@ -195,6 +164,7 @@ pm install …… <span class="ok">Success</span></pre>
       </div>
     </footer>
 
-    <script type="module" src="main.js?v=202610302"></script>
+    <script type="module" src="main.js?v=202610303"></script>
+      <script type="module" src="scenes.js?v=202610303"></script>
   </body>
 </html>
