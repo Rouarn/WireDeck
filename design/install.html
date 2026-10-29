@@ -1,0 +1,190 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8" />
+  <title>WireDeck — 安装台</title>
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+<div class="shell">
+  <aside class="sidebar">
+    <div class="brand">
+      <div class="brand-mark">W</div>
+      <div>
+        <div class="brand-name">WireDeck</div>
+        <div class="brand-version">v0.1 · 无线 ADB 控制台</div>
+      </div>
+    </div>
+
+    <nav class="nav">
+      <a class="nav-item" href="#">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6">
+          <rect x="7" y="2.5" width="10" height="19" rx="2.5" />
+          <path d="M11 18.5h2" />
+        </svg>
+        设备
+        <span class="nav-badge">2</span>
+      </a>
+      <a class="nav-item active" href="#">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6">
+          <path d="M12 3v12" /><path d="m7 11 5 5 5-5" /><path d="M4 20h16" />
+        </svg>
+        安装台
+      </a>
+      <a class="nav-item" href="#">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6">
+          <rect x="3.5" y="3.5" width="7" height="7" rx="1.5" />
+          <rect x="13.5" y="3.5" width="7" height="7" rx="1.5" />
+          <rect x="3.5" y="13.5" width="7" height="7" rx="1.5" />
+          <rect x="13.5" y="13.5" width="7" height="7" rx="1.5" />
+        </svg>
+        应用
+      </a>
+      <a class="nav-item" href="#">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6">
+          <path d="M3.5 7.5V18a1.5 1.5 0 0 0 1.5 1.5h14A1.5 1.5 0 0 0 20.5 18V9A1.5 1.5 0 0 0 19 7.5h-7L10 5H5a1.5 1.5 0 0 0-1.5 1.5Z" />
+        </svg>
+        文件
+      </a>
+      <a class="nav-item" href="#">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6">
+          <rect x="2.5" y="4" width="19" height="16" rx="2" />
+          <path d="m6.5 9 3 3-3 3" /><path d="M12.5 15h5" />
+        </svg>
+        日志
+      </a>
+      <a class="nav-item" href="#">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6">
+          <path d="M4 7h9" /><circle cx="16" cy="7" r="2" />
+          <path d="M20 7h.5" /><path d="M4 17h3" /><circle cx="10" cy="17" r="2" />
+          <path d="M14 17h6" />
+        </svg>
+        设置
+      </a>
+    </nav>
+
+    <div class="sidebar-footer">
+      <div class="adb-status">
+        <span class="dot"></span>
+        <span>adb 35.0.2 · :5038</span>
+      </div>
+    </div>
+  </aside>
+
+  <main class="main">
+    <header class="topbar">
+      <div class="page-title">安装台</div>
+      <div class="topbar-spacer"></div>
+      <div class="device-switcher">
+        <span class="dot"></span>
+        <span><strong>Pixel 7</strong> · Wi-Fi</span>
+      </div>
+      <button class="btn primary sm">选择 APK</button>
+    </header>
+
+    <div class="content">
+      <div class="dropzone">
+        <div class="drop-icon">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7">
+            <path d="M12 3v12" /><path d="m7 11 5 5 5-5" /><path d="M4 20h16" />
+          </svg>
+        </div>
+        <div>
+          <div class="drop-title">拖入 APK 开始安装</div>
+          <div class="drop-sub">支持批量、多 split；文件只会在本机读取，不会上传。</div>
+        </div>
+        <button class="btn sm">选择文件</button>
+      </div>
+
+      <div class="options">
+        <div class="option"><span class="switch on"></span>覆盖安装 -r</div>
+        <div class="option"><span class="switch"></span>允许降级 -d</div>
+        <div class="option"><span class="switch"></span>授予运行时权限 -g</div>
+        <div class="option"><span class="switch"></span>允许测试包 -t</div>
+      </div>
+
+      <div class="columns">
+        <section class="panel queue">
+          <div class="panel-head">
+            <h3>安装队列</h3>
+            <span class="hint">同设备串行 · 跨设备并行</span>
+          </div>
+          <table class="table">
+            <thead>
+              <tr>
+                <th>文件</th>
+                <th>包名</th>
+                <th>目标设备</th>
+                <th>进度</th>
+                <th>状态</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td><span class="file-name">app-release.apk</span><span class="file-size">42.6 MB</span></td>
+                <td><code>com.example.app</code></td>
+                <td>Pixel 7</td>
+                <td>
+                  <div class="progress-row">
+                    <div class="progress"><i style="width: 68%"></i></div>
+                    <span>68%</span>
+                  </div>
+                  <div class="hint-text">正在传输</div>
+                </td>
+                <td><span class="badge info">安装中</span></td>
+              </tr>
+              <tr>
+                <td><span class="file-name">wiredeck-demo.apk</span><span class="file-size">18.2 MB</span></td>
+                <td><code>cn.woyuxiaji.wiredeck</code></td>
+                <td>Pixel 7</td>
+                <td><span class="hint-text">等待中</span></td>
+                <td><span class="badge neutral">排队</span></td>
+              </tr>
+              <tr>
+                <td><span class="file-name">legacy.apk</span><span class="file-size">25.4 MB</span></td>
+                <td><code>com.example.legacy</code></td>
+                <td>Redmi K70</td>
+                <td><span class="hint-text">已中止</span></td>
+                <td>
+                  <span class="badge danger">安装失败</span>
+                  <div class="hint-text">INSTALL_FAILED_USER_RESTRICTED<br />需在开发者选项开启「USB 安装」</div>
+                </td>
+              </tr>
+              <tr>
+                <td><span class="file-name">tool.apk</span><span class="file-size">7.8 MB</span></td>
+                <td><code>com.example.tool</code></td>
+                <td>Pixel 7</td>
+                <td><span class="hint-text">4.2s</span></td>
+                <td><span class="badge success">已安装</span></td>
+              </tr>
+            </tbody>
+          </table>
+        </section>
+
+        <aside class="panel">
+          <div class="panel-head">
+            <h3>本次会话</h3>
+          </div>
+          <div class="panel-body">
+            <div class="summary-row"><span class="label">成功</span><span>2</span></div>
+            <div class="summary-row"><span class="label">失败</span><span style="color: var(--danger)">1</span></div>
+            <div class="summary-row"><span class="label">队列中</span><span>1</span></div>
+            <div class="summary-row"><span class="label">平均耗时</span><span>6.4s</span></div>
+
+            <div class="notice" style="margin: 14px 0 0">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M12 9v4" /><path d="M12 17h.01" />
+                <path d="M10.3 3.9 2.6 17.1A2 2 0 0 0 4.3 20h15.4a2 2 0 0 0 1.7-2.9L13.7 3.9a2 2 0 0 0-3.4 0Z" />
+              </svg>
+              1 个安装失败，已给出处理建议
+            </div>
+
+            <button class="btn sm" style="width: 100%; margin-top: 12px">查看安装历史</button>
+          </div>
+        </aside>
+      </div>
+    </div>
+  </main>
+</div>
+</body>
+</html>

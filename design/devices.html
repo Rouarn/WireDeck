@@ -1,0 +1,205 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8" />
+  <title>WireDeck — 设备</title>
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+<div class="shell">
+  <aside class="sidebar">
+    <div class="brand">
+      <div class="brand-mark">W</div>
+      <div>
+        <div class="brand-name">WireDeck</div>
+        <div class="brand-version">v0.1 · 无线 ADB 控制台</div>
+      </div>
+    </div>
+
+    <nav class="nav">
+      <a class="nav-item active" href="#">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6">
+          <rect x="7" y="2.5" width="10" height="19" rx="2.5" />
+          <path d="M11 18.5h2" />
+        </svg>
+        设备
+        <span class="nav-badge">2</span>
+      </a>
+      <a class="nav-item" href="#">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6">
+          <path d="M12 3v12" /><path d="m7 11 5 5 5-5" /><path d="M4 20h16" />
+        </svg>
+        安装台
+      </a>
+      <a class="nav-item" href="#">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6">
+          <rect x="3.5" y="3.5" width="7" height="7" rx="1.5" />
+          <rect x="13.5" y="3.5" width="7" height="7" rx="1.5" />
+          <rect x="3.5" y="13.5" width="7" height="7" rx="1.5" />
+          <rect x="13.5" y="13.5" width="7" height="7" rx="1.5" />
+        </svg>
+        应用
+      </a>
+      <a class="nav-item" href="#">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6">
+          <path d="M3.5 7.5V18a1.5 1.5 0 0 0 1.5 1.5h14A1.5 1.5 0 0 0 20.5 18V9A1.5 1.5 0 0 0 19 7.5h-7L10 5H5a1.5 1.5 0 0 0-1.5 1.5Z" />
+        </svg>
+        文件
+      </a>
+      <a class="nav-item" href="#">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6">
+          <rect x="2.5" y="4" width="19" height="16" rx="2" />
+          <path d="m6.5 9 3 3-3 3" /><path d="M12.5 15h5" />
+        </svg>
+        日志
+      </a>
+      <a class="nav-item" href="#">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6">
+          <path d="M4 7h9" /><circle cx="16" cy="7" r="2" />
+          <path d="M20 7h.5" /><path d="M4 17h3" /><circle cx="10" cy="17" r="2" />
+          <path d="M14 17h6" />
+        </svg>
+        设置
+      </a>
+    </nav>
+
+    <div class="sidebar-footer">
+      <div class="adb-status">
+        <span class="dot"></span>
+        <span>adb 35.0.2 · :5038</span>
+      </div>
+    </div>
+  </aside>
+
+  <main class="main">
+    <header class="topbar">
+      <div class="page-title">设备</div>
+      <div class="topbar-spacer"></div>
+      <div class="device-switcher">
+        <span class="dot"></span>
+        <span><strong>Pixel 7</strong> · Wi-Fi</span>
+      </div>
+      <button class="btn sm">刷新</button>
+    </header>
+
+    <div class="content">
+      <div class="notice">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <circle cx="12" cy="12" r="9" /><path d="M12 8v5" /><path d="M12 16h.01" />
+        </svg>
+        已检测到 2 台设备，其中 1 台通过无线调试连接。
+      </div>
+
+      <div class="section-head">
+        <h2>已连接</h2>
+        <span class="count">2 台</span>
+      </div>
+
+      <div class="device-grid">
+        <article class="device-card">
+          <div class="card-head">
+            <div class="device-avatar">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6">
+                <rect x="7" y="2.5" width="10" height="19" rx="2.5" />
+                <path d="M11 18.5h2" />
+              </svg>
+            </div>
+            <div>
+              <div class="device-title">Pixel 7</div>
+              <div class="device-sub">Android 15 · Wi-Fi</div>
+            </div>
+            <span class="badge success">已连接</span>
+          </div>
+
+          <div class="meta-grid">
+            <div>
+              <span class="meta-label">地址</span>
+              <span class="meta-value"><code>192.168.1.23:37123</code></span>
+            </div>
+            <div>
+              <span class="meta-label">电量</span>
+              <span class="meta-value">82%</span>
+            </div>
+            <div>
+              <span class="meta-label">可用空间</span>
+              <span class="meta-value">96 GB</span>
+            </div>
+          </div>
+
+          <div class="card-actions">
+            <button class="btn primary sm">安装 APK</button>
+            <button class="btn sm">截图</button>
+            <button class="btn sm danger-text">断开</button>
+          </div>
+        </article>
+
+        <article class="device-card">
+          <div class="card-head">
+            <div class="device-avatar">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6">
+                <rect x="7" y="2.5" width="10" height="19" rx="2.5" />
+                <path d="M11 18.5h2" />
+              </svg>
+            </div>
+            <div>
+              <div class="device-title">Redmi K70</div>
+              <div class="device-sub">Android 14 · USB</div>
+            </div>
+            <span class="badge success">已连接</span>
+          </div>
+
+          <div class="meta-grid">
+            <div>
+              <span class="meta-label">序列号</span>
+              <span class="meta-value"><code>R58M1234567</code></span>
+            </div>
+            <div>
+              <span class="meta-label">电量</span>
+              <span class="meta-value">64%</span>
+            </div>
+            <div>
+              <span class="meta-label">可用空间</span>
+              <span class="meta-value">128 GB</span>
+            </div>
+          </div>
+
+          <div class="card-actions">
+            <button class="btn primary sm">安装 APK</button>
+            <button class="btn sm">截图</button>
+            <button class="btn sm danger-text">断开</button>
+          </div>
+        </article>
+
+        <button class="add-card">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
+            <path d="M12 5v14M5 12h14" />
+          </svg>
+          <strong>添加设备</strong>
+          <span>无线配对或插入数据线</span>
+        </button>
+      </div>
+
+      <section class="panel pairing">
+        <div class="panel-head">
+          <h3>无线调试配对</h3>
+          <span class="hint">Android 11+</span>
+        </div>
+        <div class="panel-body">
+          <ol class="steps">
+            <li>手机打开 设置 → 开发者选项 → 无线调试，并保持页面开启。</li>
+            <li>点击「使用配对码配对设备」，记下页面上的 IP、配对端口和 6 位配对码。</li>
+            <li>填入下方信息；配对成功后会自动连接到「IP 地址和端口」显示的另一端口。</li>
+          </ol>
+          <div class="pair-form">
+            <input class="input w-ip" placeholder="IP 地址" />
+            <input class="input w-port" placeholder="配对端口" />
+            <input class="input w-code" placeholder="配对码" maxlength="6" />
+            <button class="btn primary">配对并连接</button>
+          </div>
+        </div>
+      </section>
+    </div>
+  </main>
+</div>
+</body>
+</html>
