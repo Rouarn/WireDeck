@@ -4,6 +4,7 @@ import (
 	"context"
 	"crypto/rand"
 	"fmt"
+	"os"
 	"time"
 
 	"github.com/grandcat/zeroconf"
@@ -15,6 +16,16 @@ const (
 	pairingServiceType = "_adb-tls-pairing._tcp"
 	connectServiceType = "_adb-tls-connect._tcp"
 )
+
+// qrLog 记录扫码配对的诊断信息，便于定位问题。
+func qrLog(format string, args ...any) {
+	f, err := os.OpenFile("/tmp/wiredeck-qr.log", os.O_CREATE|os.O_APPEND|os.O_WRONLY, 0o644)
+	if err != nil {
+		return
+	}
+	defer func() { _ = f.Close() }()
+	_, _ = fmt.Fprintf(f, "%s "+format+"\n", append([]any{time.Now().Format("15:04:05")}, args...)...)
+}
 
 // CreatePairingQR 生成一次扫码配对会话。
 //
@@ -52,11 +63,14 @@ func (s *DeviceService) WaitPairing(ctx context.Context, name, password string, 
 		return model.PairResult{OK: false, Message: "未能解析手机地址，请改用配对码方式"}, nil
 	}
 
+	qrLog("发现配对服务 name=%s host=%s port=%d", entry.Instance, host, entry.Port)
+
 	res, pairErr := s.Pair(ctx, model.PairRequest{
 		Host:     host,
 		PairPort: entry.Port,
 		Code:     password,
 	})
+	qrLog("pair 结果 ok=%v msg=%q raw=%q err=%v", res.OK, res.Message, res.Raw, pairErr)
 	if pairErr != nil {
 		return res, pairErr
 	}
@@ -65,6 +79,7 @@ func (s *DeviceService) WaitPairing(ctx context.Context, name, password string, 
 	}
 
 	connected := s.autoConnect(ctx, host, name)
+	qrLog("autoConnect 结果 connected=%v", connected)
 	message := "配对成功，请在手动配对里填写连接端口完成连接"
 	if connected {
 		message = "配对并连接成功"
@@ -98,9 +113,12 @@ func (s *DeviceService) autoConnect(ctx context.Context, host, name string) bool
 			if !serviceMatches(entry.Instance, name) && addr != host {
 				continue
 			}
+			qrLog("发现连接服务 name=%s host=%s port=%d", entry.Instance, addr, entry.Port)
 			if res, err := s.Connect(ctx, model.ConnectRequest{Host: addr, Port: entry.Port}); err == nil && res.OK {
 				s.RecordConnection(addr, entry.Port, name)
 				return true
+			} else {
+				qrLog("connect 失败 ok=%v msg=%q err=%v", res.OK, res.Message, err)
 			}
 		case <-browseCtx.Done():
 			return false

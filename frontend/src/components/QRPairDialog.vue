@@ -18,6 +18,8 @@ const qrData = ref('')
 const status = ref('正在生成二维码…')
 const waiting = ref(false)
 const error = ref('')
+const sessionName = ref('')
+const sessionPassword = ref('')
 
 let session: model.QRPairingSession | null = null
 let runToken = 0
@@ -30,6 +32,8 @@ async function start() {
 
   try {
     session = await CreatePairingQR()
+    sessionName.value = session.name
+    sessionPassword.value = session.password
     qrData.value = await QRCode.toDataURL(session.payload, {
       width: 280,
       margin: 1,
@@ -105,6 +109,7 @@ onBeforeUnmount(() => {
       </div>
 
       <p class="status">{{ status }}</p>
+      <p v-if="sessionName" class="meta">服务名 {{ sessionName }} · 配对码 {{ sessionPassword }}</p>
       <p v-if="error" class="error">{{ error }}</p>
 
       <div class="actions">
@@ -147,6 +152,14 @@ onBeforeUnmount(() => {
   margin: 0;
   color: var(--text-secondary);
   font-size: 12px;
+  text-align: center;
+}
+
+.meta {
+  margin: 0;
+  color: var(--text-tertiary);
+  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+  font-size: 10px;
   text-align: center;
 }
 
