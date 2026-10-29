@@ -6,7 +6,14 @@ import (
 	"fmt"
 	"time"
 
+	"github.com/grandcat/zeroconf"
+
 	"woyuxiaji.cn/wiredeck/internal/model"
+)
+
+const (
+	pairingServiceType = "_adb-tls-pairing._tcp"
+	connectServiceType = "_adb-tls-connect._tcp"
 )
 
 // CreatePairingQR 生成一次扫码配对会话。
@@ -15,7 +22,7 @@ import (
 //
 //	WIFI:T:ADB;S:<name>;P:<password>;;
 //
-// 手机扫描后会广播 _adb-tls-pairing._tcp 服务，电脑轮询发现后执行 adb pair。
+// 手机扫描后会广播 _adb-tls-pairing._tcp 服务，电脑用 DNS-SD 发现后执行 adb pair。
 func (s *DeviceService) CreatePairingQR() (model.QRPairingSession, error) {
 	name := "adb-" + randomString(6)
 	password := randomDigits(6)
@@ -27,118 +34,118 @@ func (s *DeviceService) CreatePairingQR() (model.QRPairingSession, error) {
 	}, nil
 }
 
-// WaitPairing 轮询 mDNS，等待手机扫描二维码后出现的配对服务，并完成配对与连接。
+// WaitPairing 等待手机扫描二维码后广播的配对服务，并完成配对与连接。
+//
+// 注意：这里不使用 `adb mdns services`，因为它只列出 `_adb-tls-connect._tcp`，
+// 看不到配对服务；必须用系统 DNS-SD 自己浏览。
 func (s *DeviceService) WaitPairing(ctx context.Context, name, password string, timeout time.Duration) (model.PairResult, error) {
-	deadline := time.Now().Add(timeout)
+	entry, err := browseService(ctx, pairingServiceType, name, timeout)
+	if err != nil {
+		return model.PairResult{
+			OK:      false,
+			Message: "等待超时，请确认手机已扫描二维码，并且与电脑在同一局域网",
+		}, nil
+	}
 
-	for time.Now().Before(deadline) {
+	host := firstIPv4(entry)
+	if host == "" {
+		return model.PairResult{OK: false, Message: "未能解析手机地址，请改用配对码方式"}, nil
+	}
+
+	res, pairErr := s.Pair(ctx, model.PairRequest{
+		Host:     host,
+		PairPort: entry.Port,
+		Code:     password,
+	})
+	if pairErr != nil {
+		return res, pairErr
+	}
+	if !res.OK {
+		return res, nil
+	}
+
+	connected := s.autoConnect(ctx, host, name)
+	message := "配对成功，请在手动配对里填写连接端口完成连接"
+	if connected {
+		message = "配对并连接成功"
+	}
+
+	return model.PairResult{OK: true, Message: message, Raw: res.Raw}, nil
+}
+
+// autoConnect 在配对成功后浏览连接服务，按实例名或 IP 匹配后自动连接。
+func (s *DeviceService) autoConnect(ctx context.Context, host, name string) bool {
+	browseCtx, cancel := context.WithTimeout(ctx, 12*time.Second)
+	defer cancel()
+
+	resolver, err := zeroconf.NewResolver(nil)
+	if err != nil {
+		return false
+	}
+
+	entries := make(chan *zeroconf.ServiceEntry, 8)
+	go func() {
+		_ = resolver.Browse(browseCtx, connectServiceType, "local.", entries)
+	}()
+
+	for {
 		select {
-		case <-ctx.Done():
-			return model.PairResult{}, ctx.Err()
-		case <-time.After(time.Second):
-		}
-
-		services, err := s.Discover(ctx)
-		if err != nil {
-			continue
-		}
-
-		for _, svc := range services {
-			if svc.Kind != "pairing" || !serviceMatches(svc.Name, name) {
+		case entry := <-entries:
+			if entry == nil || len(entry.AddrIPv4) == 0 {
 				continue
 			}
-
-			res, pairErr := s.Pair(ctx, model.PairRequest{
-				Host:     svc.Host,
-				PairPort: svc.Port,
-				Code:     password,
-			})
-			if pairErr != nil {
-				return res, pairErr
+			addr := entry.AddrIPv4[0].String()
+			if !serviceMatches(entry.Instance, name) && addr != host {
+				continue
 			}
-			if !res.OK {
-				return res, nil
-			}
-
-			connected := s.tryAutoConnect(ctx, svc.Host, name)
-			message := "配对成功，请在手动配对里填写连接端口完成连接"
-			if connected {
-				message = "配对并连接成功"
-			}
-
-			return model.PairResult{OK: true, Message: message, Raw: res.Raw}, nil
-		}
-	}
-
-	return model.PairResult{
-		OK:      false,
-		Message: "等待超时，请确认手机已扫描二维码，并且与电脑在同一局域网",
-	}, nil
-}
-
-// tryAutoConnect 在配对成功后等待连接服务出现并建立连接。
-func (s *DeviceService) tryAutoConnect(ctx context.Context, host, name string) bool {
-	before := s.serialSet()
-
-	for i := 0; i < 15; i++ {
-		select {
-		case <-ctx.Done():
-			return false
-		case <-time.After(700 * time.Millisecond):
-		}
-
-		if svc := s.findConnectByHost(ctx, host); svc != nil {
-			if res, err := s.Connect(ctx, model.ConnectRequest{Host: svc.Host, Port: svc.Port}); err == nil && res.OK {
-				s.RecordConnection(svc.Host, svc.Port, name)
+			if res, err := s.Connect(ctx, model.ConnectRequest{Host: addr, Port: entry.Port}); err == nil && res.OK {
+				s.RecordConnection(addr, entry.Port, name)
 				return true
 			}
-		}
-
-		// 新版 adb 有时会自行完成连接，这里同时观察设备列表。
-		s.RefreshAndEmit(ctx)
-		if s.hasNewDevice(before) {
-			return true
+		case <-browseCtx.Done():
+			return false
 		}
 	}
-
-	return false
 }
 
-func (s *DeviceService) serialSet() map[string]bool {
-	s.mu.RLock()
-	defer s.mu.RUnlock()
+// browseService 浏览一个 DNS-SD 服务，直到找到实例名匹配的条目或超时。
+func browseService(ctx context.Context, serviceType, instance string, timeout time.Duration) (*zeroconf.ServiceEntry, error) {
+	browseCtx, cancel := context.WithTimeout(ctx, timeout)
+	defer cancel()
 
-	set := make(map[string]bool, len(s.devices))
-	for _, device := range s.devices {
-		set[device.Serial] = true
-	}
-	return set
-}
-
-func (s *DeviceService) hasNewDevice(before map[string]bool) bool {
-	s.mu.RLock()
-	defer s.mu.RUnlock()
-
-	for _, device := range s.devices {
-		if device.State == "device" && !before[device.Serial] {
-			return true
-		}
-	}
-	return false
-}
-
-func (s *DeviceService) findConnectByHost(ctx context.Context, host string) *model.MDNSService {
-	services, err := s.Discover(ctx)
+	resolver, err := zeroconf.NewResolver(nil)
 	if err != nil {
-		return nil
+		return nil, err
 	}
 
-	for i := range services {
-		if services[i].Kind == "connect" && services[i].Host == host {
-			return &services[i]
+	entries := make(chan *zeroconf.ServiceEntry, 8)
+	go func() {
+		_ = resolver.Browse(browseCtx, serviceType, "local.", entries)
+	}()
+
+	for {
+		select {
+		case entry := <-entries:
+			if entry == nil {
+				continue
+			}
+			if serviceMatches(entry.Instance, instance) {
+				return entry, nil
+			}
+		case <-browseCtx.Done():
+			return nil, fmt.Errorf("等待服务超时")
 		}
 	}
-	return nil
+}
+
+func firstIPv4(entry *zeroconf.ServiceEntry) string {
+	if len(entry.AddrIPv4) > 0 {
+		return entry.AddrIPv4[0].String()
+	}
+	if len(entry.AddrIPv6) > 0 {
+		return entry.AddrIPv6[0].String()
+	}
+	return ""
 }
 
 func randomString(n int) string {
