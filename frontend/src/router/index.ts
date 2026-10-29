@@ -1,4 +1,5 @@
 import { createRouter, createWebHashHistory } from 'vue-router'
+import AppsView from '../views/AppsView.vue'
 import DevicesView from '../views/DevicesView.vue'
 import InstallView from '../views/InstallView.vue'
 import PlaceholderView from '../views/PlaceholderView.vue'
@@ -11,11 +12,7 @@ const router = createRouter({
     { path: '/', redirect: '/devices' },
     { path: '/devices', component: DevicesView, meta: { title: '设备' } },
     { path: '/install', component: InstallView, meta: { title: '安装台' } },
-    {
-      path: '/apps',
-      component: PlaceholderView,
-      meta: { title: '应用', description: 'M3 将在此实现应用列表、卸载与导出。' },
-    },
+    { path: '/apps', component: AppsView, meta: { title: '应用' } },
     {
       path: '/files',
       component: PlaceholderView,

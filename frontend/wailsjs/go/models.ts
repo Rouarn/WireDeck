@@ -46,6 +46,62 @@ export namespace model {
 	        this.size = source["size"];
 	    }
 	}
+	export class AppDetail {
+	    package: string;
+	    versionName: string;
+	    versionCode: string;
+	    minSdk: string;
+	    targetSdk: string;
+	    firstInstall: string;
+	    lastUpdate: string;
+	    dataDir: string;
+	    permissions: string[];
+	
+	    static createFrom(source: any = {}) {
+	        return new AppDetail(source);
+	    }
+	
+	    constructor(source: any = {}) {
+	        if ('string' === typeof source) source = JSON.parse(source);
+	        this.package = source["package"];
+	        this.versionName = source["versionName"];
+	        this.versionCode = source["versionCode"];
+	        this.minSdk = source["minSdk"];
+	        this.targetSdk = source["targetSdk"];
+	        this.firstInstall = source["firstInstall"];
+	        this.lastUpdate = source["lastUpdate"];
+	        this.dataDir = source["dataDir"];
+	        this.permissions = source["permissions"];
+	    }
+	}
+	export class AppOpResult {
+	    ok: boolean;
+	    message: string;
+	    raw: string;
+	
+	    static createFrom(source: any = {}) {
+	        return new AppOpResult(source);
+	    }
+	
+	    constructor(source: any = {}) {
+	        if ('string' === typeof source) source = JSON.parse(source);
+	        this.ok = source["ok"];
+	        this.message = source["message"];
+	        this.raw = source["raw"];
+	    }
+	}
+	export class AppSummary {
+	    package: string;
+	
+	    static createFrom(source: any = {}) {
+	        return new AppSummary(source);
+	    }
+	
+	    constructor(source: any = {}) {
+	        if ('string' === typeof source) source = JSON.parse(source);
+	        this.package = source["package"];
+	    }
+	}
 	export class ConnectRequest {
 	    host: string;
 	    port: number;

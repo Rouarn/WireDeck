@@ -19,6 +19,7 @@ type App struct {
 	server   *adb.Server
 	devices  *services.DeviceService
 	installs *services.InstallService
+	apps     *services.AppService
 }
 
 // NewApp 创建应用实例。
@@ -29,6 +30,7 @@ func NewApp() *App {
 	})
 	app.devices = services.NewDeviceService(app.server, app.emit)
 	app.installs = services.NewInstallService(app.server, app.emit)
+	app.apps = services.NewAppService(app.server)
 	return app
 }
 
@@ -156,4 +158,67 @@ func (a *App) StartInstall(req model.InstallRequest) (string, error) {
 func (a *App) CancelInstall(taskID string) error {
 	a.installs.Cancel(taskID)
 	return nil
+}
+
+// ListApps 读取设备应用列表。scope: user | system | all。
+func (a *App) ListApps(serial, scope string) ([]model.AppSummary, error) {
+	if _, err := a.EnsureAdbReady(); err != nil {
+		return nil, err
+	}
+	return a.apps.List(a.context(), serial, scope)
+}
+
+// AppDetail 读取应用详情。
+func (a *App) AppDetail(serial, pkg string) (*model.AppDetail, error) {
+	if _, err := a.EnsureAdbReady(); err != nil {
+		return nil, err
+	}
+	return a.apps.Detail(a.context(), serial, pkg)
+}
+
+// UninstallApp 卸载应用。
+func (a *App) UninstallApp(serial, pkg string, keepData bool) (model.AppOpResult, error) {
+	if _, err := a.EnsureAdbReady(); err != nil {
+		return model.AppOpResult{}, err
+	}
+	return a.apps.Uninstall(a.context(), serial, pkg, keepData)
+}
+
+// LaunchApp 启动应用。
+func (a *App) LaunchApp(serial, pkg string) (model.AppOpResult, error) {
+	if _, err := a.EnsureAdbReady(); err != nil {
+		return model.AppOpResult{}, err
+	}
+	return a.apps.Launch(a.context(), serial, pkg)
+}
+
+// ForceStopApp 强制停止应用。
+func (a *App) ForceStopApp(serial, pkg string) (model.AppOpResult, error) {
+	if _, err := a.EnsureAdbReady(); err != nil {
+		return model.AppOpResult{}, err
+	}
+	return a.apps.ForceStop(a.context(), serial, pkg)
+}
+
+// ClearAppData 清除应用数据。
+func (a *App) ClearAppData(serial, pkg string) (model.AppOpResult, error) {
+	if _, err := a.EnsureAdbReady(); err != nil {
+		return model.AppOpResult{}, err
+	}
+	return a.apps.ClearData(a.context(), serial, pkg)
+}
+
+// PickDirectory 打开目录选择框，用于导出 APK。
+func (a *App) PickDirectory() (string, error) {
+	return runtime.OpenDirectoryDialog(a.context(), runtime.OpenDialogOptions{
+		Title: "选择导出目录",
+	})
+}
+
+// ExportApp 将应用 APK 导出到指定目录。
+func (a *App) ExportApp(serial, pkg, outDir string) ([]string, error) {
+	if _, err := a.EnsureAdbReady(); err != nil {
+		return nil, err
+	}
+	return a.apps.Export(a.context(), serial, pkg, outDir)
 }

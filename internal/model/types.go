@@ -109,3 +109,28 @@ type InstallResult struct {
 	Raw        string `json:"raw"`
 	DurationMs int64  `json:"durationMs"`
 }
+
+// AppSummary 是应用列表中的一项。
+type AppSummary struct {
+	Package string `json:"package"`
+}
+
+// AppDetail 是应用详情。
+type AppDetail struct {
+	Package      string   `json:"package"`
+	VersionName  string   `json:"versionName"`
+	VersionCode  string   `json:"versionCode"`
+	MinSDK       string   `json:"minSdk"`
+	TargetSDK    string   `json:"targetSdk"`
+	FirstInstall string   `json:"firstInstall"`
+	LastUpdate   string   `json:"lastUpdate"`
+	DataDir      string   `json:"dataDir"`
+	Permissions  []string `json:"permissions"`
+}
+
+// AppOpResult 是应用操作（卸载 / 启动 / 强停 / 清数据 / 导出）的结果。
+type AppOpResult struct {
+	OK      bool   `json:"ok"`
+	Message string `json:"message"`
+	Raw     string `json:"raw"`
+}
