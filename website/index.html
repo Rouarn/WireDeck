@@ -30,28 +30,35 @@
 
     <main>
       <section class="hero">
-        <div class="container">
-          <span class="eyebrow">macOS · 无线 ADB</span>
-          <h1>在电脑上，掌控你的安卓手机</h1>
-          <p class="lead">
-            扫码配对即连，应用管理、APK 安装、文件传输、实时日志与 Shell，一个窗口搞定。
-          </p>
-          <div class="cta">
-            <a
-              class="btn btn-primary"
-              href="https://github.com/Rouarn/wiredeck/releases/latest/download/WireDeck-0.1.0.dmg"
-            >
-              下载 macOS 版
-            </a>
-            <a class="btn btn-ghost" href="https://github.com/Rouarn/wiredeck" target="_blank" rel="noreferrer">
-              GitHub
-            </a>
+        <div class="container hero-inner">
+          <div class="hero-copy">
+            <span class="eyebrow">macOS · 无线 ADB</span>
+            <h1>在电脑上，掌控你的安卓手机</h1>
+            <p class="lead">
+              扫码配对即连，应用管理、APK 安装、文件传输、实时日志与 Shell，一个窗口搞定。
+            </p>
+            <div class="cta">
+              <a
+                class="btn btn-primary"
+                href="https://github.com/Rouarn/wiredeck/releases/latest/download/WireDeck-0.1.0.dmg"
+              >
+                下载 macOS 版
+              </a>
+              <a class="btn btn-ghost" href="https://github.com/Rouarn/wiredeck" target="_blank" rel="noreferrer">
+                GitHub
+              </a>
+            </div>
+            <p class="meta">v0.1.0 · Apple Silicon · 13 MB · 内置 adb，无需 Android SDK</p>
           </div>
-          <p class="meta">v0.1.0 · Apple Silicon · 13 MB · 内置 adb，无需 Android SDK</p>
 
+          <div class="hero-visual">
+            <canvas id="hero-canvas"></canvas>
+          </div>
+        </div>
+
+        <div class="container">
           <div class="screenshot">
-            <img class="light" src="assets/devices.png" alt="WireDeck 设备页" />
-            <img class="dark" src="assets/devices-dark.png" alt="WireDeck 设备页（深色）" />
+            <img src="assets/devices-dark.png" alt="WireDeck 设备页" />
           </div>
         </div>
       </section>
@@ -133,5 +140,7 @@
         </span>
       </div>
     </footer>
+
+    <script type="module" src="main.js"></script>
   </body>
 </html>
