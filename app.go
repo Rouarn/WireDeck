@@ -189,6 +189,14 @@ func (a *App) PairDevice(req model.PairRequest) (model.PairResult, error) {
 	return a.devices.Pair(a.context(), req)
 }
 
+// PairByQRCode 根据无线调试二维码完成配对，并尽量自动连接。
+func (a *App) PairByQRCode(content string) (model.PairResult, error) {
+	if _, err := a.EnsureAdbReady(); err != nil {
+		return model.PairResult{}, err
+	}
+	return a.devices.PairByQRCode(a.context(), content)
+}
+
 // ConnectDevice 连接无线调试设备（adb connect）。
 func (a *App) ConnectDevice(req model.ConnectRequest) (model.ConnectResult, error) {
 	if _, err := a.EnsureAdbReady(); err != nil {

@@ -40,6 +40,8 @@ export function ListDeviceFiles(arg1:string,arg2:string):Promise<Array<model.Dev
 
 export function ListDevices():Promise<Array<model.Device>>;
 
+export function PairByQRCode(arg1:string):Promise<model.PairResult>;
+
 export function PairDevice(arg1:model.PairRequest):Promise<model.PairResult>;
 
 export function PickApkFile():Promise<string>;

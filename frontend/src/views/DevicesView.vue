@@ -4,6 +4,7 @@ import { NAlert, NButton, NEmpty, NIcon, NInput, NSpin, NTag, useMessage } from 
 import { AddOutline, InformationCircleOutline, PhonePortraitOutline } from '@vicons/ionicons5'
 import { ConnectDevice, DisconnectDevice, DiscoverServices, PairDevice } from '../../wailsjs/go/main/App'
 import type { model } from '../../wailsjs/go/models'
+import QRPairDialog from '../components/QRPairDialog.vue'
 import { useDevicesStore } from '../stores/devices'
 
 const store = useDevicesStore()
@@ -19,6 +20,11 @@ const pairHint = ref('')
 const services = ref<model.MDNSService[]>([])
 const showPairing = ref(false)
 const pairingRef = ref<HTMLElement | null>(null)
+const qrShow = ref(false)
+
+async function onPaired() {
+  await store.refresh()
+}
 
 function togglePairing() {
   showPairing.value = !showPairing.value
@@ -233,6 +239,7 @@ onMounted(async () => {
             style="width: 120px"
           />
           <NButton size="small" :loading="busy" @click="pair">配对</NButton>
+          <NButton size="small" @click="qrShow = true">扫码配对</NButton>
         </div>
 
         <div class="pair-form">
@@ -249,6 +256,7 @@ onMounted(async () => {
         <p v-if="pairHint" class="pair-hint">{{ pairHint }}</p>
       </div>
     </section>
+    <QRPairDialog v-model:show="qrShow" @paired="onPaired" />
   </div>
 </template>
 

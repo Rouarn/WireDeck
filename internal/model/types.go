@@ -182,6 +182,14 @@ type DeviceHistory struct {
 	LastSeen int64  `json:"lastSeen"`
 }
 
+// QRCodeInfo 是从无线调试二维码中解析出的配对信息。
+type QRCodeInfo struct {
+	Service  string `json:"service"`
+	Password string `json:"password"`
+	Host     string `json:"host"`
+	Port     int    `json:"port"`
+}
+
 // LogcatLine 是一行实时日志。
 type LogcatLine struct {
 	StreamID string `json:"streamId"`

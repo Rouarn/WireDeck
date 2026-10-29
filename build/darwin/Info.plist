@@ -28,6 +28,8 @@
         <string>10.13.0</string>
         <key>NSHighResolutionCapable</key>
         <string>true</string>
+        <key>NSCameraUsageDescription</key>
+        <string>WireDeck 需要访问摄像头，用于扫描无线调试配对二维码。</string>
         <key>NSHumanReadableCopyright</key>
         <string>{{.Info.Copyright}}</string>
         {{if .Info.FileAssociations}}

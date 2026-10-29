@@ -78,6 +78,10 @@ export function ListDevices() {
   return window['go']['main']['App']['ListDevices']();
 }
 
+export function PairByQRCode(arg1) {
+  return window['go']['main']['App']['PairByQRCode'](arg1);
+}
+
 export function PairDevice(arg1) {
   return window['go']['main']['App']['PairDevice'](arg1);
 }
