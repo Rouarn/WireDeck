@@ -143,6 +143,13 @@ async function openDetail(pkg: string) {
   detailProgress.value = 0
   try {
     detail.value = await fetchAppDetail(store.current.serial, pkg)
+    // 详情解析会得到应用显示名，同步回列表，避免用户再手动刷新。
+    if (detail.value.label) {
+      const target = apps.value.find((item) => item.package === pkg)
+      if (target) {
+        target.label = detail.value.label
+      }
+    }
   } catch (e) {
     message.error(e instanceof Error ? e.message : String(e))
   } finally {
