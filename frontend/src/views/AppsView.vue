@@ -44,7 +44,11 @@ const visibleApps = computed(() => {
   if (!keyword) {
     return apps.value
   }
-  return apps.value.filter((app) => app.package.toLowerCase().includes(keyword))
+  return apps.value.filter(
+    (app) =>
+      app.package.toLowerCase().includes(keyword) ||
+      (app.label || '').toLowerCase().includes(keyword),
+  )
 })
 
 const moreOptions = [
@@ -201,7 +205,13 @@ onMounted(load)
           </thead>
           <tbody>
             <tr v-for="app in visibleApps" :key="app.package">
-              <td><code>{{ app.package }}</code></td>
+              <td>
+                <template v-if="app.label">
+                  <span class="app-label">{{ app.label }}</span>
+                  <span class="app-pkg">({{ app.package }})</span>
+                </template>
+                <code v-else>{{ app.package }}</code>
+              </td>
               <td class="ops">
                 <NButton size="tiny" quaternary @click="openDetail(app.package)">详情</NButton>
                 <NButton size="tiny" quaternary @click="exportApp(app.package)">导出</NButton>
@@ -228,6 +238,10 @@ onMounted(load)
       <NDrawerContent title="应用详情" closable>
         <NSpin :show="detailLoading">
           <div v-if="detail" class="detail-list">
+            <div class="detail-row">
+              <span class="detail-label">应用名称</span>
+              <span class="detail-value">{{ detail.label || '—' }}</span>
+            </div>
             <div class="detail-row">
               <span class="detail-label">包名</span>
               <span class="detail-value mono">{{ detail.package }}</span>
@@ -338,6 +352,18 @@ onMounted(load)
 
 .table code {
   color: var(--text);
+  font-size: 11px;
+}
+
+.app-label {
+  font-size: 12px;
+  font-weight: 500;
+}
+
+.app-pkg {
+  margin-left: 6px;
+  color: var(--text-tertiary);
+  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
   font-size: 11px;
 }
 

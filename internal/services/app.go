@@ -3,21 +3,43 @@ package services
 import (
 	"context"
 	"fmt"
+	"os"
+	"path/filepath"
 	"strings"
+	"sync"
 	"time"
 
 	"woyuxiaji.cn/wiredeck/internal/adb"
+	"woyuxiaji.cn/wiredeck/internal/apk"
 	"woyuxiaji.cn/wiredeck/internal/model"
 )
 
 // AppService 封装应用列表、详情与常见操作。
 type AppService struct {
 	server *adb.Server
+
+	mu     sync.RWMutex
+	labels map[string]string // pkg -> 已解析的显示名
 }
 
 // NewAppService 创建应用服务。
 func NewAppService(server *adb.Server) *AppService {
-	return &AppService{server: server}
+	return &AppService{server: server, labels: make(map[string]string)}
+}
+
+func (s *AppService) cachedLabel(pkg string) string {
+	s.mu.RLock()
+	defer s.mu.RUnlock()
+	return s.labels[pkg]
+}
+
+func (s *AppService) setLabel(pkg, label string) {
+	if label == "" {
+		return
+	}
+	s.mu.Lock()
+	s.labels[pkg] = label
+	s.mu.Unlock()
 }
 
 // List 读取应用列表。scope: user（第三方）、system（系统）、all。
@@ -52,7 +74,7 @@ func (s *AppService) List(ctx context.Context, serial, scope string) ([]model.Ap
 		if pkg == "" {
 			continue
 		}
-		apps = append(apps, model.AppSummary{Package: pkg})
+		apps = append(apps, model.AppSummary{Package: pkg, Label: s.cachedLabel(pkg)})
 	}
 	return apps, nil
 }
@@ -110,6 +132,14 @@ func (s *AppService) Detail(ctx context.Context, serial, pkg string) (*model.App
 			if name != "" {
 				detail.Permissions = append(detail.Permissions, strings.TrimSpace(name))
 			}
+		}
+	}
+
+	detail.Label = s.cachedLabel(pkg)
+	if detail.Label == "" {
+		if label := s.resolveLabel(ctx, serial, pkg); label != "" {
+			s.setLabel(pkg, label)
+			detail.Label = label
 		}
 	}
 
@@ -235,16 +265,70 @@ func (s *AppService) Export(ctx context.Context, serial, pkg, outDir string) ([]
 	}
 
 	localFiles := make([]string, 0, len(devicePaths))
+	label := s.cachedLabel(pkg)
+
 	for _, remote := range devicePaths {
-		pullRes, pullErr := s.server.Run(ctx, 120*time.Second, "-s", serial, "pull", remote, outDir)
+		// 用包名重命名，split 保留后缀，避免导出一堆 base.apk。
+		target := filepath.Join(outDir, pkg+".apk")
+		if !strings.HasPrefix(filepath.Base(remote), "base") {
+			target = filepath.Join(outDir, pkg+"-"+filepath.Base(remote))
+		}
+
+		pullRes, pullErr := s.server.Run(ctx, 120*time.Second, "-s", serial, "pull", remote, target)
 		if pullErr != nil {
 			return localFiles, pullErr
 		}
 		if pullRes.ExitCode != 0 {
 			return localFiles, fmt.Errorf("拉取失败: %s", strings.TrimSpace(pullRes.Output()))
 		}
-		localFiles = append(localFiles, outDir)
+		localFiles = append(localFiles, target)
+
+		// 导出时顺便解析显示名，避免后续再拉一次 APK。
+		if label == "" {
+			if meta, err := apk.Inspect(target); err == nil && meta.Label != "" {
+				label = meta.Label
+				s.setLabel(pkg, label)
+			}
+		}
 	}
 
 	return localFiles, nil
+}
+
+// resolveLabel 拉取 base.apk 并解析 application-label，仅用于详情页按需获取。
+func (s *AppService) resolveLabel(ctx context.Context, serial, pkg string) string {
+	res, err := s.server.Run(ctx, 10*time.Second, "-s", serial, "shell", "pm", "path", pkg)
+	if err != nil || res.ExitCode != 0 {
+		return ""
+	}
+
+	remote := ""
+	for _, line := range strings.Split(res.Stdout, "\n") {
+		line = strings.TrimSpace(line)
+		if strings.HasPrefix(line, "package:") && strings.HasSuffix(line, "base.apk") {
+			remote = strings.TrimPrefix(line, "package:")
+			break
+		}
+	}
+	if remote == "" {
+		return ""
+	}
+
+	dir, err := os.MkdirTemp("", "wiredeck-label-")
+	if err != nil {
+		return ""
+	}
+	defer os.RemoveAll(dir)
+
+	local := filepath.Join(dir, "base.apk")
+	pullRes, pullErr := s.server.Run(ctx, 120*time.Second, "-s", serial, "pull", remote, local)
+	if pullErr != nil || pullRes.ExitCode != 0 {
+		return ""
+	}
+
+	meta, inspectErr := apk.Inspect(local)
+	if inspectErr != nil {
+		return ""
+	}
+	return meta.Label
 }

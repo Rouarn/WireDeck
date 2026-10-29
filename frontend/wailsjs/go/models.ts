@@ -48,6 +48,7 @@ export namespace model {
 	}
 	export class AppDetail {
 	    package: string;
+	    label: string;
 	    versionName: string;
 	    versionCode: string;
 	    minSdk: string;
@@ -64,6 +65,7 @@ export namespace model {
 	    constructor(source: any = {}) {
 	        if ('string' === typeof source) source = JSON.parse(source);
 	        this.package = source["package"];
+	        this.label = source["label"];
 	        this.versionName = source["versionName"];
 	        this.versionCode = source["versionCode"];
 	        this.minSdk = source["minSdk"];
@@ -92,6 +94,7 @@ export namespace model {
 	}
 	export class AppSummary {
 	    package: string;
+	    label: string;
 	
 	    static createFrom(source: any = {}) {
 	        return new AppSummary(source);
@@ -100,6 +103,7 @@ export namespace model {
 	    constructor(source: any = {}) {
 	        if ('string' === typeof source) source = JSON.parse(source);
 	        this.package = source["package"];
+	        this.label = source["label"];
 	    }
 	}
 	export class ConnectRequest {

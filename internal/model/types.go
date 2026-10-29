@@ -113,11 +113,13 @@ type InstallResult struct {
 // AppSummary 是应用列表中的一项。
 type AppSummary struct {
 	Package string `json:"package"`
+	Label   string `json:"label"` // 已解析的显示名，空表示尚未解析
 }
 
 // AppDetail 是应用详情。
 type AppDetail struct {
 	Package      string   `json:"package"`
+	Label        string   `json:"label"`
 	VersionName  string   `json:"versionName"`
 	VersionCode  string   `json:"versionCode"`
 	MinSDK       string   `json:"minSdk"`
