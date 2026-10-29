@@ -17,6 +17,16 @@ if [ -d "build/darwin/zh-Hans.lproj" ]; then
   cp -R "build/darwin/zh-Hans.lproj" "$RES/"
 fi
 
+# 内置 adb，让没有安装 Android SDK 的电脑也能直接使用。
+ADB_SRC="${ADB_BIN:-$HOME/Library/Android/sdk/platform-tools/adb}"
+if [ -f "$ADB_SRC" ]; then
+  mkdir -p "$RES/platform-tools"
+  cp "$ADB_SRC" "$RES/platform-tools/adb"
+  chmod +x "$RES/platform-tools/adb"
+else
+  echo "warning: 未找到 adb（$ADB_SRC），发布包将依赖系统 adb" >&2
+fi
+
 # 资源变更后原签名失效，重新做 ad-hoc 签名（Apple Silicon 要求至少 ad-hoc）。
 codesign --force --sign - "$APP"
 

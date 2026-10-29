@@ -70,7 +70,7 @@ func (s *Server) resolveLocked(explicit string) error {
 	return nil
 }
 
-// FindBinary 按优先级查找 adb：用户显式指定 → PATH → 常见安装目录。
+// FindBinary 按优先级查找 adb：用户显式指定 → 应用内置 → PATH → 常见安装目录。
 func FindBinary(explicit string) (string, error) {
 	if explicit != "" {
 		info, err := os.Stat(explicit)
@@ -78,6 +78,15 @@ func FindBinary(explicit string) (string, error) {
 			return "", fmt.Errorf("%w: %s", ErrAdbNotFound, explicit)
 		}
 		return explicit, nil
+	}
+
+	// 发布包内置的 adb（Contents/Resources/platform-tools/adb），
+	// 让没有安装 Android SDK 的电脑也能直接使用。
+	if exe, err := os.Executable(); err == nil {
+		bundled := filepath.Join(filepath.Dir(exe), "..", "Resources", "platform-tools", "adb")
+		if info, statErr := os.Stat(bundled); statErr == nil && !info.IsDir() {
+			return bundled, nil
+		}
 	}
 
 	if p, err := exec.LookPath("adb"); err == nil {

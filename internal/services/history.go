@@ -67,13 +67,29 @@ func (s *DeviceService) RecordConnection(host string, port int, name string) {
 		return
 	}
 
+	// 从当前设备列表补全 serial 与真实型号，便于下次重连时展示。
+	serial := ""
+	displayName := name
+	s.mu.RLock()
+	for _, device := range s.devices {
+		if strings.Contains(device.Serial, host) || device.Serial == name {
+			serial = device.Serial
+			if device.Model != "" {
+				displayName = device.Model
+			}
+			break
+		}
+	}
+	s.mu.RUnlock()
+
 	now := time.Now().UnixMilli()
 
 	s.mu.Lock()
 	updated := false
 	for i := range s.history {
 		if s.history[i].Host == host && s.history[i].Port == port {
-			s.history[i].Name = name
+			s.history[i].Serial = serial
+			s.history[i].Name = displayName
 			s.history[i].LastSeen = now
 			updated = true
 			break
@@ -81,9 +97,10 @@ func (s *DeviceService) RecordConnection(host string, port int, name string) {
 	}
 	if !updated {
 		s.history = append(s.history, model.DeviceHistory{
+			Serial:   serial,
 			Host:     host,
 			Port:     port,
-			Name:     name,
+			Name:     displayName,
 			LastSeen: now,
 		})
 		// 最多保留 20 条历史。

@@ -127,6 +127,8 @@ func (s *DeviceService) autoConnect(ctx context.Context, host, name string) bool
 			qrLog("发现连接服务 name=%s host=%s port=%d", svc.Name, svc.Host, svc.Port)
 			res, connErr := s.Connect(ctx, model.ConnectRequest{Host: svc.Host, Port: svc.Port})
 			if connErr == nil && res.OK {
+				// 先刷新设备列表，记录历史时才能拿到真实 serial 与型号。
+				s.RefreshAndEmit(ctx)
 				s.RecordConnection(svc.Host, svc.Port, name)
 				return true
 			}

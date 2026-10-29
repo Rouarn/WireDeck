@@ -9,3 +9,5 @@ build/bin/
 .env
 .env.*
 !.env.example
+
+build/*.dmg
