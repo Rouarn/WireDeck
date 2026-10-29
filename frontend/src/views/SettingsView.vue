@@ -1,12 +1,13 @@
 <script setup lang="ts">
 import { onMounted, ref } from 'vue'
-import { NButton, NRadioButton, NRadioGroup, useDialog } from 'naive-ui'
+import { NButton, useDialog } from 'naive-ui'
 import {
   AppLabelCacheInfo as fetchLabelCacheInfo,
   ClearAppLabelCache,
   GetHostIdentity,
 } from '../../wailsjs/go/main/App'
 import type { model } from '../../wailsjs/go/models'
+import SegmentedControl from '../components/SegmentedControl.vue'
 import { useThemeStore } from '../stores/theme'
 import { useDevicesStore } from '../stores/devices'
 import type { ThemeMode } from '../stores/theme'
@@ -16,6 +17,12 @@ const devices = useDevicesStore()
 const dialog = useDialog()
 const identity = ref<model.HostIdentity | null>(null)
 const cacheInfo = ref<model.LabelCacheInfo | null>(null)
+
+const themeOptions: { label: string; value: ThemeMode }[] = [
+  { label: '跟随系统', value: 'system' },
+  { label: '浅色', value: 'light' },
+  { label: '深色', value: 'dark' },
+]
 
 function onChange(value: ThemeMode) {
   theme.setMode(value)
@@ -67,11 +74,7 @@ onMounted(async () => {
         <span class="hint">切换后立即生效</span>
       </div>
       <div class="panel-body">
-        <NRadioGroup :value="theme.mode" @update:value="onChange">
-          <NRadioButton value="system">跟随系统</NRadioButton>
-          <NRadioButton value="light">浅色</NRadioButton>
-          <NRadioButton value="dark">深色</NRadioButton>
-        </NRadioGroup>
+        <SegmentedControl :options="themeOptions" :value="theme.mode" @update:value="onChange" />
       </div>
     </section>
 

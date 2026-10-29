@@ -27,6 +27,7 @@ import {
 import type { model } from '../../wailsjs/go/models'
 import { EventsOn } from '../../wailsjs/runtime/runtime'
 import VirtualList from '../components/VirtualList.vue'
+import SegmentedControl from '../components/SegmentedControl.vue'
 import { useDevicesStore } from '../stores/devices'
 
 interface AppProgressPayload {
@@ -270,17 +271,7 @@ onMounted(() => {
           <NIcon :size="14"><SearchOutline /></NIcon>
         </template>
       </NInput>
-      <div class="segmented">
-        <button
-          v-for="item in scopeOptions"
-          :key="item.value"
-          class="seg"
-          :class="{ active: scope === item.value }"
-          @click="setScope(item.value)"
-        >
-          {{ item.label }}
-        </button>
-      </div>
+      <SegmentedControl :options="scopeOptions" :value="scope" @update:value="setScope" />
       <span class="count">{{ visibleApps.length }} / {{ apps.length }}</span>
       <div class="spacer"></div>
       <NButton size="small" :loading="loading" @click="load">刷新</NButton>
@@ -436,37 +427,6 @@ onMounted(() => {
 .toolbar .count {
   color: var(--text-tertiary);
   font-size: 11px;
-}
-
-.segmented {
-  display: inline-flex;
-  overflow: hidden;
-  border: 1px solid var(--border-strong);
-  border-radius: 7px;
-  background: var(--surface);
-}
-
-.seg {
-  height: 28px;
-  padding: 0 14px;
-  border: none;
-  border-right: 1px solid var(--border);
-  background: transparent;
-  color: var(--text-secondary);
-  font-family: inherit;
-  font-size: 12px;
-  line-height: 28px;
-  cursor: pointer;
-}
-
-.seg:last-child {
-  border-right: none;
-}
-
-.seg.active {
-  background: var(--primary-soft);
-  color: var(--primary-ink);
-  font-weight: 600;
 }
 
 .spacer {
