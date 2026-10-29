@@ -6,6 +6,7 @@ import (
 	"time"
 
 	"github.com/wailsapp/wails/v2/pkg/menu"
+	"github.com/wailsapp/wails/v2/pkg/menu/keys"
 	"github.com/wailsapp/wails/v2/pkg/runtime"
 
 	"woyuxiaji.cn/wiredeck/internal/adb"
@@ -52,16 +53,58 @@ func (a *App) startup(ctx context.Context) {
 
 // buildMenu 构建 macOS 菜单栏。
 //
-// 使用系统标准菜单角色（AppMenu / EditMenu / WindowMenu），
-// 这些菜单的文案由 macOS 按系统语言本地化，避免出现英文菜单。
+// Wails 的 Role 菜单（AppMenu/EditMenu/WindowMenu）文案是硬编码英文，
+// 不跟随系统语言，因此这里全部手写中文菜单。
 func (a *App) buildMenu() *menu.Menu {
 	m := menu.NewMenu()
-	m.Append(menu.AppMenu())
-	m.Append(menu.EditMenu())
-	m.Append(menu.WindowMenu())
 
-	help := m.AddSubmenu("帮助")
-	help.AddText("打开项目主页", nil, func(_ *menu.CallbackData) {
+	appMenu := m.AddSubmenu("WireDeck")
+	appMenu.AddText("关于 WireDeck", nil, func(_ *menu.CallbackData) {
+		if a.ctx == nil {
+			return
+		}
+		runtime.MessageDialog(a.ctx, runtime.MessageDialogOptions{
+			Type:    runtime.InfoDialog,
+			Title:   "关于 WireDeck",
+			Message: "WireDeck v0.1\n无线 ADB 桌面控制台\n\n通过 Wi-Fi 或 USB 管理安卓设备。",
+		})
+	})
+	appMenu.AddSeparator()
+	appMenu.AddText("隐藏 WireDeck", keys.CmdOrCtrl("h"), func(_ *menu.CallbackData) {
+		if a.ctx != nil {
+			runtime.WindowHide(a.ctx)
+		}
+	})
+	appMenu.AddSeparator()
+	appMenu.AddText("退出 WireDeck", keys.CmdOrCtrl("q"), func(_ *menu.CallbackData) {
+		if a.ctx != nil {
+			runtime.Quit(a.ctx)
+		}
+	})
+
+	editMenu := m.AddSubmenu("编辑")
+	editMenu.AddText("撤销", keys.CmdOrCtrl("z"), nil)
+	editMenu.AddText("重做", keys.Combo("z", keys.CmdOrCtrlKey, keys.ShiftKey), nil)
+	editMenu.AddSeparator()
+	editMenu.AddText("剪切", keys.CmdOrCtrl("x"), nil)
+	editMenu.AddText("复制", keys.CmdOrCtrl("c"), nil)
+	editMenu.AddText("粘贴", keys.CmdOrCtrl("v"), nil)
+	editMenu.AddText("全选", keys.CmdOrCtrl("a"), nil)
+
+	windowMenu := m.AddSubmenu("窗口")
+	windowMenu.AddText("最小化", keys.CmdOrCtrl("m"), func(_ *menu.CallbackData) {
+		if a.ctx != nil {
+			runtime.WindowMinimise(a.ctx)
+		}
+	})
+	windowMenu.AddText("显示窗口", nil, func(_ *menu.CallbackData) {
+		if a.ctx != nil {
+			runtime.WindowShow(a.ctx)
+		}
+	})
+
+	helpMenu := m.AddSubmenu("帮助")
+	helpMenu.AddText("打开项目主页", nil, func(_ *menu.CallbackData) {
 		if a.ctx != nil {
 			runtime.BrowserOpenURL(a.ctx, "https://woyuxiaji.cn")
 		}
