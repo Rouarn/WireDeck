@@ -3,8 +3,6 @@ import { computed, onMounted, ref } from 'vue'
 import {
   NAlert,
   NButton,
-  NDescriptions,
-  NDescriptionsItem,
   NDrawer,
   NDrawerContent,
   NDropdown,
@@ -226,22 +224,44 @@ onMounted(load)
       </NSpin>
     </section>
 
-    <NDrawer v-model:show="showDetail" :width="440">
+    <NDrawer v-model:show="showDetail" :width="560">
       <NDrawerContent title="应用详情" closable>
         <NSpin :show="detailLoading">
-          <NDescriptions v-if="detail" :column="1" label-placement="left" size="small" bordered>
-            <NDescriptionsItem label="包名">
-              <code>{{ detail.package }}</code>
-            </NDescriptionsItem>
-            <NDescriptionsItem label="版本">{{ detail.versionName }} ({{ detail.versionCode }})</NDescriptionsItem>
-            <NDescriptionsItem label="SDK">min {{ detail.minSdk }} / target {{ detail.targetSdk }}</NDescriptionsItem>
-            <NDescriptionsItem label="首次安装">{{ detail.firstInstall || '—' }}</NDescriptionsItem>
-            <NDescriptionsItem label="最近更新">{{ detail.lastUpdate || '—' }}</NDescriptionsItem>
-            <NDescriptionsItem label="数据目录">{{ detail.dataDir || '—' }}</NDescriptionsItem>
-            <NDescriptionsItem label="已授予权限">
-              {{ detail.permissions.length ? detail.permissions.join('、') : '—' }}
-            </NDescriptionsItem>
-          </NDescriptions>
+          <div v-if="detail" class="detail-list">
+            <div class="detail-row">
+              <span class="detail-label">包名</span>
+              <span class="detail-value mono">{{ detail.package }}</span>
+            </div>
+            <div class="detail-row">
+              <span class="detail-label">版本</span>
+              <span class="detail-value">{{ detail.versionName }} ({{ detail.versionCode }})</span>
+            </div>
+            <div class="detail-row">
+              <span class="detail-label">SDK</span>
+              <span class="detail-value">min {{ detail.minSdk }} / target {{ detail.targetSdk }}</span>
+            </div>
+            <div class="detail-row">
+              <span class="detail-label">首次安装</span>
+              <span class="detail-value">{{ detail.firstInstall || '—' }}</span>
+            </div>
+            <div class="detail-row">
+              <span class="detail-label">最近更新</span>
+              <span class="detail-value">{{ detail.lastUpdate || '—' }}</span>
+            </div>
+            <div class="detail-row">
+              <span class="detail-label">数据目录</span>
+              <span class="detail-value mono">{{ detail.dataDir || '—' }}</span>
+            </div>
+            <div class="detail-row">
+              <span class="detail-label">已授予权限</span>
+              <div class="detail-value">
+                <div v-if="!detail.permissions.length">—</div>
+                <ul v-else class="perm-list">
+                  <li v-for="perm in detail.permissions" :key="perm">{{ perm }}</li>
+                </ul>
+              </div>
+            </div>
+          </div>
         </NSpin>
       </NDrawerContent>
     </NDrawer>
@@ -332,5 +352,70 @@ onMounted(load)
   color: var(--text-tertiary);
   font-size: 12px;
   text-align: center;
+}
+
+.detail-list {
+  overflow: hidden;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+}
+
+.detail-row {
+  display: flex;
+  gap: 12px;
+  padding: 10px 12px;
+  border-bottom: 1px solid var(--border);
+  font-size: 12px;
+}
+
+.detail-row:nth-child(even) {
+  background: var(--surface-inset);
+}
+
+.detail-row:last-child {
+  border-bottom: none;
+}
+
+.detail-label {
+  flex: 0 0 84px;
+  color: var(--text-secondary);
+  white-space: nowrap;
+}
+
+.detail-value {
+  flex: 1;
+  min-width: 0;
+  color: var(--text);
+  word-break: break-all;
+}
+
+.detail-value.mono {
+  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+  font-size: 11px;
+}
+
+.perm-list {
+  margin: 0;
+  padding: 0;
+  overflow: hidden;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  list-style: none;
+}
+
+.perm-list li {
+  padding: 5px 8px;
+  border-bottom: 1px solid var(--border);
+  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+  font-size: 11px;
+  word-break: break-all;
+}
+
+.perm-list li:nth-child(even) {
+  background: var(--surface-inset);
+}
+
+.perm-list li:last-child {
+  border-bottom: none;
 }
 </style>
