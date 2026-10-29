@@ -109,7 +109,7 @@ onBeforeUnmount(() => {
 
       <div class="actions">
         <NButton size="small" @click="close">取消</NButton>
-        <NButton size="small" type="primary" :loading="waiting" @click="refresh">刷新二维码</NButton>
+        <NButton size="small" type="primary" @click="refresh">刷新二维码</NButton>
       </div>
 
       <p class="tip">
