@@ -272,6 +272,7 @@ onMounted(() => {
         size="small"
         placeholder="搜索应用名称或包名"
         clearable
+        class="search-input"
         style="width: 260px"
       >
         <template #prefix>
@@ -434,6 +435,21 @@ onMounted(() => {
 .toolbar .count {
   color: var(--text-tertiary);
   font-size: 11px;
+}
+
+/* 让工具栏控件与 32px 的分段控件保持同一高度 */
+.toolbar :deep(.n-input) {
+  height: 32px;
+}
+
+.toolbar :deep(.n-input .n-input__input-el),
+.toolbar :deep(.n-input .n-input__placeholder) {
+  height: 32px;
+  line-height: 32px;
+}
+
+.toolbar :deep(.n-button) {
+  height: 32px;
 }
 
 .spacer {
