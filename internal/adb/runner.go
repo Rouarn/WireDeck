@@ -122,6 +122,39 @@ func (r *Runner) commandArgs(args ...string) []string {
 
 var pushPercentPattern = regexp.MustCompile(`(\d+)%`)
 
+// RunRaw 执行命令并返回 stdout 原始字节（用于截图等二进制输出）。
+func (r *Runner) RunRaw(ctx context.Context, timeout time.Duration, args ...string) ([]byte, error) {
+	if r.AdbPath == "" {
+		return nil, ErrAdbNotFound
+	}
+	if timeout <= 0 {
+		timeout = DefaultTimeout
+	}
+
+	runCtx, cancel := context.WithTimeout(ctx, timeout)
+	defer cancel()
+
+	cmd := exec.CommandContext(runCtx, r.AdbPath, r.commandArgs(args...)...)
+	cmd.Env = append(os.Environ(), "LANG=C", "LC_ALL=C")
+
+	var stdout, stderr bytes.Buffer
+	cmd.Stdout = &stdout
+	cmd.Stderr = &stderr
+
+	err := cmd.Run()
+	if runCtx.Err() == context.DeadlineExceeded {
+		return stdout.Bytes(), fmt.Errorf("%w: adb %s", ErrTimeout, strings.Join(args, " "))
+	}
+	if err != nil {
+		var exitErr *exec.ExitError
+		if errors.As(err, &exitErr) {
+			return stdout.Bytes(), fmt.Errorf("%s: %s", exitErr.Error(), strings.TrimSpace(stderr.String()))
+		}
+		return stdout.Bytes(), err
+	}
+	return stdout.Bytes(), nil
+}
+
 // PushWithProgress 通过伪终端执行 adb push，实时回调传输百分比。
 func (r *Runner) PushWithProgress(ctx context.Context, serial, local, remote string, onPercent func(int)) error {
 	return r.runWithProgress(ctx, ErrPushFailed, 10*time.Minute, onPercent, "-s", serial, "push", local, remote)

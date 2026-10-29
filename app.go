@@ -3,6 +3,7 @@ package main
 import (
 	"context"
 	"fmt"
+	"time"
 
 	"github.com/wailsapp/wails/v2/pkg/runtime"
 
@@ -20,6 +21,8 @@ type App struct {
 	devices  *services.DeviceService
 	installs *services.InstallService
 	apps     *services.AppService
+	files    *services.FileService
+	logs     *services.LogService
 }
 
 // NewApp 创建应用实例。
@@ -31,6 +34,8 @@ func NewApp() *App {
 	app.devices = services.NewDeviceService(app.server, app.emit)
 	app.installs = services.NewInstallService(app.server, app.emit)
 	app.apps = services.NewAppService(app.server, app.emit)
+	app.files = services.NewFileService(app.server, app.emit)
+	app.logs = services.NewLogService(app.server, app.emit)
 	return app
 }
 
@@ -46,6 +51,7 @@ func (a *App) startup(ctx context.Context) {
 
 // shutdown 由 Wails 在应用退出时调用。
 func (a *App) shutdown(_ context.Context) {
+	a.logs.StopAll()
 	a.devices.Stop()
 }
 
@@ -231,4 +237,67 @@ func (a *App) AppLabelCacheInfo() (model.LabelCacheInfo, error) {
 // ClearAppLabelCache 清空应用名称缓存。
 func (a *App) ClearAppLabelCache() error {
 	return a.apps.ClearLabels()
+}
+
+// PickFile 打开文件选择框。
+func (a *App) PickFile() (string, error) {
+	return runtime.OpenFileDialog(a.context(), runtime.OpenDialogOptions{
+		Title: "选择文件",
+	})
+}
+
+// Screenshot 截取设备屏幕并保存到图片目录。
+func (a *App) Screenshot(serial string) (*model.ScreenshotResult, error) {
+	if _, err := a.EnsureAdbReady(); err != nil {
+		return nil, err
+	}
+	return a.files.Screenshot(a.context(), serial, "")
+}
+
+// PushFile 将本地文件推送到设备。
+func (a *App) PushFile(serial, local, remote string) error {
+	if _, err := a.EnsureAdbReady(); err != nil {
+		return err
+	}
+	return a.files.Push(a.context(), serial, local, remote)
+}
+
+// PullFile 从设备拉取文件到本地。
+func (a *App) PullFile(serial, remote, local string) error {
+	if _, err := a.EnsureAdbReady(); err != nil {
+		return err
+	}
+	return a.files.Pull(a.context(), serial, remote, local)
+}
+
+// StartLogcat 启动实时日志流，返回 streamId。
+func (a *App) StartLogcat(serial, filter string) (string, error) {
+	if _, err := a.EnsureAdbReady(); err != nil {
+		return "", err
+	}
+	return a.logs.Start(a.context(), serial, filter)
+}
+
+// StopLogcat 停止日志流。
+func (a *App) StopLogcat(streamID string) error {
+	a.logs.Stop(streamID)
+	return nil
+}
+
+// ExecShell 执行一条 adb shell 命令。
+func (a *App) ExecShell(serial, command string) (model.ShellResult, error) {
+	if _, err := a.EnsureAdbReady(); err != nil {
+		return model.ShellResult{}, err
+	}
+
+	res, err := a.server.Run(a.context(), 30*time.Second, "-s", serial, "shell", command)
+	if err != nil {
+		return model.ShellResult{}, err
+	}
+
+	return model.ShellResult{
+		Stdout:   res.Stdout,
+		Stderr:   res.Stderr,
+		ExitCode: res.ExitCode,
+	}, nil
 }

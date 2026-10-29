@@ -151,3 +151,29 @@ type AppProgress struct {
 	Percent int    `json:"percent"`
 	Message string `json:"message"`
 }
+
+// FileProgress 是文件传输进度事件。
+type FileProgress struct {
+	Stage   string `json:"stage"` // push | pull
+	Percent int    `json:"percent"`
+	Message string `json:"message"`
+}
+
+// ScreenshotResult 是截图结果，同时返回本地路径与可直接展示的 dataURL。
+type ScreenshotResult struct {
+	Path    string `json:"path"`
+	DataURL string `json:"dataUrl"`
+}
+
+// LogcatLine 是一行实时日志。
+type LogcatLine struct {
+	StreamID string `json:"streamId"`
+	Line     string `json:"line"`
+}
+
+// ShellResult 是一条 shell 命令的执行结果。
+type ShellResult struct {
+	Stdout   string `json:"stdout"`
+	Stderr   string `json:"stderr"`
+	ExitCode int    `json:"exitCode"`
+}

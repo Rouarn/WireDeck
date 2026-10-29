@@ -42,6 +42,13 @@ func (s *Server) SetLogger(fn func(format string, args ...any)) {
 // Port 返回当前使用的 adb server 端口。
 func (s *Server) Port() int { return s.port }
 
+// BinaryPath 返回已解析的 adb 可执行文件路径。
+func (s *Server) BinaryPath() string {
+	s.mu.Lock()
+	defer s.mu.Unlock()
+	return s.binaryPath
+}
+
 // Resolve 定位 adb 可执行文件。explicit 为空时按 PATH 与常见安装路径查找。
 func (s *Server) Resolve(explicit string) error {
 	s.mu.Lock()
@@ -156,6 +163,17 @@ func (s *Server) Run(ctx context.Context, timeout time.Duration, args ...string)
 		return nil, ErrAdbNotFound
 	}
 	return runner.Run(ctx, timeout, args...)
+}
+
+// RunRaw 执行命令并返回 stdout 原始字节（截图等二进制输出）。
+func (s *Server) RunRaw(ctx context.Context, timeout time.Duration, args ...string) ([]byte, error) {
+	s.mu.Lock()
+	runner := s.runner
+	s.mu.Unlock()
+	if runner == nil {
+		return nil, ErrAdbNotFound
+	}
+	return runner.RunRaw(ctx, timeout, args...)
 }
 
 // PushWithProgress 以伪终端执行 adb push 并回调真实传输百分比。

@@ -298,6 +298,36 @@ export namespace model {
 	        this.raw = source["raw"];
 	    }
 	}
+	export class ScreenshotResult {
+	    path: string;
+	    dataUrl: string;
+	
+	    static createFrom(source: any = {}) {
+	        return new ScreenshotResult(source);
+	    }
+	
+	    constructor(source: any = {}) {
+	        if ('string' === typeof source) source = JSON.parse(source);
+	        this.path = source["path"];
+	        this.dataUrl = source["dataUrl"];
+	    }
+	}
+	export class ShellResult {
+	    stdout: string;
+	    stderr: string;
+	    exitCode: number;
+	
+	    static createFrom(source: any = {}) {
+	        return new ShellResult(source);
+	    }
+	
+	    constructor(source: any = {}) {
+	        if ('string' === typeof source) source = JSON.parse(source);
+	        this.stdout = source["stdout"];
+	        this.stderr = source["stderr"];
+	        this.exitCode = source["exitCode"];
+	    }
+	}
 
 }
 

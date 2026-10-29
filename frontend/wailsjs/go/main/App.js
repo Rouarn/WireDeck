@@ -38,6 +38,10 @@ export function EnsureAdbReady() {
   return window['go']['main']['App']['EnsureAdbReady']();
 }
 
+export function ExecShell(arg1, arg2) {
+  return window['go']['main']['App']['ExecShell'](arg1, arg2);
+}
+
 export function ExportApp(arg1, arg2, arg3) {
   return window['go']['main']['App']['ExportApp'](arg1, arg2, arg3);
 }
@@ -78,12 +82,36 @@ export function PickDirectory() {
   return window['go']['main']['App']['PickDirectory']();
 }
 
+export function PickFile() {
+  return window['go']['main']['App']['PickFile']();
+}
+
+export function PullFile(arg1, arg2, arg3) {
+  return window['go']['main']['App']['PullFile'](arg1, arg2, arg3);
+}
+
+export function PushFile(arg1, arg2, arg3) {
+  return window['go']['main']['App']['PushFile'](arg1, arg2, arg3);
+}
+
+export function Screenshot(arg1) {
+  return window['go']['main']['App']['Screenshot'](arg1);
+}
+
 export function SetAdbPath(arg1) {
   return window['go']['main']['App']['SetAdbPath'](arg1);
 }
 
 export function StartInstall(arg1) {
   return window['go']['main']['App']['StartInstall'](arg1);
+}
+
+export function StartLogcat(arg1, arg2) {
+  return window['go']['main']['App']['StartLogcat'](arg1, arg2);
+}
+
+export function StopLogcat(arg1) {
+  return window['go']['main']['App']['StopLogcat'](arg1);
 }
 
 export function UninstallApp(arg1, arg2, arg3) {

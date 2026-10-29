@@ -20,6 +20,8 @@ export function DiscoverServices():Promise<Array<model.MDNSService>>;
 
 export function EnsureAdbReady():Promise<model.AdbEnv>;
 
+export function ExecShell(arg1:string,arg2:string):Promise<model.ShellResult>;
+
 export function ExportApp(arg1:string,arg2:string,arg3:string):Promise<Array<string>>;
 
 export function ForceStopApp(arg1:string,arg2:string):Promise<model.AppOpResult>;
@@ -40,8 +42,20 @@ export function PickApkFile():Promise<string>;
 
 export function PickDirectory():Promise<string>;
 
+export function PickFile():Promise<string>;
+
+export function PullFile(arg1:string,arg2:string,arg3:string):Promise<void>;
+
+export function PushFile(arg1:string,arg2:string,arg3:string):Promise<void>;
+
+export function Screenshot(arg1:string):Promise<model.ScreenshotResult>;
+
 export function SetAdbPath(arg1:string):Promise<void>;
 
 export function StartInstall(arg1:model.InstallRequest):Promise<string>;
+
+export function StartLogcat(arg1:string,arg2:string):Promise<string>;
+
+export function StopLogcat(arg1:string):Promise<void>;
 
 export function UninstallApp(arg1:string,arg2:string,arg3:boolean):Promise<model.AppOpResult>;
