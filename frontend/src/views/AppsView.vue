@@ -405,7 +405,7 @@ onMounted(() => {
 .table-head {
   display: grid;
   flex: 0 0 auto;
-  grid-template-columns: 1fr 300px;
+  grid-template-columns: 1fr var(--ops-col, 260px);
   gap: 12px;
   padding: 8px 14px;
   border-bottom: 1px solid var(--border);
@@ -426,7 +426,7 @@ onMounted(() => {
 
 .app-row {
   display: grid;
-  grid-template-columns: 1fr 300px;
+  grid-template-columns: 1fr var(--ops-col, 260px);
   gap: 12px;
   align-items: center;
   height: 40px;
@@ -466,7 +466,7 @@ onMounted(() => {
   display: flex;
   align-items: center;
   justify-content: flex-end;
-  gap: 2px;
+  gap: 6px;
 }
 
 .empty {
