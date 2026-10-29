@@ -25,7 +25,15 @@ import {
   UninstallApp,
 } from '../../wailsjs/go/main/App'
 import type { model } from '../../wailsjs/go/models'
+import { EventsOn } from '../../wailsjs/runtime/runtime'
 import { useDevicesStore } from '../stores/devices'
+
+interface AppProgressPayload {
+  pkg: string
+  stage: string
+  percent: number
+  message: string
+}
 
 const store = useDevicesStore()
 const message = useMessage()
@@ -38,6 +46,10 @@ const scope = ref<'user' | 'system' | 'all'>('user')
 const showDetail = ref(false)
 const detailLoading = ref(false)
 const detail = ref<model.AppDetail | null>(null)
+const pendingDetailPkg = ref('')
+const detailProgress = ref(0)
+const exportProgress = ref(0)
+const exporting = ref(false)
 
 const visibleApps = computed(() => {
   const keyword = search.value.trim().toLowerCase()
@@ -91,6 +103,8 @@ async function openDetail(pkg: string) {
   showDetail.value = true
   detailLoading.value = true
   detail.value = null
+  pendingDetailPkg.value = pkg
+  detailProgress.value = 0
   try {
     detail.value = await fetchAppDetail(store.current.serial, pkg)
   } catch (e) {
@@ -109,10 +123,23 @@ async function exportApp(pkg: string) {
     if (!dir) {
       return
     }
+    exporting.value = true
+    exportProgress.value = 0
     await ExportApp(store.current.serial, pkg, dir)
     message.success(`已导出到 ${dir}`)
   } catch (e) {
     message.error(e instanceof Error ? e.message : String(e))
+  } finally {
+    exporting.value = false
+  }
+}
+
+function onAppProgress(p: AppProgressPayload) {
+  if (p.stage === 'label' && p.pkg === pendingDetailPkg.value && detailLoading.value) {
+    detailProgress.value = Math.max(detailProgress.value, p.percent)
+  }
+  if (p.stage === 'export' && exporting.value) {
+    exportProgress.value = Math.max(exportProgress.value, p.percent)
   }
 }
 
@@ -184,7 +211,10 @@ async function onMore(key: string, pkg: string) {
   }
 }
 
-onMounted(load)
+onMounted(() => {
+  EventsOn('app:progress', (p: AppProgressPayload) => onAppProgress(p))
+  void load()
+})
 </script>
 
 <template>
@@ -209,6 +239,12 @@ onMounted(load)
       <span class="count">{{ visibleApps.length }} / {{ apps.length }}</span>
       <div class="spacer"></div>
       <NButton size="small" :loading="loading" @click="load">刷新</NButton>
+    </div>
+
+    <div v-if="exporting" class="export-bar">
+      <span class="export-label">正在导出…</span>
+      <div class="export-progress"><i :style="{ width: `${exportProgress}%` }"></i></div>
+      <span class="export-percent">{{ exportProgress }}%</span>
     </div>
 
     <section class="panel">
@@ -314,6 +350,13 @@ onMounted(load)
               <div v-else class="empty-perm">该应用没有已授予的运行时权限</div>
             </div>
           </div>
+          <div v-else-if="detailLoading" class="detail-loading">
+            <div class="loading-title">正在读取应用信息…</div>
+            <div class="loading-progress">
+              <i :style="{ width: `${detailProgress}%` }"></i>
+            </div>
+            <div class="loading-hint">{{ detailProgress }}%</div>
+          </div>
         </NSpin>
       </NDrawerContent>
     </NDrawer>
@@ -416,6 +459,76 @@ onMounted(load)
   color: var(--text-tertiary);
   font-size: 12px;
   text-align: center;
+}
+
+.export-bar {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 12px;
+  padding: 8px 12px;
+  border: 1px solid var(--primary-border);
+  border-radius: var(--radius-sm);
+  background: var(--primary-soft);
+  color: var(--primary-ink);
+  font-size: 12px;
+}
+
+.export-progress {
+  flex: 1;
+  height: 5px;
+  overflow: hidden;
+  border-radius: 3px;
+  background: var(--border);
+}
+
+.export-progress > i {
+  display: block;
+  height: 100%;
+  background: var(--primary);
+  transition: width 0.2s ease;
+}
+
+.export-percent {
+  width: 36px;
+  font-variant-numeric: tabular-nums;
+  text-align: right;
+}
+
+.detail-loading {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  min-height: 240px;
+  color: var(--text-secondary);
+  font-size: 12px;
+}
+
+.loading-title {
+  font-size: 13px;
+}
+
+.loading-progress {
+  width: 220px;
+  height: 6px;
+  overflow: hidden;
+  border-radius: 3px;
+  background: var(--border);
+}
+
+.loading-progress > i {
+  display: block;
+  height: 100%;
+  background: var(--primary);
+  transition: width 0.2s ease;
+}
+
+.loading-hint {
+  color: var(--text-tertiary);
+  font-size: 11px;
+  font-variant-numeric: tabular-nums;
 }
 
 .detail-hero {

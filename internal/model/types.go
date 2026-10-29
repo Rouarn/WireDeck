@@ -143,3 +143,11 @@ type LabelCacheInfo struct {
 	Path  string `json:"path"`
 	Size  int64  `json:"size"`
 }
+
+// AppProgress 是应用详情解析 / 导出的进度事件。
+type AppProgress struct {
+	Pkg     string `json:"pkg"`
+	Stage   string `json:"stage"` // label | export
+	Percent int    `json:"percent"`
+	Message string `json:"message"`
+}

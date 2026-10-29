@@ -123,23 +123,38 @@ func (r *Runner) commandArgs(args ...string) []string {
 var pushPercentPattern = regexp.MustCompile(`(\d+)%`)
 
 // PushWithProgress 通过伪终端执行 adb push，实时回调传输百分比。
-//
-// adb 在非 TTY 环境下只输出最终结果，因此必须借助 pty 才能拿到进度行。
 func (r *Runner) PushWithProgress(ctx context.Context, serial, local, remote string, onPercent func(int)) error {
+	return r.runWithProgress(ctx, ErrPushFailed, 10*time.Minute, onPercent, "-s", serial, "push", local, remote)
+}
+
+// PullWithProgress 通过伪终端执行 adb pull，实时回调传输百分比。
+func (r *Runner) PullWithProgress(ctx context.Context, serial, remote, local string, onPercent func(int)) error {
+	return r.runWithProgress(ctx, ErrPullFailed, 10*time.Minute, onPercent, "-s", serial, "pull", remote, local)
+}
+
+// runWithProgress 以伪终端运行 adb 传输命令并解析百分比。
+//
+// adb 在非 TTY 环境或缺少 TERM 时只输出最终结果，因此必须借助 pty 并注入 TERM。
+func (r *Runner) runWithProgress(
+	ctx context.Context,
+	failErr error,
+	timeout time.Duration,
+	onPercent func(int),
+	args ...string,
+) error {
 	if r.AdbPath == "" {
 		return ErrAdbNotFound
 	}
 
-	runCtx, cancel := context.WithTimeout(ctx, 10*time.Minute)
+	runCtx, cancel := context.WithTimeout(ctx, timeout)
 	defer cancel()
 
-	cmd := exec.CommandContext(runCtx, r.AdbPath, r.commandArgs("-s", serial, "push", local, remote)...)
-	// adb 只有在 TERM 存在且 stdout 为终端时才输出百分比进度。
+	cmd := exec.CommandContext(runCtx, r.AdbPath, r.commandArgs(args...)...)
 	cmd.Env = append(os.Environ(), "LANG=C", "LC_ALL=C", "TERM=xterm-256color")
 
 	ptmx, err := pty.StartWithSize(cmd, &pty.Winsize{Rows: 24, Cols: 120})
 	if err != nil {
-		return fmt.Errorf("%w: %v", ErrPushFailed, err)
+		return fmt.Errorf("%w: %v", failErr, err)
 	}
 	defer func() { _ = ptmx.Close() }()
 
@@ -174,12 +189,12 @@ func (r *Runner) PushWithProgress(ctx context.Context, serial, local, remote str
 		if runCtx.Err() == context.Canceled {
 			return fmt.Errorf("%w: %v", ErrCanceled, err)
 		}
-		return fmt.Errorf("%w: %v: %s", ErrPushFailed, err, lastOutputLine(buf.String()))
+		return fmt.Errorf("%w: %v: %s", failErr, err, lastOutputLine(buf.String()))
 	}
 	return nil
 }
 
-// lastOutputLine 返回输出中最后一段（adb push 用 \r 原地刷新进度）。
+// lastOutputLine 返回输出中最后一段（adb 用 \r 原地刷新进度）。
 func lastOutputLine(text string) string {
 	lines := strings.FieldsFunc(text, func(r rune) bool {
 		return r == '\r' || r == '\n'

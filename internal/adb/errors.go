@@ -13,6 +13,7 @@ var (
 	ErrNoDevice    = errors.New("没有可用的设备")
 	ErrCanceled    = errors.New("操作已取消")
 	ErrPushFailed  = errors.New("传输文件到设备失败")
+	ErrPullFailed  = errors.New("从设备拉取文件失败")
 )
 
 // installAdvice 是安装失败码到中文处理建议的映射（对应文档第 8 章）。

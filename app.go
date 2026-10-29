@@ -30,7 +30,7 @@ func NewApp() *App {
 	})
 	app.devices = services.NewDeviceService(app.server, app.emit)
 	app.installs = services.NewInstallService(app.server, app.emit)
-	app.apps = services.NewAppService(app.server)
+	app.apps = services.NewAppService(app.server, app.emit)
 	return app
 }
 

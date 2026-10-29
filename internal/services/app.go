@@ -18,14 +18,15 @@ import (
 // AppService 封装应用列表、详情与常见操作。
 type AppService struct {
 	server *adb.Server
+	emit   func(event string, data any)
 
 	mu     sync.RWMutex
 	labels map[string]string // pkg -> 已解析的显示名
 }
 
 // NewAppService 创建应用服务。
-func NewAppService(server *adb.Server) *AppService {
-	service := &AppService{server: server, labels: make(map[string]string)}
+func NewAppService(server *adb.Server, emit func(event string, data any)) *AppService {
+	service := &AppService{server: server, emit: emit, labels: make(map[string]string)}
 	service.loadLabels()
 	return service
 }
@@ -350,12 +351,18 @@ func (s *AppService) Export(ctx context.Context, serial, pkg, outDir string) ([]
 			target = filepath.Join(outDir, pkg+"-"+filepath.Base(remote))
 		}
 
-		pullRes, pullErr := s.server.Run(ctx, 120*time.Second, "-s", serial, "pull", remote, target)
+		pullErr := s.server.PullWithProgress(ctx, serial, remote, target, func(pct int) {
+			if s.emit != nil {
+				s.emit("app:progress", model.AppProgress{
+					Pkg:     pkg,
+					Stage:   "export",
+					Percent: pct,
+					Message: fmt.Sprintf("导出 %d%%", pct),
+				})
+			}
+		})
 		if pullErr != nil {
 			return localFiles, pullErr
-		}
-		if pullRes.ExitCode != 0 {
-			return localFiles, fmt.Errorf("拉取失败: %s", strings.TrimSpace(pullRes.Output()))
 		}
 		localFiles = append(localFiles, target)
 
@@ -397,8 +404,17 @@ func (s *AppService) resolveLabel(ctx context.Context, serial, pkg string) strin
 	defer os.RemoveAll(dir)
 
 	local := filepath.Join(dir, "base.apk")
-	pullRes, pullErr := s.server.Run(ctx, 120*time.Second, "-s", serial, "pull", remote, local)
-	if pullErr != nil || pullRes.ExitCode != 0 {
+	pullErr := s.server.PullWithProgress(ctx, serial, remote, local, func(pct int) {
+		if s.emit != nil {
+			s.emit("app:progress", model.AppProgress{
+				Pkg:     pkg,
+				Stage:   "label",
+				Percent: pct,
+				Message: fmt.Sprintf("读取应用信息 %d%%", pct),
+			})
+		}
+	})
+	if pullErr != nil {
 		return ""
 	}
 
