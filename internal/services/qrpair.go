@@ -63,7 +63,7 @@ func (s *DeviceService) WaitPairing(ctx context.Context, name, password string, 
 		return model.PairResult{OK: false, Message: "未能解析手机地址，请改用配对码方式"}, nil
 	}
 
-	qrLog("发现配对服务 name=%s host=%s port=%d", entry.Instance, host, entry.Port)
+	qrLog("发现配对服务 name=%s host=%s port=%d code=%s", entry.Instance, host, entry.Port, password)
 
 	res, pairErr := s.Pair(ctx, model.PairRequest{
 		Host:     host,
