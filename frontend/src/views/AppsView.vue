@@ -6,6 +6,7 @@ import {
   NDrawer,
   NDrawerContent,
   NDropdown,
+  NIcon,
   NInput,
   NPopconfirm,
   NRadioButton,
@@ -14,6 +15,7 @@ import {
   useDialog,
   useMessage,
 } from 'naive-ui'
+import { SearchOutline } from '@vicons/ionicons5'
 import {
   AppDetail as fetchAppDetail,
   ClearAppData,
@@ -69,6 +71,26 @@ const moreOptions = [
   { label: '强制停止', key: 'stop' },
   { label: '清除数据', key: 'clear' },
 ]
+
+const avatarPalette = [
+  { bg: 'var(--primary-soft)', fg: 'var(--primary-ink)' },
+  { bg: 'var(--success-soft)', fg: 'var(--success)' },
+  { bg: 'var(--warning-soft)', fg: 'var(--warning)' },
+  { bg: 'var(--danger-soft)', fg: 'var(--danger)' },
+]
+
+function avatarStyle(pkg: string) {
+  let hash = 0
+  for (let i = 0; i < pkg.length; i += 1) {
+    hash = (hash * 31 + pkg.charCodeAt(i)) >>> 0
+  }
+  return avatarPalette[hash % avatarPalette.length]
+}
+
+function avatarText(item: model.AppSummary) {
+  const base = item.label || item.package
+  return (base[0] || '?').toUpperCase()
+}
 
 const showAllPerms = ref(false)
 
@@ -228,10 +250,14 @@ onMounted(() => {
       <NInput
         v-model:value="search"
         size="small"
-        placeholder="搜索包名"
+        placeholder="搜索应用名称或包名"
         clearable
-        style="width: 220px"
-      />
+        style="width: 260px"
+      >
+        <template #prefix>
+          <NIcon :size="14"><SearchOutline /></NIcon>
+        </template>
+      </NInput>
       <NRadioGroup v-model:value="scope" size="small" @update:value="load">
         <NRadioButton value="user">第三方</NRadioButton>
         <NRadioButton value="system">系统</NRadioButton>
@@ -254,15 +280,23 @@ onMounted(() => {
         <span class="head-ops">操作</span>
       </div>
       <div class="table-body">
-        <VirtualList v-if="visibleApps.length" :items="visibleApps" :item-height="40">
+        <VirtualList v-if="visibleApps.length" :items="visibleApps" :item-height="48">
           <template #default="{ item }">
             <div class="app-row">
               <div class="app-cell">
-                <template v-if="item.label">
-                  <span class="app-label">{{ item.label }}</span>
-                  <span class="app-pkg">({{ item.package }})</span>
-                </template>
-                <code v-else>{{ item.package }}</code>
+                <div
+                  class="avatar"
+                  :style="{
+                    background: avatarStyle(item.package).bg,
+                    color: avatarStyle(item.package).fg,
+                  }"
+                >
+                  {{ avatarText(item) }}
+                </div>
+                <div class="app-info">
+                  <div class="app-name">{{ item.label || item.package }}</div>
+                  <div v-if="item.label" class="app-pkg">{{ item.package }}</div>
+                </div>
               </div>
               <div class="ops">
                 <NButton size="tiny" quaternary @click="openDetail(item.package)">详情</NButton>
@@ -429,7 +463,7 @@ onMounted(() => {
   grid-template-columns: 1fr var(--ops-col, 260px);
   gap: 12px;
   align-items: center;
-  height: 40px;
+  height: 48px;
   padding: 0 14px;
   border-bottom: 1px solid var(--border);
   font-size: 12px;
@@ -440,26 +474,46 @@ onMounted(() => {
 }
 
 .app-cell {
-  overflow: hidden;
-  white-space: nowrap;
-  text-overflow: ellipsis;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-width: 0;
 }
 
-.app-cell code {
-  color: var(--text);
-  font-size: 11px;
-}
-
-.app-label {
+.avatar {
+  display: flex;
+  flex-shrink: 0;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 28px;
+  border-radius: 8px;
   font-size: 12px;
-  font-weight: 500;
+  font-weight: 700;
+}
+
+.app-info {
+  min-width: 0;
+}
+
+.app-name {
+  overflow: hidden;
+  color: var(--text);
+  font-size: 12px;
+  font-weight: 600;
+  line-height: 1.4;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 .app-pkg {
-  margin-left: 6px;
+  overflow: hidden;
   color: var(--text-tertiary);
   font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
-  font-size: 11px;
+  font-size: 10px;
+  line-height: 1.4;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 .ops {
