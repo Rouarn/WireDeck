@@ -100,6 +100,14 @@ func FindBinary(explicit string) (string, error) {
 	return "", ErrAdbNotFound
 }
 
+// Restart 重启 adb server，用于清除异常状态（例如配对时的 protocol fault）。
+func (s *Server) Restart(ctx context.Context) error {
+	_, _ = s.Run(ctx, 5*time.Second, "kill-server")
+	time.Sleep(500 * time.Millisecond)
+	_, err := s.EnsureReady(ctx)
+	return err
+}
+
 // EnsureReady 定位 adb、启动独立 server 并探测版本，返回环境信息（幂等）。
 func (s *Server) EnsureReady(ctx context.Context) (*model.AdbEnv, error) {
 	s.mu.Lock()

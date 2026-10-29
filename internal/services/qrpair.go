@@ -5,6 +5,7 @@ import (
 	"crypto/rand"
 	"fmt"
 	"os"
+	"strings"
 	"time"
 
 	"github.com/grandcat/zeroconf"
@@ -65,12 +66,21 @@ func (s *DeviceService) WaitPairing(ctx context.Context, name, password string, 
 
 	qrLog("发现配对服务 name=%s host=%s port=%d code=%s", entry.Instance, host, entry.Port, password)
 
-	res, pairErr := s.Pair(ctx, model.PairRequest{
-		Host:     host,
-		PairPort: entry.Port,
-		Code:     password,
-	})
+	pairReq := model.PairRequest{Host: host, PairPort: entry.Port, Code: password}
+	res, pairErr := s.Pair(ctx, pairReq)
 	qrLog("pair 结果 ok=%v msg=%q raw=%q err=%v", res.OK, res.Message, res.Raw, pairErr)
+
+	// adb server 偶尔会处于半死状态，表现为 protocol fault；重启后重试一次。
+	if pairErr == nil && !res.OK && strings.Contains(res.Message, "protocol fault") {
+		qrLog("pair 协议错误，重启 adb server 后重试")
+		if restartErr := s.server.Restart(ctx); restartErr == nil {
+			res, pairErr = s.Pair(ctx, pairReq)
+			qrLog("重试 pair 结果 ok=%v msg=%q raw=%q err=%v", res.OK, res.Message, res.Raw, pairErr)
+		} else {
+			qrLog("重启 adb server 失败: %v", restartErr)
+		}
+	}
+
 	if pairErr != nil {
 		return res, pairErr
 	}
@@ -88,42 +98,43 @@ func (s *DeviceService) WaitPairing(ctx context.Context, name, password string, 
 	return model.PairResult{OK: true, Message: message, Raw: res.Raw}, nil
 }
 
-// autoConnect 在配对成功后浏览连接服务，按实例名或 IP 匹配后自动连接。
+// autoConnect 在配对成功后等待连接服务出现并连接。
+//
+// 连接服务用 adb 自己的 mdns 列表（它能列出 _adb-tls-connect._tcp）。
 func (s *DeviceService) autoConnect(ctx context.Context, host, name string) bool {
-	browseCtx, cancel := context.WithTimeout(ctx, 12*time.Second)
-	defer cancel()
+	deadline := time.Now().Add(15 * time.Second)
 
-	resolver, err := zeroconf.NewResolver(nil)
-	if err != nil {
-		return false
-	}
-
-	entries := make(chan *zeroconf.ServiceEntry, 8)
-	go func() {
-		_ = resolver.Browse(browseCtx, connectServiceType, "local.", entries)
-	}()
-
-	for {
+	for time.Now().Before(deadline) {
 		select {
-		case entry := <-entries:
-			if entry == nil || len(entry.AddrIPv4) == 0 {
-				continue
-			}
-			addr := entry.AddrIPv4[0].String()
-			if !serviceMatches(entry.Instance, name) && addr != host {
-				continue
-			}
-			qrLog("发现连接服务 name=%s host=%s port=%d", entry.Instance, addr, entry.Port)
-			if res, err := s.Connect(ctx, model.ConnectRequest{Host: addr, Port: entry.Port}); err == nil && res.OK {
-				s.RecordConnection(addr, entry.Port, name)
-				return true
-			} else {
-				qrLog("connect 失败 ok=%v msg=%q err=%v", res.OK, res.Message, err)
-			}
-		case <-browseCtx.Done():
+		case <-ctx.Done():
 			return false
+		case <-time.After(time.Second):
+		}
+
+		services, err := s.Discover(ctx)
+		if err != nil {
+			continue
+		}
+
+		for _, svc := range services {
+			if svc.Kind != "connect" {
+				continue
+			}
+			if svc.Host != host && !serviceMatches(svc.Name, name) {
+				continue
+			}
+
+			qrLog("发现连接服务 name=%s host=%s port=%d", svc.Name, svc.Host, svc.Port)
+			res, connErr := s.Connect(ctx, model.ConnectRequest{Host: svc.Host, Port: svc.Port})
+			if connErr == nil && res.OK {
+				s.RecordConnection(svc.Host, svc.Port, name)
+				return true
+			}
+			qrLog("connect 失败 ok=%v msg=%q err=%v", res.OK, res.Message, connErr)
 		}
 	}
+
+	return false
 }
 
 // browseService 浏览一个 DNS-SD 服务，直到找到实例名匹配的条目或超时。
