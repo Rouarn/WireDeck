@@ -9,8 +9,6 @@ import {
   NIcon,
   NInput,
   NPopconfirm,
-  NRadioButton,
-  NRadioGroup,
   NSpin,
   useDialog,
   useMessage,
@@ -46,6 +44,20 @@ const apps = ref<model.AppSummary[]>([])
 const loading = ref(false)
 const search = ref('')
 const scope = ref<'user' | 'system' | 'all'>('user')
+
+const scopeOptions: { label: string; value: 'user' | 'system' | 'all' }[] = [
+  { label: '第三方', value: 'user' },
+  { label: '系统', value: 'system' },
+  { label: '全部', value: 'all' },
+]
+
+function setScope(value: 'user' | 'system' | 'all') {
+  if (scope.value === value) {
+    return
+  }
+  scope.value = value
+  void load()
+}
 const showDetail = ref(false)
 const detailLoading = ref(false)
 const detail = ref<model.AppDetail | null>(null)
@@ -258,11 +270,17 @@ onMounted(() => {
           <NIcon :size="14"><SearchOutline /></NIcon>
         </template>
       </NInput>
-      <NRadioGroup v-model:value="scope" size="small" @update:value="load">
-        <NRadioButton value="user">第三方</NRadioButton>
-        <NRadioButton value="system">系统</NRadioButton>
-        <NRadioButton value="all">全部</NRadioButton>
-      </NRadioGroup>
+      <div class="segmented">
+        <button
+          v-for="item in scopeOptions"
+          :key="item.value"
+          class="seg"
+          :class="{ active: scope === item.value }"
+          @click="setScope(item.value)"
+        >
+          {{ item.label }}
+        </button>
+      </div>
       <span class="count">{{ visibleApps.length }} / {{ apps.length }}</span>
       <div class="spacer"></div>
       <NButton size="small" :loading="loading" @click="load">刷新</NButton>
@@ -418,6 +436,37 @@ onMounted(() => {
 .toolbar .count {
   color: var(--text-tertiary);
   font-size: 11px;
+}
+
+.segmented {
+  display: inline-flex;
+  overflow: hidden;
+  border: 1px solid var(--border-strong);
+  border-radius: 7px;
+  background: var(--surface);
+}
+
+.seg {
+  height: 28px;
+  padding: 0 14px;
+  border: none;
+  border-right: 1px solid var(--border);
+  background: transparent;
+  color: var(--text-secondary);
+  font-family: inherit;
+  font-size: 12px;
+  line-height: 28px;
+  cursor: pointer;
+}
+
+.seg:last-child {
+  border-right: none;
+}
+
+.seg.active {
+  background: var(--primary-soft);
+  color: var(--primary-ink);
+  font-weight: 600;
 }
 
 .spacer {
