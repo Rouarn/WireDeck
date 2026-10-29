@@ -546,3 +546,34 @@ footer {
     display: none;
   }
 }
+
+/* 3D 旋转方块 */
+.visual .cube {
+  position: absolute;
+  right: 26px;
+  bottom: 24px;
+  width: 66px;
+  height: 66px;
+  transform-style: preserve-3d;
+  animation: cubeSpin 18s linear infinite;
+  pointer-events: none;
+}
+
+.visual .cube i {
+  position: absolute;
+  inset: 0;
+  border: 1px solid rgba(255, 255, 255, 0.38);
+  background: rgba(255, 255, 255, 0.05);
+}
+
+.visual .cube i:nth-child(1) { transform: translateZ(33px); }
+.visual .cube i:nth-child(2) { transform: rotateY(180deg) translateZ(33px); }
+.visual .cube i:nth-child(3) { transform: rotateY(90deg) translateZ(33px); }
+.visual .cube i:nth-child(4) { transform: rotateY(-90deg) translateZ(33px); }
+.visual .cube i:nth-child(5) { transform: rotateX(90deg) translateZ(33px); }
+.visual .cube i:nth-child(6) { transform: rotateX(-90deg) translateZ(33px); }
+
+@keyframes cubeSpin {
+  from { transform: rotateX(-24deg) rotateY(0deg); }
+  to { transform: rotateX(-24deg) rotateY(360deg); }
+}
