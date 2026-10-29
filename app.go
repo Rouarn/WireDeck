@@ -49,6 +49,14 @@ func (a *App) startup(ctx context.Context) {
 		println(fmt.Sprintf("[drop] %d file(s) dropped", len(paths)))
 		a.emit("files:dropped", paths)
 	})
+
+	// 启动后尝试重连历史设备，避免每次都要手动连接。
+	go func() {
+		if _, err := a.EnsureAdbReady(); err != nil {
+			return
+		}
+		a.devices.ReconnectKnown(ctx)
+	}()
 }
 
 // buildMenu 构建 macOS 菜单栏。
