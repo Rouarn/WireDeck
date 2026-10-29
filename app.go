@@ -355,6 +355,14 @@ func (a *App) PullFile(serial, remote, local string) error {
 	return a.files.Pull(a.context(), serial, remote, local)
 }
 
+// ListDeviceFiles 读取设备目录内容，供文件浏览器使用。
+func (a *App) ListDeviceFiles(serial, path string) ([]model.DeviceFile, error) {
+	if _, err := a.EnsureAdbReady(); err != nil {
+		return nil, err
+	}
+	return a.files.ListDir(a.context(), serial, path)
+}
+
 // StartLogcat 启动实时日志流。pkg 非空时只采集该应用的日志。
 func (a *App) StartLogcat(serial, pkg string) (string, error) {
 	if _, err := a.EnsureAdbReady(); err != nil {

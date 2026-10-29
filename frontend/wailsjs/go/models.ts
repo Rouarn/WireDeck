@@ -162,6 +162,24 @@ export namespace model {
 	        this.lastSeen = source["lastSeen"];
 	    }
 	}
+	export class DeviceFile {
+	    name: string;
+	    path: string;
+	    isDir: boolean;
+	    size: number;
+	
+	    static createFrom(source: any = {}) {
+	        return new DeviceFile(source);
+	    }
+	
+	    constructor(source: any = {}) {
+	        if ('string' === typeof source) source = JSON.parse(source);
+	        this.name = source["name"];
+	        this.path = source["path"];
+	        this.isDir = source["isDir"];
+	        this.size = source["size"];
+	    }
+	}
 	export class HostIdentity {
 	    hostname: string;
 	    lanIP: string;

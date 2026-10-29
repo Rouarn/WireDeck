@@ -70,6 +70,10 @@ export function ListApps(arg1, arg2) {
   return window['go']['main']['App']['ListApps'](arg1, arg2);
 }
 
+export function ListDeviceFiles(arg1, arg2) {
+  return window['go']['main']['App']['ListDeviceFiles'](arg1, arg2);
+}
+
 export function ListDevices() {
   return window['go']['main']['App']['ListDevices']();
 }

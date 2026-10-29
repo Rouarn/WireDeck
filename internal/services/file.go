@@ -6,11 +6,17 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
+	"regexp"
+	"sort"
+	"strconv"
+	"strings"
 	"time"
 
 	"woyuxiaji.cn/wiredeck/internal/adb"
 	"woyuxiaji.cn/wiredeck/internal/model"
 )
+
+var datePattern = regexp.MustCompile(`^\d{4}-\d{2}-\d{2}$`)
 
 // FileService 负责截图与文件互传。
 type FileService struct {
@@ -55,6 +61,76 @@ func (s *FileService) Screenshot(ctx context.Context, serial, saveDir string) (*
 		Path:    path,
 		DataURL: "data:image/png;base64," + base64.StdEncoding.EncodeToString(data),
 	}, nil
+}
+
+// ListDir 读取设备目录，供前端文件浏览器使用。
+func (s *FileService) ListDir(ctx context.Context, serial, path string) ([]model.DeviceFile, error) {
+	if serial == "" {
+		return nil, fmt.Errorf("未选择设备")
+	}
+	if !strings.HasPrefix(path, "/") {
+		return nil, fmt.Errorf("请输入绝对路径")
+	}
+
+	res, err := s.server.Run(ctx, 15*time.Second, "-s", serial, "shell", "ls", "-la", path)
+	if err != nil {
+		return nil, err
+	}
+	if res.ExitCode != 0 {
+		return nil, fmt.Errorf("读取目录失败: %s", strings.TrimSpace(res.Output()))
+	}
+
+	base := strings.TrimSuffix(path, "/")
+	if base == "" {
+		base = "/"
+	}
+
+	files := make([]model.DeviceFile, 0, 32)
+	for _, raw := range strings.Split(res.Stdout, "\n") {
+		line := strings.TrimSpace(raw)
+		if line == "" || strings.HasPrefix(line, "total") {
+			continue
+		}
+
+		fields := strings.Fields(line)
+		if len(fields) < 8 {
+			continue
+		}
+
+		mode := fields[0]
+		// 兼容 "2024-01-01 12:00" 与 "Jan 1 12:00" 两种日期格式。
+		var name string
+		if datePattern.MatchString(fields[5]) {
+			name = strings.Join(fields[7:], " ")
+		} else if len(fields) >= 9 {
+			name = strings.Join(fields[8:], " ")
+		}
+		if name == "" || name == "." || name == ".." {
+			continue
+		}
+
+		size, _ := strconv.ParseInt(fields[4], 10, 64)
+		child := base + name
+		if base != "/" {
+			child = base + "/" + name
+		}
+
+		files = append(files, model.DeviceFile{
+			Name:  name,
+			Path:  child,
+			IsDir: strings.HasPrefix(mode, "d"),
+			Size:  size,
+		})
+	}
+
+	sort.Slice(files, func(i, j int) bool {
+		if files[i].IsDir != files[j].IsDir {
+			return files[i].IsDir
+		}
+		return strings.ToLower(files[i].Name) < strings.ToLower(files[j].Name)
+	})
+
+	return files, nil
 }
 
 // Push 将本地文件推送到设备。

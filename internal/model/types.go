@@ -165,6 +165,14 @@ type ScreenshotResult struct {
 	DataURL string `json:"dataUrl"`
 }
 
+// DeviceFile 是设备文件浏览器中的一项。
+type DeviceFile struct {
+	Name  string `json:"name"`
+	Path  string `json:"path"`
+	IsDir bool   `json:"isDir"`
+	Size  int64  `json:"size"`
+}
+
 // LogcatLine 是一行实时日志。
 type LogcatLine struct {
 	StreamID string `json:"streamId"`

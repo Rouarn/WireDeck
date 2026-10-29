@@ -36,6 +36,8 @@ export function LaunchApp(arg1:string,arg2:string):Promise<model.AppOpResult>;
 
 export function ListApps(arg1:string,arg2:string):Promise<Array<model.AppSummary>>;
 
+export function ListDeviceFiles(arg1:string,arg2:string):Promise<Array<model.DeviceFile>>;
+
 export function ListDevices():Promise<Array<model.Device>>;
 
 export function PairDevice(arg1:model.PairRequest):Promise<model.PairResult>;

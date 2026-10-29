@@ -5,6 +5,7 @@ import { CameraOutline, CloudDownloadOutline, CloudUploadOutline } from '@vicons
 import { PickDirectory, PickFile, PullFile, PushFile, Screenshot } from '../../wailsjs/go/main/App'
 import type { model } from '../../wailsjs/go/models'
 import { EventsOn } from '../../wailsjs/runtime/runtime'
+import DevicePathPicker from '../components/DevicePathPicker.vue'
 import { useDevicesStore } from '../stores/devices'
 
 interface FileProgressPayload {
@@ -28,6 +29,28 @@ const pullLocalDir = ref('')
 const pulling = ref(false)
 
 const transfer = ref({ active: false, label: '', percent: 0 })
+
+const pickerShow = ref(false)
+const pickerMode = ref<'file' | 'dir'>('dir')
+const pickerTarget = ref<'push' | 'pull'>('push')
+
+function openPicker(mode: 'file' | 'dir', target: 'push' | 'pull') {
+  if (!store.current) {
+    message.warning('请先在「设备」页选择设备')
+    return
+  }
+  pickerMode.value = mode
+  pickerTarget.value = target
+  pickerShow.value = true
+}
+
+function onPickerSelect(path: string) {
+  if (pickerTarget.value === 'push') {
+    pushRemote.value = path.endsWith('/') ? path : `${path}/`
+  } else {
+    pullRemote.value = path
+  }
+}
 
 const busy = computed(() => shooting.value || pushing.value || pulling.value)
 
@@ -171,6 +194,7 @@ onMounted(() => {
         <div class="form-row">
           <span class="form-label">目标路径</span>
           <NInput v-model:value="pushRemote" size="small" placeholder="/sdcard/Download/" class="grow" />
+          <NButton size="small" @click="openPicker('dir', 'push')">浏览</NButton>
           <NButton size="small" type="primary" :loading="pushing" :disabled="!store.current" @click="doPush">
             推送
           </NButton>
@@ -188,6 +212,7 @@ onMounted(() => {
         <div class="form-row">
           <span class="form-label">设备路径</span>
           <NInput v-model:value="pullRemote" size="small" placeholder="/sdcard/Download/example.txt" class="grow" />
+          <NButton size="small" @click="openPicker('file', 'pull')">浏览</NButton>
         </div>
         <div class="form-row">
           <span class="form-label">保存到</span>
@@ -199,6 +224,13 @@ onMounted(() => {
         </div>
       </div>
     </section>
+
+    <DevicePathPicker
+      v-model:show="pickerShow"
+      :serial="store.current?.serial || ''"
+      :mode="pickerMode"
+      @select="onPickerSelect"
+    />
   </div>
 </template>
 
