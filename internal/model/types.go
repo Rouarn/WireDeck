@@ -190,6 +190,13 @@ type QRCodeInfo struct {
 	Port     int    `json:"port"`
 }
 
+// QRPairingSession 是电脑端生成的扫码配对会话。
+type QRPairingSession struct {
+	Name     string `json:"name"`
+	Password string `json:"password"`
+	Payload  string `json:"payload"`
+}
+
 // LogcatLine 是一行实时日志。
 type LogcatLine struct {
 	StreamID string `json:"streamId"`

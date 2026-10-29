@@ -30,6 +30,10 @@ export function CopyText(arg1) {
   return window['go']['main']['App']['CopyText'](arg1);
 }
 
+export function CreatePairingQR() {
+  return window['go']['main']['App']['CreatePairingQR']();
+}
+
 export function DisconnectDevice(arg1) {
   return window['go']['main']['App']['DisconnectDevice'](arg1);
 }
@@ -132,4 +136,8 @@ export function StopLogcat(arg1) {
 
 export function UninstallApp(arg1, arg2, arg3) {
   return window['go']['main']['App']['UninstallApp'](arg1, arg2, arg3);
+}
+
+export function WaitQRPairing(arg1, arg2) {
+  return window['go']['main']['App']['WaitQRPairing'](arg1, arg2);
 }

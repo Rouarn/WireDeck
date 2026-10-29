@@ -16,6 +16,8 @@ export function ConnectDevice(arg1:model.ConnectRequest):Promise<model.ConnectRe
 
 export function CopyText(arg1:string):Promise<void>;
 
+export function CreatePairingQR():Promise<model.QRPairingSession>;
+
 export function DisconnectDevice(arg1:string):Promise<void>;
 
 export function DiscoverServices():Promise<Array<model.MDNSService>>;
@@ -67,3 +69,5 @@ export function StartLogcat(arg1:string,arg2:string):Promise<string>;
 export function StopLogcat(arg1:string):Promise<void>;
 
 export function UninstallApp(arg1:string,arg2:string,arg3:boolean):Promise<model.AppOpResult>;
+
+export function WaitQRPairing(arg1:string,arg2:string):Promise<model.PairResult>;

@@ -197,6 +197,22 @@ func (a *App) PairByQRCode(content string) (model.PairResult, error) {
 	return a.devices.PairByQRCode(a.context(), content)
 }
 
+// CreatePairingQR 生成扫码配对会话（电脑显示二维码，手机扫描）。
+func (a *App) CreatePairingQR() (model.QRPairingSession, error) {
+	if _, err := a.EnsureAdbReady(); err != nil {
+		return model.QRPairingSession{}, err
+	}
+	return a.devices.CreatePairingQR()
+}
+
+// WaitQRPairing 等待手机扫描二维码，并通过 mDNS 发现后完成配对。
+func (a *App) WaitQRPairing(name, password string) (model.PairResult, error) {
+	if _, err := a.EnsureAdbReady(); err != nil {
+		return model.PairResult{}, err
+	}
+	return a.devices.WaitPairing(a.context(), name, password, 120*time.Second)
+}
+
 // ConnectDevice 连接无线调试设备（adb connect）。
 func (a *App) ConnectDevice(req model.ConnectRequest) (model.ConnectResult, error) {
 	if _, err := a.EnsureAdbReady(); err != nil {

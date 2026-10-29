@@ -316,6 +316,22 @@ export namespace model {
 	        this.raw = source["raw"];
 	    }
 	}
+	export class QRPairingSession {
+	    name: string;
+	    password: string;
+	    payload: string;
+	
+	    static createFrom(source: any = {}) {
+	        return new QRPairingSession(source);
+	    }
+	
+	    constructor(source: any = {}) {
+	        if ('string' === typeof source) source = JSON.parse(source);
+	        this.name = source["name"];
+	        this.password = source["password"];
+	        this.payload = source["payload"];
+	    }
+	}
 	export class ScreenshotResult {
 	    path: string;
 	    dataUrl: string;
