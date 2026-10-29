@@ -6,6 +6,7 @@ import InstallView from '../views/InstallView.vue'
 import LogsView from '../views/LogsView.vue'
 import PlaceholderView from '../views/PlaceholderView.vue'
 import SettingsView from '../views/SettingsView.vue'
+import ShellView from '../views/ShellView.vue'
 
 // Wails 以 file:// 加载页面，必须使用 hash 路由。
 const router = createRouter({
@@ -17,6 +18,7 @@ const router = createRouter({
     { path: '/apps', component: AppsView, meta: { title: '应用' } },
     { path: '/files', component: FilesView, meta: { title: '文件' } },
     { path: '/logs', component: LogsView, meta: { title: '日志' } },
+    { path: '/shell', component: ShellView, meta: { title: 'Shell' } },
     { path: '/settings', component: SettingsView, meta: { title: '设置' } },
   ],
 })

@@ -26,6 +26,7 @@ import {
 } from '../../wailsjs/go/main/App'
 import type { model } from '../../wailsjs/go/models'
 import { EventsOn } from '../../wailsjs/runtime/runtime'
+import VirtualList from '../components/VirtualList.vue'
 import { useDevicesStore } from '../stores/devices'
 
 interface AppProgressPayload {
@@ -248,43 +249,41 @@ onMounted(() => {
     </div>
 
     <section class="panel">
-      <NSpin :show="loading">
-        <table v-if="visibleApps.length" class="table">
-          <thead>
-            <tr>
-              <th>包名</th>
-              <th class="ops-col">操作</th>
-            </tr>
-          </thead>
-          <tbody>
-            <tr v-for="app in visibleApps" :key="app.package">
-              <td>
-                <template v-if="app.label">
-                  <span class="app-label">{{ app.label }}</span>
-                  <span class="app-pkg">({{ app.package }})</span>
+      <div class="table-head">
+        <span>应用</span>
+        <span>操作</span>
+      </div>
+      <div class="table-body">
+        <VirtualList v-if="visibleApps.length" :items="visibleApps" :item-height="40">
+          <template #default="{ item }">
+            <div class="app-row">
+              <div class="app-cell">
+                <template v-if="item.label">
+                  <span class="app-label">{{ item.label }}</span>
+                  <span class="app-pkg">({{ item.package }})</span>
                 </template>
-                <code v-else>{{ app.package }}</code>
-              </td>
-              <td class="ops">
-                <NButton size="tiny" quaternary @click="openDetail(app.package)">详情</NButton>
-                <NButton size="tiny" quaternary @click="exportApp(app.package)">导出</NButton>
-                <NPopconfirm @positive-click="uninstall(app.package)">
+                <code v-else>{{ item.package }}</code>
+              </div>
+              <div class="ops">
+                <NButton size="tiny" quaternary @click="openDetail(item.package)">详情</NButton>
+                <NButton size="tiny" quaternary @click="exportApp(item.package)">导出</NButton>
+                <NPopconfirm @positive-click="uninstall(item.package)">
                   <template #trigger>
                     <NButton size="tiny" quaternary type="error">卸载</NButton>
                   </template>
-                  确认卸载 {{ app.package }}？此操作不可撤销。
+                  确认卸载 {{ item.package }}？此操作不可撤销。
                 </NPopconfirm>
-                <NDropdown :options="moreOptions" @select="(key) => onMore(String(key), app.package)">
+                <NDropdown :options="moreOptions" @select="(key) => onMore(String(key), item.package)">
                   <NButton size="tiny" quaternary>更多</NButton>
                 </NDropdown>
-              </td>
-            </tr>
-          </tbody>
-        </table>
+              </div>
+            </div>
+          </template>
+        </VirtualList>
         <div v-else class="empty">
           {{ store.current ? '没有匹配的应用' : '请先选择设备' }}
         </div>
-      </NSpin>
+      </div>
     </section>
 
     <NDrawer v-model:show="showDetail" :width="600">
@@ -367,6 +366,7 @@ onMounted(() => {
 .apps {
   display: flex;
   flex-direction: column;
+  height: calc(100vh - 96px);
 }
 
 .alert {
@@ -390,48 +390,57 @@ onMounted(() => {
 }
 
 .panel {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  min-height: 0;
+  overflow: hidden;
   border: 1px solid var(--border);
   border-radius: var(--radius);
   background: var(--surface);
   box-shadow: var(--shadow-sm);
-  overflow: hidden;
 }
 
-.table {
-  width: 100%;
-  border-collapse: collapse;
-  table-layout: fixed;
-}
-
-.table th {
+.table-head {
+  display: grid;
+  flex: 0 0 auto;
+  grid-template-columns: 1fr 300px;
+  gap: 12px;
   padding: 8px 14px;
   border-bottom: 1px solid var(--border);
   color: var(--text-tertiary);
   font-size: 10px;
   font-weight: 500;
-  text-align: left;
   text-transform: uppercase;
 }
 
-.table th.ops-col {
-  width: 300px;
+.table-body {
+  flex: 1;
+  min-height: 0;
 }
 
-.table td {
-  padding: 8px 14px;
+.app-row {
+  display: grid;
+  grid-template-columns: 1fr 300px;
+  gap: 12px;
+  align-items: center;
+  height: 40px;
+  padding: 0 14px;
   border-bottom: 1px solid var(--border);
   font-size: 12px;
 }
 
-.table tbody tr:hover {
+.app-row:hover {
   background: var(--surface-inset);
 }
 
-.table tr:last-child td {
-  border-bottom: none;
+.app-cell {
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
 }
 
-.table code {
+.app-cell code {
   color: var(--text);
   font-size: 11px;
 }

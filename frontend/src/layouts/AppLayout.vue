@@ -4,11 +4,12 @@ import { RouterLink, RouterView, useRoute } from 'vue-router'
 import { NIcon } from 'naive-ui'
 import {
   CloudDownloadOutline,
+  CodeSlashOutline,
+  DocumentTextOutline,
   FolderOutline,
   GridOutline,
   PhonePortraitOutline,
   SettingsOutline,
-  TerminalOutline,
 } from '@vicons/ionicons5'
 import { EventsOn } from '../../wailsjs/runtime/runtime'
 import type { model } from '../../wailsjs/go/models'
@@ -22,7 +23,8 @@ const nav = [
   { to: '/install', label: '安装台', icon: CloudDownloadOutline, badge: false },
   { to: '/apps', label: '应用', icon: GridOutline, badge: false },
   { to: '/files', label: '文件', icon: FolderOutline, badge: false },
-  { to: '/logs', label: '日志', icon: TerminalOutline, badge: false },
+  { to: '/logs', label: '日志', icon: DocumentTextOutline, badge: false },
+  { to: '/shell', label: 'Shell', icon: CodeSlashOutline, badge: false },
   { to: '/settings', label: '设置', icon: SettingsOutline, badge: false },
 ]
 

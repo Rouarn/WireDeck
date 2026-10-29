@@ -1,10 +1,11 @@
 <script setup lang="ts">
-import { computed, nextTick, onBeforeUnmount, onMounted, ref } from 'vue'
-import { NButton, NIcon, NInput, NRadioButton, NRadioGroup, NSelect, NSpin, useMessage } from 'naive-ui'
-import { PlayOutline, StopOutline, TerminalOutline } from '@vicons/ionicons5'
-import { CopyText, ExecShell, ListApps, StartLogcat, StopLogcat } from '../../wailsjs/go/main/App'
+import { computed, onBeforeUnmount, onMounted, ref, watch } from 'vue'
+import { NButton, NIcon, NInput, NSelect, useMessage } from 'naive-ui'
+import { PlayOutline, StopOutline } from '@vicons/ionicons5'
+import { CopyText, ListApps, StartLogcat, StopLogcat } from '../../wailsjs/go/main/App'
 import type { model } from '../../wailsjs/go/models'
 import { EventsOn } from '../../wailsjs/runtime/runtime'
+import VirtualList from '../components/VirtualList.vue'
 import { useDevicesStore } from '../stores/devices'
 
 interface LogcatBatchPayload {
@@ -20,20 +21,19 @@ interface LogLine {
 const store = useDevicesStore()
 const message = useMessage()
 
-const mode = ref<'logcat' | 'shell'>('logcat')
-
 const running = ref(false)
 const streamId = ref('')
 const lines = ref<LogLine[]>([])
 const level = ref('WA')
 const keyword = ref('')
 const paused = ref(false)
-const logBox = ref<HTMLElement | null>(null)
 
 const apps = ref<model.AppSummary[]>([])
 const selectedPkg = ref('')
 const crashActive = ref(false)
 const crashBuffer = ref<string[]>([])
+
+const listRef = ref<{ scrollToBottom: () => void } | null>(null)
 
 const appOptions = computed(() => [
   { label: '全部应用', value: '' },
@@ -73,24 +73,6 @@ function parseLine(raw: string): LogLine {
   return { level: match ? match[1] : '?', text: raw }
 }
 
-function onBatch(p: LogcatBatchPayload) {
-  if (!running.value || p.streamId !== streamId.value) {
-    return
-  }
-  if (paused.value) {
-    return
-  }
-
-  for (const raw of p.lines) {
-    lines.value.push(parseLine(raw))
-    trackCrash(raw)
-  }
-  if (lines.value.length > 1000) {
-    lines.value.splice(0, lines.value.length - 1000)
-  }
-  scheduleScroll()
-}
-
 function trackCrash(raw: string) {
   if (raw.includes('FATAL EXCEPTION') || raw.includes('ANR in')) {
     crashActive.value = true
@@ -102,10 +84,29 @@ function trackCrash(raw: string) {
   }
 }
 
-function dismissCrash() {
-  crashActive.value = false
-  crashBuffer.value = []
+function onBatch(p: LogcatBatchPayload) {
+  if (!running.value || p.streamId !== streamId.value || paused.value) {
+    return
+  }
+
+  for (const raw of p.lines) {
+    lines.value.push(parseLine(raw))
+    trackCrash(raw)
+  }
+  if (lines.value.length > 2000) {
+    lines.value.splice(0, lines.value.length - 2000)
+  }
 }
+
+// 新日志到达后贴到底部
+watch(
+  () => visibleLines.value.length,
+  () => {
+    if (!paused.value) {
+      listRef.value?.scrollToBottom()
+    }
+  },
+)
 
 async function copyCrash() {
   try {
@@ -114,6 +115,11 @@ async function copyCrash() {
   } catch (e) {
     message.error(e instanceof Error ? e.message : String(e))
   }
+}
+
+function dismissCrash() {
+  crashActive.value = false
+  crashBuffer.value = []
 }
 
 async function loadApps() {
@@ -128,26 +134,6 @@ async function loadApps() {
   }
 }
 
-let scrollQueued = false
-
-function scheduleScroll() {
-  if (scrollQueued) {
-    return
-  }
-  scrollQueued = true
-  requestAnimationFrame(() => {
-    scrollQueued = false
-    void scrollToBottom()
-  })
-}
-
-async function scrollToBottom() {
-  await nextTick()
-  if (logBox.value) {
-    logBox.value.scrollTop = logBox.value.scrollHeight
-  }
-}
-
 async function startLog() {
   if (!store.current) {
     message.warning('请先在「设备」页选择设备')
@@ -158,6 +144,8 @@ async function startLog() {
   }
 
   lines.value = []
+  crashActive.value = false
+  crashBuffer.value = []
   try {
     streamId.value = await StartLogcat(store.current.serial, selectedPkg.value || '')
     running.value = true
@@ -176,43 +164,8 @@ async function stopLog() {
 
 function clearLog() {
   lines.value = []
-}
-
-// Shell
-const command = ref('')
-const shellOutput = ref('')
-const shellBusy = ref(false)
-const history = ref<string[]>([])
-
-async function runShell() {
-  if (!store.current) {
-    message.warning('请先在「设备」页选择设备')
-    return
-  }
-  const cmd = command.value.trim()
-  if (!cmd) {
-    return
-  }
-
-  shellBusy.value = true
-  try {
-    const result = await ExecShell(store.current.serial, cmd)
-    const parts = [`$ ${cmd}`]
-    if (result.stdout) {
-      parts.push(result.stdout.trimEnd())
-    }
-    if (result.stderr) {
-      parts.push(`[stderr]\n${result.stderr.trimEnd()}`)
-    }
-    parts.push(`[exit ${result.exitCode}]`)
-    shellOutput.value = parts.join('\n')
-    history.value.unshift(cmd)
-    history.value = history.value.slice(0, 20)
-  } catch (e) {
-    shellOutput.value = `$ ${cmd}\n${e instanceof Error ? e.message : String(e)}`
-  } finally {
-    shellBusy.value = false
-  }
+  crashActive.value = false
+  crashBuffer.value = []
 }
 
 let unlisten: (() => void) | null = null
@@ -223,7 +176,6 @@ onMounted(() => {
 })
 
 onBeforeUnmount(() => {
-  // 离开页面时必须停止流并注销监听，否则事件会持续涌入导致界面卡死。
   if (streamId.value) {
     void StopLogcat(streamId.value)
   }
@@ -237,82 +189,52 @@ onBeforeUnmount(() => {
 <template>
   <div class="logs">
     <div class="toolbar">
-      <NRadioGroup v-model:value="mode" size="small">
-        <NRadioButton value="logcat">实时日志</NRadioButton>
-        <NRadioButton value="shell">Shell</NRadioButton>
-      </NRadioGroup>
-      <span class="count" v-if="mode === 'logcat'">{{ visibleLines.length }} / {{ lines.length }} 行</span>
+      <span class="count">{{ visibleLines.length }} / {{ lines.length }} 行</span>
       <div class="spacer"></div>
-      <template v-if="mode === 'logcat'">
-        <NButton size="small" type="primary" :disabled="running || !store.current" @click="startLog">
-          <template #icon><NIcon><PlayOutline /></NIcon></template>
-          开始
-        </NButton>
-        <NButton size="small" :disabled="!running" @click="stopLog">
-          <template #icon><NIcon><StopOutline /></NIcon></template>
-          停止
-        </NButton>
-        <NButton size="small" quaternary @click="paused = !paused">{{ paused ? '继续' : '暂停' }}</NButton>
-        <NButton size="small" quaternary @click="clearLog">清空</NButton>
-      </template>
+      <NButton size="small" type="primary" :disabled="running || !store.current" @click="startLog">
+        <template #icon><NIcon><PlayOutline /></NIcon></template>
+        开始
+      </NButton>
+      <NButton size="small" :disabled="!running" @click="stopLog">
+        <template #icon><NIcon><StopOutline /></NIcon></template>
+        停止
+      </NButton>
+      <NButton size="small" quaternary @click="paused = !paused">{{ paused ? '继续' : '暂停' }}</NButton>
+      <NButton size="small" quaternary @click="clearLog">清空</NButton>
     </div>
 
-    <template v-if="mode === 'logcat'">
-      <div class="filters">
-        <NSelect
-          v-model:value="selectedPkg"
-          size="small"
-          filterable
-          clearable
-          placeholder="全部应用"
-          :options="appOptions"
-          style="width: 240px"
-        />
-        <NSelect v-model:value="level" size="small" :options="levelOptions" style="width: 140px" />
-        <NInput v-model:value="keyword" size="small" clearable placeholder="关键字过滤" style="width: 200px" />
-        <span class="hint">最多保留最近 1000 行</span>
-      </div>
+    <div class="filters">
+      <NSelect
+        v-model:value="selectedPkg"
+        size="small"
+        filterable
+        clearable
+        placeholder="全部应用"
+        :options="appOptions"
+        style="width: 240px"
+      />
+      <NSelect v-model:value="level" size="small" :options="levelOptions" style="width: 140px" />
+      <NInput v-model:value="keyword" size="small" clearable placeholder="关键字过滤" style="width: 200px" />
+      <span class="hint">最多保留最近 2000 行 · 虚拟滚动</span>
+    </div>
 
-      <div v-if="crashActive" class="crash-bar">
-        <span>检测到崩溃 / ANR，已收集 {{ crashBuffer.length }} 行日志</span>
-        <div class="spacer"></div>
-        <NButton size="tiny" type="primary" @click="copyCrash">复制日志</NButton>
-        <NButton size="tiny" quaternary @click="dismissCrash">忽略</NButton>
-      </div>
+    <div v-if="crashActive" class="crash-bar">
+      <span>检测到崩溃 / ANR，已收集 {{ crashBuffer.length }} 行日志</span>
+      <div class="spacer"></div>
+      <NButton size="tiny" type="primary" @click="copyCrash">复制日志</NButton>
+      <NButton size="tiny" quaternary @click="dismissCrash">忽略</NButton>
+    </div>
 
-      <div ref="logBox" class="log-box">
-        <div v-if="!visibleLines.length" class="log-empty">
-          {{ running ? '等待日志…' : '点击「开始」读取实时日志' }}
-        </div>
-        <div
-          v-for="(line, index) in visibleLines"
-          :key="index"
-          class="log-line"
-          :class="`level-${line.level}`"
-        >{{ line.text }}</div>
+    <div class="log-box">
+      <VirtualList ref="listRef" :items="visibleLines" :item-height="19">
+        <template #default="{ item }">
+          <div class="log-line" :class="`level-${item.level}`" :title="item.text">{{ item.text }}</div>
+        </template>
+      </VirtualList>
+      <div v-if="!visibleLines.length" class="log-empty">
+        {{ running ? '等待日志…' : '点击「开始」读取实时日志' }}
       </div>
-    </template>
-
-    <template v-else>
-      <div class="shell">
-        <div class="shell-input">
-          <NIcon :size="16"><TerminalOutline /></NIcon>
-          <span class="prompt">$</span>
-          <NInput
-            v-model:value="command"
-            size="small"
-            placeholder="输入 adb shell 命令，例如 pm list packages -3"
-            @keyup.enter="runShell"
-          />
-          <NButton size="small" type="primary" :loading="shellBusy" @click="runShell">执行</NButton>
-        </div>
-        <pre class="shell-output">{{ shellOutput || '命令输出会显示在这里' }}</pre>
-        <div v-if="history.length" class="history">
-          <span class="hint">最近命令：</span>
-          <button v-for="item in history" :key="item" class="history-chip" @click="command = item">{{ item }}</button>
-        </div>
-      </div>
-    </template>
+    </div>
   </div>
 </template>
 
@@ -320,7 +242,7 @@ onBeforeUnmount(() => {
 .logs {
   display: flex;
   flex-direction: column;
-  height: 100%;
+  height: calc(100vh - 96px);
 }
 
 .toolbar {
@@ -365,30 +287,25 @@ onBeforeUnmount(() => {
 }
 
 .log-box {
+  position: relative;
   flex: 1;
-  min-height: 420px;
-  max-height: calc(100vh - 260px);
-  overflow: auto;
-  padding: 10px 12px;
+  min-height: 0;
+  overflow: hidden;
   border: 1px solid var(--border);
   border-radius: var(--radius);
   background: var(--surface-inset);
 }
 
-.log-empty {
-  padding: 40px 0;
-  color: var(--text-tertiary);
-  font-size: 12px;
-  text-align: center;
-}
-
 .log-line {
+  height: 19px;
+  padding: 0 12px;
+  overflow: hidden;
+  color: var(--text-secondary);
   font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
   font-size: 11px;
-  line-height: 1.7;
-  white-space: pre-wrap;
-  word-break: break-all;
-  color: var(--text-secondary);
+  line-height: 19px;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 .level-V {
@@ -412,62 +329,12 @@ onBeforeUnmount(() => {
   color: var(--danger);
 }
 
-.shell {
-  display: flex;
-  flex-direction: column;
-  gap: 10px;
-}
-
-.shell-input {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-}
-
-.prompt {
-  color: var(--primary-ink);
-  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
-  font-size: 13px;
-  font-weight: 600;
-}
-
-.shell-output {
-  min-height: 380px;
-  max-height: calc(100vh - 300px);
-  margin: 0;
-  overflow: auto;
-  padding: 12px;
-  border: 1px solid var(--border);
-  border-radius: var(--radius);
-  background: var(--surface-inset);
-  color: var(--text);
-  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
-  font-size: 11px;
-  line-height: 1.7;
-  white-space: pre-wrap;
-  word-break: break-all;
-}
-
-.history {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: center;
-  gap: 6px;
-}
-
-.history .hint {
+.log-empty {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
   color: var(--text-tertiary);
-  font-size: 11px;
-}
-
-.history-chip {
-  padding: 3px 8px;
-  border: 1px solid var(--border);
-  border-radius: 999px;
-  background: var(--surface);
-  color: var(--text-secondary);
-  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
-  font-size: 10px;
-  cursor: pointer;
+  font-size: 12px;
 }
 </style>
