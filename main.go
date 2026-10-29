@@ -34,7 +34,8 @@ func main() {
 		MinHeight:        640,
 		BackgroundColour: &options.RGBA{R: 247, G: 248, B: 250, A: 1},
 		OnStartup:        app.startup,
-		OnShutdown: func(context.Context) {
+		OnShutdown: func(ctx context.Context) {
+			app.shutdown(ctx)
 			_ = lock.Unlock()
 		},
 		AssetServer: &assetserver.Options{Assets: assets},
