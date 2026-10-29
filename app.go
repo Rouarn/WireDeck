@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"time"
 
+	"github.com/wailsapp/wails/v2/pkg/menu"
 	"github.com/wailsapp/wails/v2/pkg/runtime"
 
 	"woyuxiaji.cn/wiredeck/internal/adb"
@@ -47,6 +48,26 @@ func (a *App) startup(ctx context.Context) {
 		println(fmt.Sprintf("[drop] %d file(s) dropped", len(paths)))
 		a.emit("files:dropped", paths)
 	})
+}
+
+// buildMenu 构建 macOS 菜单栏。
+//
+// 使用系统标准菜单角色（AppMenu / EditMenu / WindowMenu），
+// 这些菜单的文案由 macOS 按系统语言本地化，避免出现英文菜单。
+func (a *App) buildMenu() *menu.Menu {
+	m := menu.NewMenu()
+	m.Append(menu.AppMenu())
+	m.Append(menu.EditMenu())
+	m.Append(menu.WindowMenu())
+
+	help := m.AddSubmenu("帮助")
+	help.AddText("打开项目主页", nil, func(_ *menu.CallbackData) {
+		if a.ctx != nil {
+			runtime.BrowserOpenURL(a.ctx, "https://woyuxiaji.cn")
+		}
+	})
+
+	return m
 }
 
 // shutdown 由 Wails 在应用退出时调用。
