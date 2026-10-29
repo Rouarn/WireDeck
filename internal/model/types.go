@@ -171,6 +171,12 @@ type LogcatLine struct {
 	Line     string `json:"line"`
 }
 
+// LogcatBatch 是一批日志行，用于降低事件推送频率。
+type LogcatBatch struct {
+	StreamID string   `json:"streamId"`
+	Lines    []string `json:"lines"`
+}
+
 // ShellResult 是一条 shell 命令的执行结果。
 type ShellResult struct {
 	Stdout   string `json:"stdout"`

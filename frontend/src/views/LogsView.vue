@@ -1,14 +1,14 @@
 <script setup lang="ts">
-import { computed, nextTick, onMounted, ref } from 'vue'
+import { computed, nextTick, onBeforeUnmount, onMounted, ref } from 'vue'
 import { NButton, NIcon, NInput, NRadioButton, NRadioGroup, NSelect, NSpin, useMessage } from 'naive-ui'
 import { PlayOutline, StopOutline, TerminalOutline } from '@vicons/ionicons5'
 import { ExecShell, StartLogcat, StopLogcat } from '../../wailsjs/go/main/App'
 import { EventsOn } from '../../wailsjs/runtime/runtime'
 import { useDevicesStore } from '../stores/devices'
 
-interface LogcatLinePayload {
+interface LogcatBatchPayload {
   streamId: string
-  line: string
+  lines: string[]
 }
 
 interface LogLine {
@@ -56,18 +56,34 @@ function parseLine(raw: string): LogLine {
   return { level: match ? match[1] : '?', text: raw }
 }
 
-function onLine(p: LogcatLinePayload) {
+function onBatch(p: LogcatBatchPayload) {
   if (!running.value || p.streamId !== streamId.value) {
     return
   }
   if (paused.value) {
     return
   }
-  lines.value.push(parseLine(p.line))
+
+  for (const raw of p.lines) {
+    lines.value.push(parseLine(raw))
+  }
   if (lines.value.length > 1000) {
     lines.value.splice(0, lines.value.length - 1000)
   }
-  void scrollToBottom()
+  scheduleScroll()
+}
+
+let scrollQueued = false
+
+function scheduleScroll() {
+  if (scrollQueued) {
+    return
+  }
+  scrollQueued = true
+  requestAnimationFrame(() => {
+    scrollQueued = false
+    void scrollToBottom()
+  })
 }
 
 async function scrollToBottom() {
@@ -144,8 +160,21 @@ async function runShell() {
   }
 }
 
+let unlisten: (() => void) | null = null
+
 onMounted(() => {
-  EventsOn('logcat:line', (p: LogcatLinePayload) => onLine(p))
+  unlisten = EventsOn('logcat:batch', (p: LogcatBatchPayload) => onBatch(p))
+})
+
+onBeforeUnmount(() => {
+  // 离开页面时必须停止流并注销监听，否则事件会持续涌入导致界面卡死。
+  if (streamId.value) {
+    void StopLogcat(streamId.value)
+  }
+  if (unlisten) {
+    unlisten()
+    unlisten = null
+  }
 })
 </script>
 

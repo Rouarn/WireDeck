@@ -8,9 +8,15 @@ import (
 	"os/exec"
 	"strconv"
 	"sync"
+	"time"
 
 	"woyuxiaji.cn/wiredeck/internal/adb"
 	"woyuxiaji.cn/wiredeck/internal/model"
+)
+
+const (
+	logBatchInterval = 100 * time.Millisecond
+	logBatchSize     = 200
 )
 
 // LogService 负责 logcat 实时流的启动与停止。
@@ -102,16 +108,52 @@ func (s *LogService) stream(ctx context.Context, id, serial, filter string) {
 	if err := cmd.Start(); err != nil {
 		return
 	}
+	defer func() { _ = cmd.Wait() }()
 
-	scanner := bufio.NewScanner(stdout)
-	// logcat 行可能很长，默认 64KB 会截断。
-	scanner.Buffer(make([]byte, 64*1024), 1024*1024)
-
-	for scanner.Scan() {
-		if s.emit != nil {
-			s.emit("logcat:line", model.LogcatLine{StreamID: id, Line: scanner.Text()})
+	lineCh := make(chan string, 2048)
+	go func() {
+		scanner := bufio.NewScanner(stdout)
+		// logcat 行可能很长，默认 64KB 会截断。
+		scanner.Buffer(make([]byte, 64*1024), 1024*1024)
+		for scanner.Scan() {
+			select {
+			case lineCh <- scanner.Text():
+			case <-ctx.Done():
+				return
+			}
 		}
+		close(lineCh)
+	}()
+
+	ticker := time.NewTicker(logBatchInterval)
+	defer ticker.Stop()
+
+	batch := make([]string, 0, logBatchSize)
+	flush := func() {
+		if len(batch) == 0 || s.emit == nil {
+			return
+		}
+		lines := append([]string(nil), batch...)
+		s.emit("logcat:batch", model.LogcatBatch{StreamID: id, Lines: lines})
+		batch = batch[:0]
 	}
 
-	_ = cmd.Wait()
+	for {
+		select {
+		case line, ok := <-lineCh:
+			if !ok {
+				flush()
+				return
+			}
+			batch = append(batch, line)
+			if len(batch) >= logBatchSize {
+				flush()
+			}
+		case <-ticker.C:
+			flush()
+		case <-ctx.Done():
+			flush()
+			return
+		}
+	}
 }
