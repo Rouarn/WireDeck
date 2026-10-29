@@ -45,6 +45,8 @@ async function onPaired() {
 function togglePairing() {
   showPairing.value = !showPairing.value
   if (showPairing.value) {
+    // 只在需要配对时才做 mDNS 服务发现。
+    void discover()
     void nextTick(() => pairingRef.value?.scrollIntoView({ behavior: 'smooth', block: 'start' }))
   }
 }
@@ -145,9 +147,12 @@ function fillFromService(service: model.MDNSService) {
   }
 }
 
-onMounted(async () => {
-  await store.reconnect()
-  await discover()
+onMounted(() => {
+  // 设备列表由后台轮询维护，进入页面不重复重连；
+  // 启动时的自动重连已在后端 startup 中完成。
+  if (!store.list.length) {
+    void store.refresh()
+  }
 })
 </script>
 
