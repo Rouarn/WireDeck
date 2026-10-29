@@ -56,11 +56,20 @@ func ParseDevices(output string, now int64) []model.Device {
 	return devices
 }
 
-// isWirelessSerial 判断 serial 是否为无线调试地址（host:port）。
+// isWirelessSerial 判断 serial 是否为无线调试地址。
+//
+// 两种形态：
+//   - Android 10 及以下：host:port（tcpip 模式）
+//   - Android 11+：adb 以 mDNS 服务名作为 serial，形如
+//     adb-d2de5f92-1guyQc._adb-tls-connect._tcp
 func isWirelessSerial(serial string) bool {
 	if strings.HasPrefix(serial, "emulator-") {
 		return false
 	}
+	if strings.Contains(serial, "_adb-tls-connect._tcp") {
+		return true
+	}
+
 	host, port, ok := strings.Cut(serial, ":")
 	if !ok || port == "" {
 		return false

@@ -128,8 +128,12 @@ func (s *DeviceService) Snapshot() []model.Device {
 	return append([]model.Device(nil), s.devices...)
 }
 
-// Refresh 执行 `adb devices -l` 并解析。
+// Refresh 执行 `adb devices -l` 并解析，随后合并同一设备的重复连接。
 func (s *DeviceService) Refresh(ctx context.Context) ([]model.Device, error) {
+	if _, err := s.server.EnsureReady(ctx); err != nil {
+		return nil, err
+	}
+
 	res, err := s.server.Run(ctx, 8*time.Second, "devices", "-l")
 	if err != nil {
 		return nil, err
@@ -137,7 +141,98 @@ func (s *DeviceService) Refresh(ctx context.Context) ([]model.Device, error) {
 	if res.ExitCode != 0 {
 		return nil, fmt.Errorf("adb devices 执行失败: %s", strings.TrimSpace(res.Output()))
 	}
-	return adb.ParseDevices(res.Stdout, time.Now().UnixMilli()), nil
+
+	devices := adb.ParseDevices(res.Stdout, time.Now().UnixMilli())
+	return s.mergeDuplicates(ctx, devices), nil
+}
+
+// mergeDuplicates 合并同一物理设备的多条连接记录。
+//
+// adb 会把「手动 connect 的 IP:port」与「mDNS 自动连接的服务名」视为两台设备，
+// 它们指向同一台手机。这里仅在存在同型号设备时才读取 ro.serialno，避免每轮轮询都付出额外调用。
+func (s *DeviceService) mergeDuplicates(ctx context.Context, devices []model.Device) []model.Device {
+	if len(devices) < 2 {
+		return devices
+	}
+
+	groups := make(map[string][]int)
+	for i, d := range devices {
+		if d.Model == "" {
+			continue
+		}
+		groups[d.Model] = append(groups[d.Model], i)
+	}
+
+	drop := make(map[int]bool)
+	for _, indexes := range groups {
+		if len(indexes) < 2 {
+			continue
+		}
+
+		bySerial := make(map[string]int)
+		for _, i := range indexes {
+			hw := s.hardwareSerial(ctx, devices[i].Serial)
+			if hw == "" {
+				continue
+			}
+			devices[i].HwSerial = hw
+
+			prev, ok := bySerial[hw]
+			if !ok {
+				bySerial[hw] = i
+				continue
+			}
+
+			keep, remove := preferConnection(prev, i, devices)
+			bySerial[hw] = keep
+			drop[remove] = true
+		}
+	}
+
+	if len(drop) == 0 {
+		return devices
+	}
+
+	merged := make([]model.Device, 0, len(devices)-len(drop))
+	for i, d := range devices {
+		if !drop[i] {
+			merged = append(merged, d)
+		}
+	}
+	return merged
+}
+
+func (s *DeviceService) hardwareSerial(ctx context.Context, serial string) string {
+	res, err := s.server.Run(ctx, 5*time.Second, "-s", serial, "shell", "getprop", "ro.serialno")
+	if err != nil || res.ExitCode != 0 {
+		return ""
+	}
+	return strings.TrimSpace(res.Stdout)
+}
+
+// preferConnection 决定保留哪一条连接：mDNS 优先，其次 Wi-Fi，最后 USB。
+func preferConnection(a, b int, devices []model.Device) (int, int) {
+	da, db := devices[a], devices[b]
+
+	if isMDNSSerial(da.Serial) != isMDNSSerial(db.Serial) {
+		if isMDNSSerial(da.Serial) {
+			return a, b
+		}
+		return b, a
+	}
+
+	if (da.Transport == "wifi") != (db.Transport == "wifi") {
+		if da.Transport == "wifi" {
+			return a, b
+		}
+		return b, a
+	}
+
+	return a, b
+}
+
+func isMDNSSerial(serial string) bool {
+	return strings.Contains(serial, "_adb-tls-connect._tcp")
 }
 
 // Discover 执行 `adb mdns services` 并解析配对/连接服务。

@@ -55,6 +55,7 @@ export namespace model {
 	    androidVersion: string;
 	    state: string;
 	    transport: string;
+	    hwSerial: string;
 	    lastSeen: number;
 	
 	    static createFrom(source: any = {}) {
@@ -69,6 +70,7 @@ export namespace model {
 	        this.androidVersion = source["androidVersion"];
 	        this.state = source["state"];
 	        this.transport = source["transport"];
+	        this.hwSerial = source["hwSerial"];
 	        this.lastSeen = source["lastSeen"];
 	    }
 	}

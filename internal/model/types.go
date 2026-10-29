@@ -8,6 +8,7 @@ type Device struct {
 	AndroidVersion string `json:"androidVersion"`
 	State          string `json:"state"`     // device | offline | unauthorized
 	Transport      string `json:"transport"` // usb | wifi
+	HwSerial       string `json:"hwSerial"`  // ro.serialno，用于合并同一设备的多种连接
 	LastSeen       int64  `json:"lastSeen"`
 }
 

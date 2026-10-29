@@ -46,9 +46,10 @@ func TestIsWirelessSerial(t *testing.T) {
 	cases := map[string]bool{
 		"192.168.1.23:37123": true,
 		"10.0.0.5:5555":      true,
-		"R58M1234567":        false,
-		"emulator-5554":      false,
-		"localhost:5555":     false,
+		"adb-d2de5f92-1guyQc._adb-tls-connect._tcp": true,
+		"R58M1234567":    false,
+		"emulator-5554":  false,
+		"localhost:5555": false,
 	}
 	for serial, want := range cases {
 		if got := isWirelessSerial(serial); got != want {
