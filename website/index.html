@@ -1,0 +1,137 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>WireDeck — 无线 ADB 桌面控制台</title>
+    <meta
+      name="description"
+      content="在电脑上无线管理安卓手机：扫码配对、应用管理、APK 安装、文件传输、实时日志与 Shell。内置 adb，免费。"
+    />
+    <link rel="stylesheet" href="style.css" />
+    <link rel="icon" href="assets/icon.png" />
+  </head>
+  <body>
+    <header class="nav">
+      <div class="container nav-inner">
+        <a class="brand" href="./">
+          <span class="brand-mark">W</span>
+          <span>WireDeck</span>
+        </a>
+        <nav class="nav-links">
+          <a href="#features">功能</a>
+          <a href="#install">安装</a>
+          <a href="docs.html">文档</a>
+          <a href="changelog.html">更新日志</a>
+          <a href="https://github.com/Rouarn/wiredeck" target="_blank" rel="noreferrer">GitHub</a>
+        </nav>
+      </div>
+    </header>
+
+    <main>
+      <section class="hero">
+        <div class="container">
+          <span class="eyebrow">macOS · 无线 ADB</span>
+          <h1>在电脑上，掌控你的安卓手机</h1>
+          <p class="lead">
+            扫码配对即连，应用管理、APK 安装、文件传输、实时日志与 Shell，一个窗口搞定。
+          </p>
+          <div class="cta">
+            <a
+              class="btn btn-primary"
+              href="https://github.com/Rouarn/wiredeck/releases/latest/download/WireDeck-0.1.0.dmg"
+            >
+              下载 macOS 版
+            </a>
+            <a class="btn btn-ghost" href="https://github.com/Rouarn/wiredeck" target="_blank" rel="noreferrer">
+              GitHub
+            </a>
+          </div>
+          <p class="meta">v0.1.0 · Apple Silicon · 13 MB · 内置 adb，无需 Android SDK</p>
+
+          <div class="screenshot">
+            <img class="light" src="assets/devices.png" alt="WireDeck 设备页" />
+            <img class="dark" src="assets/devices-dark.png" alt="WireDeck 设备页（深色）" />
+          </div>
+        </div>
+      </section>
+
+      <section id="features">
+        <div class="container">
+          <h2 class="section-title">一个工具，覆盖日常调试</h2>
+          <p class="section-sub">不用记 adb 命令，也不用装 Android Studio。</p>
+          <div class="grid">
+            <div class="card">
+              <div class="card-icon">📶</div>
+              <h3>无线连接</h3>
+              <p>扫码配对、配对码配对，启动时自动重连上次的设备。</p>
+            </div>
+            <div class="card">
+              <div class="card-icon">📦</div>
+              <h3>安装 APK</h3>
+              <p>拖放安装包即可推送并安装，实时进度，支持取消。</p>
+            </div>
+            <div class="card">
+              <div class="card-icon">🧩</div>
+              <h3>应用管理</h3>
+              <p>查看已安装应用、详情与权限，卸载、启动、停止、清除数据、导出。</p>
+            </div>
+            <div class="card">
+              <div class="card-icon">📁</div>
+              <h3>文件传输</h3>
+              <p>截图保存到电脑，推送与拉取文件，可直接浏览手机目录。</p>
+            </div>
+            <div class="card">
+              <div class="card-icon">📋</div>
+              <h3>实时日志</h3>
+              <p>按应用过滤 logcat，自动识别崩溃与 ANR，一键复制。</p>
+            </div>
+            <div class="card">
+              <div class="card-icon">⌨️</div>
+              <h3>Shell 控制台</h3>
+              <p>常用命令快捷入口，输出清晰，支持复制与历史。</p>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section id="install">
+        <div class="container">
+          <h2 class="section-title">三步开始使用</h2>
+          <p class="section-sub">首次打开需要手动放行（应用未经过 Apple 公证）。</p>
+          <div class="steps">
+            <div class="step">
+              <span class="step-no">1</span>
+              <h3>下载并安装</h3>
+              <p>打开 DMG，把 WireDeck 拖进「应用程序」文件夹。</p>
+            </div>
+            <div class="step">
+              <span class="step-no">2</span>
+              <h3>首次打开</h3>
+              <p>右键 WireDeck → 打开。若被拦截，到「系统设置 → 隐私与安全性」点「仍要打开」。</p>
+            </div>
+            <div class="step">
+              <span class="step-no">3</span>
+              <h3>连接手机</h3>
+              <p>手机打开无线调试，应用里点「扫码配对」，对准屏幕上的二维码。</p>
+            </div>
+          </div>
+          <div class="note">
+            手机需要 Android 11 及以上，并与电脑连接同一个 Wi-Fi。应用已内置 adb，无需额外安装。
+          </div>
+        </div>
+      </section>
+    </main>
+
+    <footer>
+      <div class="container footer-inner">
+        <span>© 2026 WireDeck · woyuxiaji.cn</span>
+        <span>
+          <a href="https://github.com/Rouarn/wiredeck">GitHub</a> ·
+          <a href="docs.html">文档</a> ·
+          <a href="changelog.html">更新日志</a>
+        </span>
+      </div>
+    </footer>
+  </body>
+</html>
