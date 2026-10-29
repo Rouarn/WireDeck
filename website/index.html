@@ -12,126 +12,180 @@
     <link rel="icon" href="assets/icon.png" />
   </head>
   <body>
+    <div class="announce">
+      WireDeck v0.1.0 已发布 · <a href="changelog.html">查看更新日志 →</a>
+    </div>
+
     <header class="nav">
-      <div class="container nav-inner">
-        <a class="brand" href="./">
-          <span class="brand-mark">W</span>
-          <span>WireDeck</span>
-        </a>
-        <nav class="nav-links">
-          <a href="#features">功能</a>
-          <a href="#install">安装</a>
-          <a href="docs.html">文档</a>
-          <a href="changelog.html">更新日志</a>
-          <a href="https://github.com/Rouarn/wiredeck" target="_blank" rel="noreferrer">GitHub</a>
-        </nav>
+      <a class="brand" href="./">
+        <span class="brand-mark">W</span>
+        <span>WireDeck</span>
+      </a>
+      <nav class="nav-links">
+        <a href="#features">功能</a>
+        <a href="docs.html">文档</a>
+        <a href="changelog.html">更新日志</a>
+        <a href="https://github.com/Rouarn/wiredeck" target="_blank" rel="noreferrer">GitHub</a>
+      </nav>
+      <div class="nav-right">
+        <span class="ver">v0.1.0</span>
+        <a href="https://github.com/Rouarn/wiredeck/releases/latest/download/WireDeck-0.1.0.dmg">下载</a>
       </div>
     </header>
 
-    <main>
+    <main class="shell">
       <section class="hero">
-        <div class="container hero-inner">
-          <div class="hero-copy">
-            <span class="eyebrow">macOS · 无线 ADB</span>
-            <h1>在电脑上，掌控你的安卓手机</h1>
-            <p class="lead">
-              扫码配对即连，应用管理、APK 安装、文件传输、实时日志与 Shell，一个窗口搞定。
-            </p>
-            <div class="cta">
-              <a
-                class="btn btn-primary"
-                href="https://github.com/Rouarn/wiredeck/releases/latest/download/WireDeck-0.1.0.dmg"
-              >
-                下载 macOS 版
-              </a>
-              <a class="btn btn-ghost" href="https://github.com/Rouarn/wiredeck" target="_blank" rel="noreferrer">
-                GitHub
-              </a>
-            </div>
-            <p class="meta">v0.1.0 · Apple Silicon · 13 MB · 内置 adb，无需 Android SDK</p>
+        <div class="hero-copy">
+          <span class="eyebrow">macOS · 无线 ADB</span>
+          <h1>在电脑上<br />掌控你的手机</h1>
+          <p class="lead">
+            WireDeck 把无线调试、应用管理、APK 安装、文件传输、日志与 Shell
+            收进一个窗口，不用记 adb 命令。
+          </p>
+          <div class="cta">
+            <a
+              class="btn btn-primary"
+              href="https://github.com/Rouarn/wiredeck/releases/latest/download/WireDeck-0.1.0.dmg"
+            >
+              下载 macOS 版
+            </a>
+            <a class="btn btn-ghost" href="https://github.com/Rouarn/wiredeck" target="_blank" rel="noreferrer">
+              在 GitHub 查看
+            </a>
           </div>
-
-          <div class="hero-visual">
-            <canvas id="hero-canvas"></canvas>
-          </div>
+          <p class="meta">v0.1.0 · Apple Silicon · 13 MB · 内置 adb</p>
         </div>
 
-        <div class="container">
-          <div class="screenshot">
-            <img src="assets/devices-dark.png" alt="WireDeck 设备页" />
-          </div>
+        <div class="hero-visual">
+          <canvas id="hero-canvas"></canvas>
         </div>
-      </section>
 
-      <section id="features">
-        <div class="container">
-          <h2 class="section-title">一个工具，覆盖日常调试</h2>
-          <p class="section-sub">不用记 adb 命令，也不用装 Android Studio。</p>
-          <div class="grid">
-            <div class="card">
-              <div class="card-icon">📶</div>
-              <h3>无线连接</h3>
-              <p>扫码配对、配对码配对，启动时自动重连上次的设备。</p>
-            </div>
-            <div class="card">
-              <div class="card-icon">📦</div>
-              <h3>安装 APK</h3>
-              <p>拖放安装包即可推送并安装，实时进度，支持取消。</p>
-            </div>
-            <div class="card">
-              <div class="card-icon">🧩</div>
-              <h3>应用管理</h3>
-              <p>查看已安装应用、详情与权限，卸载、启动、停止、清除数据、导出。</p>
-            </div>
-            <div class="card">
-              <div class="card-icon">📁</div>
-              <h3>文件传输</h3>
-              <p>截图保存到电脑，推送与拉取文件，可直接浏览手机目录。</p>
-            </div>
-            <div class="card">
-              <div class="card-icon">📋</div>
-              <h3>实时日志</h3>
-              <p>按应用过滤 logcat，自动识别崩溃与 ANR，一键复制。</p>
-            </div>
-            <div class="card">
-              <div class="card-icon">⌨️</div>
-              <h3>Shell 控制台</h3>
-              <p>常用命令快捷入口，输出清晰，支持复制与历史。</p>
-            </div>
+        <div class="hero-term">
+          <div class="term-tabs">
+            <span class="active">快速开始</span>
+            <span>扫码配对</span>
+            <span>配对码</span>
+            <span>USB</span>
           </div>
+          <pre class="term">$ open WireDeck.app
+$ 设备 → 添加设备 → 扫码配对
+$ 手机扫描二维码 …… <span class="g">✓ 已连接 Mi 10</span></pre>
         </div>
       </section>
 
-      <section id="install">
-        <div class="container">
-          <h2 class="section-title">三步开始使用</h2>
-          <p class="section-sub">首次打开需要手动放行（应用未经过 Apple 公证）。</p>
-          <div class="steps">
-            <div class="step">
-              <span class="step-no">1</span>
-              <h3>下载并安装</h3>
-              <p>打开 DMG，把 WireDeck 拖进「应用程序」文件夹。</p>
-            </div>
-            <div class="step">
-              <span class="step-no">2</span>
-              <h3>首次打开</h3>
-              <p>右键 WireDeck → 打开。若被拦截，到「系统设置 → 隐私与安全性」点「仍要打开」。</p>
-            </div>
-            <div class="step">
-              <span class="step-no">3</span>
-              <h3>连接手机</h3>
-              <p>手机打开无线调试，应用里点「扫码配对」，对准屏幕上的二维码。</p>
-            </div>
-          </div>
-          <div class="note">
-            手机需要 Android 11 及以上，并与电脑连接同一个 Wi-Fi。应用已内置 adb，无需额外安装。
-          </div>
+      <section class="trust">
+        <p>适用于这些日常场景</p>
+        <div class="trust-row">
+          <span>日常调试</span>
+          <span>安装测试包</span>
+          <span>截图传文件</span>
+          <span>看崩溃日志</span>
+          <span>批量管理</span>
+          <span>无线调试</span>
         </div>
       </section>
+
+      <section class="headline">
+        <h2>重新定义手机调试体验</h2>
+        <p>WireDeck 让安卓调试不再依赖命令行。</p>
+      </section>
+
+      <section class="features" id="features">
+        <article class="feature">
+          <h3>扫码配对，一步连上</h3>
+          <p>电脑显示二维码，手机扫一下即完成配对与连接；下次启动自动重连。</p>
+          <div class="visual">
+            <div class="window">
+              <div class="window-bar"><i></i><i></i><i></i></div>
+              <pre>发现配对服务 adb-7dkbra
+pair …… <span class="ok">配对成功</span>
+发现连接服务 192.168.31.54:41257
+<span class="ok">✓ 已连接 Mi 10</span></pre>
+            </div>
+          </div>
+        </article>
+
+        <article class="feature">
+          <h3>拖放安装 APK</h3>
+          <p>把安装包拖进窗口即可推送并安装，显示真实进度，支持随时取消。</p>
+          <div class="visual">
+            <div class="window">
+              <div class="window-bar"><i></i><i></i><i></i></div>
+              <pre>push app-debug.apk → /data/local/tmp
+[██████████████░░░░] <span class="acc">78%</span>
+pm install …… <span class="ok">Success</span></pre>
+            </div>
+          </div>
+        </article>
+
+        <article class="feature">
+          <h3>应用管理</h3>
+          <p>查看已安装应用与权限，卸载、启动、强制停止、清除数据、导出 APK。</p>
+          <div class="visual">
+            <div class="window">
+              <div class="window-bar"><i></i><i></i><i></i></div>
+              <pre>网易大神 (com.netease.gl)   详情 导出 卸载
+哔哩哔哩 (tv.danmaku.bili)   详情 导出 卸载
+<span class="dim">共 105 个应用 · 虚拟滚动</span></pre>
+            </div>
+          </div>
+        </article>
+
+        <article class="feature">
+          <h3>实时日志与崩溃摘要</h3>
+          <p>按应用过滤 logcat，自动识别崩溃与 ANR，一键复制堆栈。</p>
+          <div class="visual">
+            <div class="window">
+              <div class="window-bar"><i></i><i></i><i></i></div>
+              <pre><span class="dim">06-30 12:00:01.123</span> E AndroidRuntime: <span class="acc">FATAL EXCEPTION</span>
+<span class="dim">06-30 12:00:01.124</span> E AndroidRuntime: Process: com.example
+<span class="ok">已收集 32 行 · 复制日志</span></pre>
+            </div>
+          </div>
+        </article>
+      </section>
+
+      <section class="headline">
+        <h2>一个窗口，覆盖全部日常</h2>
+        <p>文件、日志、Shell，常用能力都在手边。</p>
+      </section>
+
+      <section class="features">
+        <article class="feature">
+          <h3>文件传输</h3>
+          <p>截图保存到电脑，推送与拉取文件，可直接浏览手机目录选择路径。</p>
+          <div class="visual">
+            <div class="window">
+              <div class="window-bar"><i></i><i></i><i></i></div>
+              <pre>/sdcard/Download    <span class="acc">推送中 64%</span>
+/sdcard/DCIM         <span class="dim">目录</span>
+/sdcard/Pictures     <span class="dim">目录</span></pre>
+            </div>
+          </div>
+        </article>
+
+        <article class="feature">
+          <h3>Shell 控制台</h3>
+          <p>常用命令快捷入口，输出与退出码清晰展示，支持复制与历史。</p>
+          <div class="visual">
+            <div class="window">
+              <div class="window-bar"><i></i><i></i><i></i></div>
+              <pre>$ dumpsys battery
+  level: 72   health: 2   temp: 22.2°C
+<span class="ok">exit 0</span></pre>
+            </div>
+          </div>
+        </article>
+      </section>
+
+      <figure class="shot">
+        <img src="assets/devices-dark.png" alt="WireDeck 设备页" />
+        <figcaption>设备页：扫码配对、自动重连、连接状态一目了然</figcaption>
+      </figure>
     </main>
 
     <footer>
-      <div class="container footer-inner">
+      <div class="footer-inner">
         <span>© 2026 WireDeck · woyuxiaji.cn</span>
         <span>
           <a href="https://github.com/Rouarn/wiredeck">GitHub</a> ·

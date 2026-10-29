@@ -17,7 +17,7 @@ scene.add(group)
 const sphere = new THREE.Mesh(
   new THREE.IcosahedronGeometry(2.1, 1),
   new THREE.MeshBasicMaterial({
-    color: 0x3b82f6,
+    color: 0xbd34fe,
     wireframe: true,
     transparent: true,
     opacity: 0.26,
@@ -29,7 +29,7 @@ group.add(sphere)
 const inner = new THREE.Mesh(
   new THREE.IcosahedronGeometry(1.45, 0),
   new THREE.MeshBasicMaterial({
-    color: 0x8b5cf6,
+    color: 0x41d1ff,
     transparent: true,
     opacity: 0.1,
   }),
@@ -52,7 +52,7 @@ particleGeo.setAttribute('position', new THREE.BufferAttribute(positions, 3))
 const particles = new THREE.Points(
   particleGeo,
   new THREE.PointsMaterial({
-    color: 0x93c5fd,
+    color: 0xd8b4fe,
     size: 0.035,
     transparent: true,
     opacity: 0.85,
@@ -64,14 +64,14 @@ group.add(particles)
 // 两个环绕的细环
 const ring1 = new THREE.Mesh(
   new THREE.TorusGeometry(2.65, 0.006, 8, 140),
-  new THREE.MeshBasicMaterial({ color: 0x60a5fa, transparent: true, opacity: 0.55 }),
+  new THREE.MeshBasicMaterial({ color: 0xc084fc, transparent: true, opacity: 0.55 }),
 )
 ring1.rotation.x = Math.PI / 2.35
 group.add(ring1)
 
 const ring2 = new THREE.Mesh(
   new THREE.TorusGeometry(2.95, 0.005, 8, 140),
-  new THREE.MeshBasicMaterial({ color: 0x8b5cf6, transparent: true, opacity: 0.4 }),
+  new THREE.MeshBasicMaterial({ color: 0x41d1ff, transparent: true, opacity: 0.4 }),
 )
 ring2.rotation.x = -Math.PI / 3
 ring2.rotation.y = 0.7
