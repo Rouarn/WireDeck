@@ -169,7 +169,10 @@ function onProgress(p: TaskProgressPayload) {
     return
   }
   task.stage = p.stage
-  task.percent = p.percent
+  // 阶段事件与传输回调可能交错，单调递增避免进度条视觉回退。
+  if (p.percent >= 0) {
+    task.percent = Math.max(task.percent, p.percent)
+  }
   task.message = p.message
 }
 

@@ -125,10 +125,10 @@ func (s *InstallService) installWithProgress(ctx context.Context, id string, req
 		_, _ = s.server.Run(context.Background(), 10*time.Second, "shell", "rm", "-f", remote)
 	}()
 
-	s.progress(id, "transfer", 0, "传输安装包")
+	// 传输阶段从解析进度 5% 平滑过渡到 90%，避免进度回退。
+	s.progress(id, "transfer", 5, "开始传输")
 	err := s.server.PushWithProgress(ctx, req.Serial, req.Paths[0], remote, func(pct int) {
-		// 传输阶段占 0-90%，给安装阶段留出空间。
-		s.progress(id, "transfer", pct*9/10, fmt.Sprintf("传输 %d%%", pct))
+		s.progress(id, "transfer", 5+pct*85/100, fmt.Sprintf("传输 %d%%", pct))
 	})
 	if err != nil {
 		if errors.Is(err, adb.ErrCanceled) {
