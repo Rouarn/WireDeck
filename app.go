@@ -83,13 +83,14 @@ func (a *App) buildMenu() *menu.Menu {
 	})
 
 	editMenu := m.AddSubmenu("编辑")
-	editMenu.AddText("撤销", keys.CmdOrCtrl("z"), nil)
-	editMenu.AddText("重做", keys.Combo("z", keys.CmdOrCtrlKey, keys.ShiftKey), nil)
+	// 不注册 accelerator，避免菜单抢占 ⌘C/⌘V 等按键，让 WebView 原生处理快捷键。
+	editMenu.AddText("撤销", nil, func(_ *menu.CallbackData) { a.execJS("document.execCommand('undo')") })
+	editMenu.AddText("重做", nil, func(_ *menu.CallbackData) { a.execJS("document.execCommand('redo')") })
 	editMenu.AddSeparator()
-	editMenu.AddText("剪切", keys.CmdOrCtrl("x"), nil)
-	editMenu.AddText("复制", keys.CmdOrCtrl("c"), nil)
-	editMenu.AddText("粘贴", keys.CmdOrCtrl("v"), nil)
-	editMenu.AddText("全选", keys.CmdOrCtrl("a"), nil)
+	editMenu.AddText("剪切", nil, func(_ *menu.CallbackData) { a.execJS("document.execCommand('cut')") })
+	editMenu.AddText("复制", nil, func(_ *menu.CallbackData) { a.execJS("document.execCommand('copy')") })
+	editMenu.AddText("粘贴", nil, func(_ *menu.CallbackData) { a.execJS("document.execCommand('paste')") })
+	editMenu.AddText("全选", nil, func(_ *menu.CallbackData) { a.execJS("document.execCommand('selectAll')") })
 
 	windowMenu := m.AddSubmenu("窗口")
 	windowMenu.AddText("最小化", keys.CmdOrCtrl("m"), func(_ *menu.CallbackData) {
@@ -111,6 +112,13 @@ func (a *App) buildMenu() *menu.Menu {
 	})
 
 	return m
+}
+
+// execJS 在 WebView 中执行一段脚本，用于菜单项的编辑命令。
+func (a *App) execJS(js string) {
+	if a.ctx != nil {
+		runtime.WindowExecJS(a.ctx, js)
+	}
 }
 
 // shutdown 由 Wails 在应用退出时调用。
