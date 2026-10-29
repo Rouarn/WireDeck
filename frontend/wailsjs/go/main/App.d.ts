@@ -4,9 +4,13 @@ import {model} from '../models';
 
 export function AppDetail(arg1:string,arg2:string):Promise<model.AppDetail>;
 
+export function AppLabelCacheInfo():Promise<model.LabelCacheInfo>;
+
 export function CancelInstall(arg1:string):Promise<void>;
 
 export function ClearAppData(arg1:string,arg2:string):Promise<model.AppOpResult>;
+
+export function ClearAppLabelCache():Promise<void>;
 
 export function ConnectDevice(arg1:model.ConnectRequest):Promise<model.ConnectResult>;
 

@@ -136,3 +136,10 @@ type AppOpResult struct {
 	Message string `json:"message"`
 	Raw     string `json:"raw"`
 }
+
+// LabelCacheInfo 描述应用名称缓存的占用情况。
+type LabelCacheInfo struct {
+	Count int    `json:"count"`
+	Path  string `json:"path"`
+	Size  int64  `json:"size"`
+}

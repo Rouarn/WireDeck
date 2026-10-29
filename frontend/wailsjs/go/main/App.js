@@ -6,12 +6,20 @@ export function AppDetail(arg1, arg2) {
   return window['go']['main']['App']['AppDetail'](arg1, arg2);
 }
 
+export function AppLabelCacheInfo() {
+  return window['go']['main']['App']['AppLabelCacheInfo']();
+}
+
 export function CancelInstall(arg1) {
   return window['go']['main']['App']['CancelInstall'](arg1);
 }
 
 export function ClearAppData(arg1, arg2) {
   return window['go']['main']['App']['ClearAppData'](arg1, arg2);
+}
+
+export function ClearAppLabelCache() {
+  return window['go']['main']['App']['ClearAppLabelCache']();
 }
 
 export function ConnectDevice(arg1) {

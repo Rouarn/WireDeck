@@ -76,6 +76,32 @@ func (s *AppService) persistLabels() {
 	_ = os.WriteFile(path, data, 0o644)
 }
 
+// LabelCacheInfo 返回应用名称缓存的条目数、路径与文件大小。
+func (s *AppService) LabelCacheInfo() model.LabelCacheInfo {
+	path := labelsFilePath()
+	info := model.LabelCacheInfo{Path: path}
+
+	s.mu.RLock()
+	info.Count = len(s.labels)
+	s.mu.RUnlock()
+
+	if path != "" {
+		if stat, err := os.Stat(path); err == nil {
+			info.Size = stat.Size()
+		}
+	}
+	return info
+}
+
+// ClearLabels 清空应用名称缓存（包括设备上已卸载应用留下的孤儿记录）。
+func (s *AppService) ClearLabels() error {
+	s.mu.Lock()
+	s.labels = make(map[string]string)
+	s.mu.Unlock()
+	s.persistLabels()
+	return nil
+}
+
 func (s *AppService) cachedLabel(pkg string) string {
 	s.mu.RLock()
 	defer s.mu.RUnlock()

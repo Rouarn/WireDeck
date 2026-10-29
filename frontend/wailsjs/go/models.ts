@@ -230,6 +230,22 @@ export namespace model {
 		    return a;
 		}
 	}
+	export class LabelCacheInfo {
+	    count: number;
+	    path: string;
+	    size: number;
+	
+	    static createFrom(source: any = {}) {
+	        return new LabelCacheInfo(source);
+	    }
+	
+	    constructor(source: any = {}) {
+	        if ('string' === typeof source) source = JSON.parse(source);
+	        this.count = source["count"];
+	        this.path = source["path"];
+	        this.size = source["size"];
+	    }
+	}
 	export class MDNSService {
 	    name: string;
 	    kind: string;

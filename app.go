@@ -222,3 +222,13 @@ func (a *App) ExportApp(serial, pkg, outDir string) ([]string, error) {
 	}
 	return a.apps.Export(a.context(), serial, pkg, outDir)
 }
+
+// AppLabelCacheInfo 返回应用名称缓存的占用情况。
+func (a *App) AppLabelCacheInfo() (model.LabelCacheInfo, error) {
+	return a.apps.LabelCacheInfo(), nil
+}
+
+// ClearAppLabelCache 清空应用名称缓存。
+func (a *App) ClearAppLabelCache() error {
+	return a.apps.ClearLabels()
+}

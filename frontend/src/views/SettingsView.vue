@@ -1,7 +1,11 @@
 <script setup lang="ts">
 import { onMounted, ref } from 'vue'
-import { NRadioButton, NRadioGroup } from 'naive-ui'
-import { GetHostIdentity } from '../../wailsjs/go/main/App'
+import { NButton, NRadioButton, NRadioGroup, useDialog } from 'naive-ui'
+import {
+  AppLabelCacheInfo as fetchLabelCacheInfo,
+  ClearAppLabelCache,
+  GetHostIdentity,
+} from '../../wailsjs/go/main/App'
 import type { model } from '../../wailsjs/go/models'
 import { useThemeStore } from '../stores/theme'
 import { useDevicesStore } from '../stores/devices'
@@ -9,10 +13,40 @@ import type { ThemeMode } from '../stores/theme'
 
 const theme = useThemeStore()
 const devices = useDevicesStore()
+const dialog = useDialog()
 const identity = ref<model.HostIdentity | null>(null)
+const cacheInfo = ref<model.LabelCacheInfo | null>(null)
 
 function onChange(value: ThemeMode) {
   theme.setMode(value)
+}
+
+async function refreshCacheInfo() {
+  try {
+    cacheInfo.value = await fetchLabelCacheInfo()
+  } catch {
+    cacheInfo.value = null
+  }
+}
+
+function formatSize(bytes: number) {
+  if (bytes < 1024) {
+    return `${bytes} B`
+  }
+  return `${(bytes / 1024).toFixed(1)} KB`
+}
+
+function clearCache() {
+  dialog.warning({
+    title: '清理应用名称缓存',
+    content: '将删除所有已解析的应用名称，下次查看详情或导出时会重新解析。',
+    positiveText: '清理',
+    negativeText: '取消',
+    onPositiveClick: async () => {
+      await ClearAppLabelCache()
+      await refreshCacheInfo()
+    },
+  })
 }
 
 onMounted(async () => {
@@ -21,6 +55,7 @@ onMounted(async () => {
   } catch {
     identity.value = null
   }
+  await refreshCacheInfo()
 })
 </script>
 
@@ -79,6 +114,31 @@ onMounted(async () => {
         <pre class="cmd">sudo scutil --set HostName WireDeck   # 修改
 sudo scutil --set HostName ""         # 恢复</pre>
         <p class="desc muted">修改后需在手机上移除旧配对记录并重新配对，才会更新显示。</p>
+      </div>
+    </section>
+
+    <section class="panel">
+      <div class="panel-head">
+        <h3>应用名称缓存</h3>
+        <span class="hint">用于列表显示中文名</span>
+      </div>
+      <div class="panel-body">
+        <div class="row">
+          <span class="label">条目数</span>
+          <span>{{ cacheInfo?.count ?? 0 }} 条</span>
+        </div>
+        <div class="row">
+          <span class="label">占用空间</span>
+          <span>{{ cacheInfo ? formatSize(cacheInfo.size) : '—' }}</span>
+        </div>
+        <div class="row">
+          <span class="label">文件位置</span>
+          <code>{{ cacheInfo?.path || '—' }}</code>
+        </div>
+        <p class="desc muted">
+          缓存只保存「包名 → 应用名」的映射，不包含 APK。手机上卸载应用后，对应记录不会自动删除，可在此清理。
+        </p>
+        <NButton size="small" @click="clearCache">清理缓存</NButton>
       </div>
     </section>
   </div>
