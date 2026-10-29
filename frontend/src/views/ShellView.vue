@@ -257,18 +257,22 @@ async function copyAll() {
 }
 
 .record {
-  padding: 8px 0;
-  border-bottom: 1px dashed var(--border);
+  margin-bottom: 14px;
 }
 
 .record:last-child {
-  border-bottom: none;
+  margin-bottom: 0;
 }
 
+/* 命令行做成独立卡片，与输出拉开层次 */
 .record-head {
   display: flex;
-  align-items: baseline;
+  align-items: center;
   gap: 8px;
+  padding: 7px 10px;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  background: var(--surface);
   font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
   font-size: 12px;
 }
@@ -280,6 +284,7 @@ async function copyAll() {
 
 .record-command {
   color: var(--text);
+  font-weight: 600;
   word-break: break-all;
 }
 
@@ -307,10 +312,15 @@ async function copyAll() {
   color: var(--danger);
 }
 
+/* 输出缩进 + 左侧竖线，视觉上从属于上方的命令 */
 .record-out,
 .record-err {
-  margin: 6px 0 0;
+  margin: 5px 0 0 14px;
+  padding: 8px 10px;
   overflow: auto;
+  border-left: 2px solid var(--border-strong);
+  border-radius: 0 6px 6px 0;
+  background: var(--surface);
   color: var(--text-secondary);
   font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
   font-size: 11px;
@@ -320,6 +330,7 @@ async function copyAll() {
 }
 
 .record-err {
+  border-left-color: var(--danger);
   color: var(--danger);
 }
 
