@@ -2,7 +2,8 @@
 import { computed, nextTick, onBeforeUnmount, onMounted, ref } from 'vue'
 import { NButton, NIcon, NInput, NRadioButton, NRadioGroup, NSelect, NSpin, useMessage } from 'naive-ui'
 import { PlayOutline, StopOutline, TerminalOutline } from '@vicons/ionicons5'
-import { ExecShell, StartLogcat, StopLogcat } from '../../wailsjs/go/main/App'
+import { CopyText, ExecShell, ListApps, StartLogcat, StopLogcat } from '../../wailsjs/go/main/App'
+import type { model } from '../../wailsjs/go/models'
 import { EventsOn } from '../../wailsjs/runtime/runtime'
 import { useDevicesStore } from '../stores/devices'
 
@@ -24,23 +25,39 @@ const mode = ref<'logcat' | 'shell'>('logcat')
 const running = ref(false)
 const streamId = ref('')
 const lines = ref<LogLine[]>([])
-const level = ref('ALL')
+const level = ref('WA')
 const keyword = ref('')
 const paused = ref(false)
 const logBox = ref<HTMLElement | null>(null)
 
+const apps = ref<model.AppSummary[]>([])
+const selectedPkg = ref('')
+const crashActive = ref(false)
+const crashBuffer = ref<string[]>([])
+
+const appOptions = computed(() => [
+  { label: '全部应用', value: '' },
+  ...apps.value.map((app) => ({
+    label: app.label ? `${app.label} (${app.package})` : app.package,
+    value: app.package,
+  })),
+])
+
 const levelOptions = [
+  { label: '警告与错误', value: 'WA' },
   { label: '全部级别', value: 'ALL' },
-  { label: 'VERBOSE', value: 'V' },
-  { label: 'DEBUG', value: 'D' },
-  { label: 'INFO', value: 'I' },
-  { label: 'WARN', value: 'W' },
   { label: 'ERROR', value: 'E' },
+  { label: 'WARN', value: 'W' },
+  { label: 'INFO', value: 'I' },
+  { label: 'DEBUG', value: 'D' },
+  { label: 'VERBOSE', value: 'V' },
 ]
 
 const visibleLines = computed(() => {
   let result = lines.value
-  if (level.value !== 'ALL') {
+  if (level.value === 'WA') {
+    result = result.filter((line) => ['W', 'E', 'F'].includes(line.level))
+  } else if (level.value !== 'ALL') {
     result = result.filter((line) => line.level === level.value)
   }
   if (keyword.value.trim()) {
@@ -66,11 +83,49 @@ function onBatch(p: LogcatBatchPayload) {
 
   for (const raw of p.lines) {
     lines.value.push(parseLine(raw))
+    trackCrash(raw)
   }
   if (lines.value.length > 1000) {
     lines.value.splice(0, lines.value.length - 1000)
   }
   scheduleScroll()
+}
+
+function trackCrash(raw: string) {
+  if (raw.includes('FATAL EXCEPTION') || raw.includes('ANR in')) {
+    crashActive.value = true
+    crashBuffer.value = [raw]
+    return
+  }
+  if (crashActive.value && crashBuffer.value.length < 60) {
+    crashBuffer.value.push(raw)
+  }
+}
+
+function dismissCrash() {
+  crashActive.value = false
+  crashBuffer.value = []
+}
+
+async function copyCrash() {
+  try {
+    await CopyText(crashBuffer.value.join('\n'))
+    message.success('崩溃日志已复制')
+  } catch (e) {
+    message.error(e instanceof Error ? e.message : String(e))
+  }
+}
+
+async function loadApps() {
+  if (!store.current) {
+    apps.value = []
+    return
+  }
+  try {
+    apps.value = await ListApps(store.current.serial, 'user')
+  } catch {
+    apps.value = []
+  }
 }
 
 let scrollQueued = false
@@ -104,7 +159,7 @@ async function startLog() {
 
   lines.value = []
   try {
-    streamId.value = await StartLogcat(store.current.serial, '')
+    streamId.value = await StartLogcat(store.current.serial, selectedPkg.value || '')
     running.value = true
   } catch (e) {
     message.error(e instanceof Error ? e.message : String(e))
@@ -164,6 +219,7 @@ let unlisten: (() => void) | null = null
 
 onMounted(() => {
   unlisten = EventsOn('logcat:batch', (p: LogcatBatchPayload) => onBatch(p))
+  void loadApps()
 })
 
 onBeforeUnmount(() => {
@@ -203,9 +259,25 @@ onBeforeUnmount(() => {
 
     <template v-if="mode === 'logcat'">
       <div class="filters">
+        <NSelect
+          v-model:value="selectedPkg"
+          size="small"
+          filterable
+          clearable
+          placeholder="全部应用"
+          :options="appOptions"
+          style="width: 240px"
+        />
         <NSelect v-model:value="level" size="small" :options="levelOptions" style="width: 140px" />
-        <NInput v-model:value="keyword" size="small" clearable placeholder="关键字过滤" style="width: 220px" />
+        <NInput v-model:value="keyword" size="small" clearable placeholder="关键字过滤" style="width: 200px" />
         <span class="hint">最多保留最近 1000 行</span>
+      </div>
+
+      <div v-if="crashActive" class="crash-bar">
+        <span>检测到崩溃 / ANR，已收集 {{ crashBuffer.length }} 行日志</span>
+        <div class="spacer"></div>
+        <NButton size="tiny" type="primary" @click="copyCrash">复制日志</NButton>
+        <NButton size="tiny" quaternary @click="dismissCrash">忽略</NButton>
       </div>
 
       <div ref="logBox" class="log-box">
@@ -277,6 +349,19 @@ onBeforeUnmount(() => {
 .filters .hint {
   color: var(--text-tertiary);
   font-size: 11px;
+}
+
+.crash-bar {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 10px;
+  padding: 8px 12px;
+  border: 1px solid var(--danger-soft);
+  border-radius: var(--radius-sm);
+  background: var(--danger-soft);
+  color: var(--danger);
+  font-size: 12px;
 }
 
 .log-box {

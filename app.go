@@ -270,17 +270,23 @@ func (a *App) PullFile(serial, remote, local string) error {
 	return a.files.Pull(a.context(), serial, remote, local)
 }
 
-// StartLogcat 启动实时日志流，返回 streamId。
-func (a *App) StartLogcat(serial, filter string) (string, error) {
+// StartLogcat 启动实时日志流。pkg 非空时只采集该应用的日志。
+func (a *App) StartLogcat(serial, pkg string) (string, error) {
 	if _, err := a.EnsureAdbReady(); err != nil {
 		return "", err
 	}
-	return a.logs.Start(a.context(), serial, filter)
+	return a.logs.Start(a.context(), serial, pkg)
 }
 
 // StopLogcat 停止日志流。
 func (a *App) StopLogcat(streamID string) error {
 	a.logs.Stop(streamID)
+	return nil
+}
+
+// CopyText 将文本写入系统剪贴板。
+func (a *App) CopyText(text string) error {
+	runtime.ClipboardSetText(a.context(), text)
 	return nil
 }
 

@@ -7,6 +7,7 @@ import (
 	"os"
 	"os/exec"
 	"strconv"
+	"strings"
 	"sync"
 	"time"
 
@@ -38,13 +39,22 @@ func NewLogService(server *adb.Server, emit func(string, any)) *LogService {
 	}
 }
 
-// Start 启动一个 logcat 流，返回 streamId。
-func (s *LogService) Start(ctx context.Context, serial, filter string) (string, error) {
+// Start 启动一个 logcat 流。pkg 非空时只采集该应用的日志。
+func (s *LogService) Start(ctx context.Context, serial, pkg string) (string, error) {
 	if serial == "" {
 		return "", fmt.Errorf("未选择设备")
 	}
 	if s.server.BinaryPath() == "" {
 		return "", adb.ErrAdbNotFound
+	}
+
+	filterArgs := make([]string, 0, 1)
+	if pkg != "" {
+		pid := s.pidOf(ctx, serial, pkg)
+		if pid == "" {
+			return "", fmt.Errorf("应用未运行，请先在手机上打开 %s 再开始", pkg)
+		}
+		filterArgs = append(filterArgs, "--pid="+pid)
 	}
 
 	runCtx, cancel := context.WithCancel(ctx)
@@ -55,8 +65,21 @@ func (s *LogService) Start(ctx context.Context, serial, filter string) (string, 
 	s.streams[id] = cancel
 	s.mu.Unlock()
 
-	go s.stream(runCtx, id, serial, filter)
+	go s.stream(runCtx, id, serial, filterArgs)
 	return id, nil
+}
+
+// pidOf 返回应用当前进程号，未运行时返回空。
+func (s *LogService) pidOf(ctx context.Context, serial, pkg string) string {
+	res, err := s.server.Run(ctx, 5*time.Second, "-s", serial, "shell", "pidof", pkg)
+	if err != nil || res.ExitCode != 0 {
+		return ""
+	}
+	fields := strings.Fields(res.Stdout)
+	if len(fields) == 0 {
+		return ""
+	}
+	return fields[0]
 }
 
 // Stop 停止指定日志流。
@@ -86,7 +109,7 @@ func (s *LogService) StopAll() {
 	}
 }
 
-func (s *LogService) stream(ctx context.Context, id, serial, filter string) {
+func (s *LogService) stream(ctx context.Context, id, serial string, filterArgs []string) {
 	defer func() {
 		s.mu.Lock()
 		delete(s.streams, id)
@@ -94,9 +117,7 @@ func (s *LogService) stream(ctx context.Context, id, serial, filter string) {
 	}()
 
 	args := []string{"-P", strconv.Itoa(s.server.Port()), "-s", serial, "logcat", "-v", "threadtime"}
-	if filter != "" {
-		args = append(args, filter)
-	}
+	args = append(args, filterArgs...)
 
 	cmd := exec.CommandContext(ctx, s.server.BinaryPath(), args...)
 	cmd.Env = append(os.Environ(), "LANG=C", "LC_ALL=C")

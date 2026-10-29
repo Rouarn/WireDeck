@@ -26,6 +26,10 @@ export function ConnectDevice(arg1) {
   return window['go']['main']['App']['ConnectDevice'](arg1);
 }
 
+export function CopyText(arg1) {
+  return window['go']['main']['App']['CopyText'](arg1);
+}
+
 export function DisconnectDevice(arg1) {
   return window['go']['main']['App']['DisconnectDevice'](arg1);
 }

@@ -14,6 +14,8 @@ export function ClearAppLabelCache():Promise<void>;
 
 export function ConnectDevice(arg1:model.ConnectRequest):Promise<model.ConnectResult>;
 
+export function CopyText(arg1:string):Promise<void>;
+
 export function DisconnectDevice(arg1:string):Promise<void>;
 
 export function DiscoverServices():Promise<Array<model.MDNSService>>;
