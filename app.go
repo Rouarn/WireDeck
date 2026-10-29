@@ -200,6 +200,7 @@ func (a *App) ConnectDevice(req model.ConnectRequest) (model.ConnectResult, erro
 		return res, err
 	}
 	if res.OK {
+		a.devices.RecordConnection(req.Host, req.Port, "")
 		a.devices.RefreshAndEmit(a.context())
 	}
 	return res, nil
@@ -214,6 +215,15 @@ func (a *App) DisconnectDevice(serial string) error {
 		return err
 	}
 	a.devices.RefreshAndEmit(a.context())
+	return nil
+}
+
+// ReconnectDevices 尝试重连历史设备并自动连接 mDNS 发现的无线设备。
+func (a *App) ReconnectDevices() error {
+	if _, err := a.EnsureAdbReady(); err != nil {
+		return err
+	}
+	a.devices.ReconnectKnown(a.context())
 	return nil
 }
 

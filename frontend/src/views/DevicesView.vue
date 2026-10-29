@@ -122,7 +122,10 @@ function fillFromService(service: model.MDNSService) {
   }
 }
 
-onMounted(discover)
+onMounted(async () => {
+  await store.reconnect()
+  await discover()
+})
 </script>
 
 <template>

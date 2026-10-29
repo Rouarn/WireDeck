@@ -52,6 +52,8 @@ export function PullFile(arg1:string,arg2:string,arg3:string):Promise<void>;
 
 export function PushFile(arg1:string,arg2:string,arg3:string):Promise<void>;
 
+export function ReconnectDevices():Promise<void>;
+
 export function Screenshot(arg1:string):Promise<model.ScreenshotResult>;
 
 export function SetAdbPath(arg1:string):Promise<void>;

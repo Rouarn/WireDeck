@@ -102,6 +102,10 @@ export function PushFile(arg1, arg2, arg3) {
   return window['go']['main']['App']['PushFile'](arg1, arg2, arg3);
 }
 
+export function ReconnectDevices() {
+  return window['go']['main']['App']['ReconnectDevices']();
+}
+
 export function Screenshot(arg1) {
   return window['go']['main']['App']['Screenshot'](arg1);
 }

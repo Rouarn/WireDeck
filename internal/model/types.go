@@ -173,6 +173,15 @@ type DeviceFile struct {
 	Size  int64  `json:"size"`
 }
 
+// DeviceHistory 是曾经成功连接过的无线设备，用于启动时自动重连。
+type DeviceHistory struct {
+	Serial   string `json:"serial"`
+	Host     string `json:"host"`
+	Port     int    `json:"port"`
+	Name     string `json:"name"`
+	LastSeen int64  `json:"lastSeen"`
+}
+
 // LogcatLine 是一行实时日志。
 type LogcatLine struct {
 	StreamID string `json:"streamId"`

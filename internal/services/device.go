@@ -22,13 +22,16 @@ type DeviceService struct {
 
 	mu      sync.RWMutex
 	devices []model.Device
+	history []model.DeviceHistory
 	cancel  context.CancelFunc
 	done    chan struct{}
 }
 
 // NewDeviceService 创建设备服务；emit 用于向前端推送事件。
 func NewDeviceService(server *adb.Server, emit func(event string, data any)) *DeviceService {
-	return &DeviceService{server: server, emit: emit}
+	service := &DeviceService{server: server, emit: emit}
+	service.loadHistory()
+	return service
 }
 
 // Start 启动后台轮询，设备状态变化时推送 device:changed。

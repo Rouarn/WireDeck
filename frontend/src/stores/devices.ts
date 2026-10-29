@@ -1,6 +1,6 @@
 import { computed, ref } from 'vue'
 import { defineStore } from 'pinia'
-import { EnsureAdbReady, ListDevices } from '../../wailsjs/go/main/App'
+import { EnsureAdbReady, ListDevices, ReconnectDevices } from '../../wailsjs/go/main/App'
 import type { model } from '../../wailsjs/go/models'
 
 export const useDevicesStore = defineStore('devices', () => {
@@ -39,5 +39,15 @@ export const useDevicesStore = defineStore('devices', () => {
     currentSerial.value = serial
   }
 
-  return { list, adb, current, currentSerial, error, loading, apply, refresh, select }
+  // reconnect 尝试重连历史设备并自动连接 mDNS 发现的无线设备。
+  async function reconnect() {
+    try {
+      await ReconnectDevices()
+    } catch {
+      // 重连失败不打断页面，后续轮询会继续更新
+    }
+    await refresh()
+  }
+
+  return { list, adb, current, currentSerial, error, loading, apply, refresh, select, reconnect }
 })
