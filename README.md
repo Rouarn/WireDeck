@@ -43,7 +43,7 @@ go test ./...  # 单测
 
 ## 技术栈
 
-Wails v2（系统 WebView）+ Go 1.27 后端 + Vue 3 + TypeScript + Vite + Pinia 前端；设备操作通过内置或首次启动下载的 `platform-tools`（`adb`）执行。
+Wails v2（系统 WebView）+ Go 1.27 后端 + Vue 3 + TypeScript + Vite + Pinia + Naive UI + UnoCSS 前端；设备操作通过内置或首次启动下载的 `platform-tools`（`adb`）执行。UI 设计稿见 `design/`（浅色 / 深色双主题）。
 
 ## 分发
 
