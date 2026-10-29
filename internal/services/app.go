@@ -343,13 +343,15 @@ func (s *AppService) Export(ctx context.Context, serial, pkg, outDir string) ([]
 
 	localFiles := make([]string, 0, len(devicePaths))
 	label := s.cachedLabel(pkg)
+	baseTarget := ""
 
 	for _, remote := range devicePaths {
-		// 用包名重命名，split 保留后缀，避免导出一堆 base.apk。
-		target := filepath.Join(outDir, pkg+".apk")
+		split := ""
 		if !strings.HasPrefix(filepath.Base(remote), "base") {
-			target = filepath.Join(outDir, pkg+"-"+filepath.Base(remote))
+			split = filepath.Base(remote)
 		}
+
+		target := filepath.Join(outDir, exportFileName(pkg, label, split))
 
 		pullErr := s.server.PullWithProgress(ctx, serial, remote, target, func(pct int) {
 			if s.emit != nil {
@@ -365,17 +367,51 @@ func (s *AppService) Export(ctx context.Context, serial, pkg, outDir string) ([]
 			return localFiles, pullErr
 		}
 		localFiles = append(localFiles, target)
+		if split == "" {
+			baseTarget = target
+		}
+	}
 
-		// 导出时顺便解析显示名，避免后续再拉一次 APK。
-		if label == "" {
-			if meta, err := apk.Inspect(target); err == nil && meta.Label != "" {
-				label = meta.Label
-				s.setLabel(pkg, label)
+	// 导出前没有缓存显示名时，解析刚导出的 APK，并把 base 文件改成「中文名 (包名).apk」。
+	if label == "" && baseTarget != "" {
+		if meta, err := apk.Inspect(baseTarget); err == nil && meta.Label != "" {
+			label = meta.Label
+			s.setLabel(pkg, label)
+
+			renamed := filepath.Join(outDir, exportFileName(pkg, label, ""))
+			if renamed != baseTarget {
+				if err := os.Rename(baseTarget, renamed); err == nil {
+					for i := range localFiles {
+						if localFiles[i] == baseTarget {
+							localFiles[i] = renamed
+						}
+					}
+				}
 			}
 		}
 	}
 
 	return localFiles, nil
+}
+
+// exportFileName 生成导出文件名：有显示名时用「中文名 (包名).apk」，否则用包名。
+func exportFileName(pkg, label, split string) string {
+	base := pkg
+	if label != "" {
+		base = sanitizeFileName(label) + " (" + pkg + ")"
+	}
+	if split != "" {
+		base += "-" + split
+	}
+	return base + ".apk"
+}
+
+func sanitizeFileName(name string) string {
+	replacer := strings.NewReplacer(
+		"/", "_", "\\", "_", ":", "_", "*", "_", "?", "_",
+		"\"", "_", "<", "_", ">", "_", "|", "_",
+	)
+	return strings.TrimSpace(replacer.Replace(name))
 }
 
 // resolveLabel 拉取 base.apk 并解析 application-label，仅用于详情页按需获取。
