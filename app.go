@@ -37,6 +37,7 @@ func (a *App) startup(ctx context.Context) {
 	a.ctx = ctx
 	a.devices.Start(ctx)
 	runtime.OnFileDrop(ctx, func(x, y int, paths []string) {
+		println(fmt.Sprintf("[drop] %d file(s) dropped", len(paths)))
 		a.emit("files:dropped", paths)
 	})
 }

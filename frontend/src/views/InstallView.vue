@@ -3,6 +3,7 @@ import { computed, onMounted, ref } from 'vue'
 import { NButton, NCheckbox, NEmpty, NIcon, NTag, useMessage } from 'naive-ui'
 import { CloudUploadOutline } from '@vicons/ionicons5'
 import {
+  CancelInstall,
   InspectApk,
   PickApkFile,
   StartInstall,
@@ -104,6 +105,14 @@ async function pick() {
 
 function removeAt(index: number) {
   pending.value.splice(index, 1)
+}
+
+async function cancel(taskId: string) {
+  try {
+    await CancelInstall(taskId)
+  } catch (e) {
+    message.error(e instanceof Error ? e.message : String(e))
+  }
 }
 
 function deviceLabel() {
@@ -264,10 +273,20 @@ onMounted(() => {
               <div class="hint-text">{{ task.message }}</div>
             </td>
             <td>
-              <NTag v-if="task.done" size="small" :type="task.ok ? 'success' : 'error'" :bordered="false">
-                {{ task.ok ? '已安装' : '安装失败' }}
-              </NTag>
-              <NTag v-else size="small" type="info" :bordered="false">进行中</NTag>
+              <div class="status-cell">
+                <NTag
+                  v-if="task.done"
+                  size="small"
+                  :type="task.ok ? 'success' : 'error'"
+                  :bordered="false"
+                >
+                  {{ task.ok ? '已安装' : '安装失败' }}
+                </NTag>
+                <template v-else>
+                  <NTag size="small" type="info" :bordered="false">进行中</NTag>
+                  <NButton size="tiny" quaternary @click="cancel(task.taskId)">取消</NButton>
+                </template>
+              </div>
               <div v-if="task.done && !task.ok && task.code" class="hint-text">
                 {{ task.code }}<br />{{ task.advice }}
               </div>
@@ -291,6 +310,7 @@ onMounted(() => {
 
 <style scoped>
 .install {
+  --wails-drop-target: drop;
   display: flex;
   flex-direction: column;
 }
@@ -464,6 +484,12 @@ onMounted(() => {
 .table th:last-child,
 .table td:last-child {
   padding-right: 18px;
+}
+
+.status-cell {
+  display: flex;
+  align-items: center;
+  gap: 8px;
 }
 
 .progress {

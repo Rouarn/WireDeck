@@ -157,3 +157,14 @@ func (s *Server) Run(ctx context.Context, timeout time.Duration, args ...string)
 	}
 	return runner.Run(ctx, timeout, args...)
 }
+
+// PushWithProgress 以伪终端执行 adb push 并回调真实传输百分比。
+func (s *Server) PushWithProgress(ctx context.Context, serial, local, remote string, onPercent func(int)) error {
+	s.mu.Lock()
+	runner := s.runner
+	s.mu.Unlock()
+	if runner == nil {
+		return ErrAdbNotFound
+	}
+	return runner.PushWithProgress(ctx, serial, local, remote, onPercent)
+}

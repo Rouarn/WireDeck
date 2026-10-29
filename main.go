@@ -38,6 +38,10 @@ func main() {
 			app.shutdown(ctx)
 			_ = lock.Unlock()
 		},
+		DragAndDrop: &options.DragAndDrop{
+			EnableFileDrop:     true,
+			DisableWebViewDrop: true,
+		},
 		AssetServer: &assetserver.Options{Assets: assets},
 		Bind:        []interface{}{app},
 	})
