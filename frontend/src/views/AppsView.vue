@@ -251,7 +251,7 @@ onMounted(() => {
     <section class="panel">
       <div class="table-head">
         <span>应用</span>
-        <span>操作</span>
+        <span class="head-ops">操作</span>
       </div>
       <div class="table-body">
         <VirtualList v-if="visibleApps.length" :items="visibleApps" :item-height="40">
@@ -415,6 +415,10 @@ onMounted(() => {
   text-transform: uppercase;
 }
 
+.table-head .head-ops {
+  text-align: right;
+}
+
 .table-body {
   flex: 1;
   min-height: 0;
@@ -461,6 +465,7 @@ onMounted(() => {
 .ops {
   display: flex;
   align-items: center;
+  justify-content: flex-end;
   gap: 2px;
 }
 
