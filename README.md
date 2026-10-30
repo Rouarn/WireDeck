@@ -1,5 +1,7 @@
 # WireDeck
 
+> 项目状态：v1.0.0 已发布，进入维护暂停；有问题请提交 Issue，看到后会恢复维护。
+
 **在电脑上无线管理安卓手机。**
 
 扫码配对即连，应用管理、APK 安装、文件传输、实时日志与 Shell，全部在一个窗口里完成。
@@ -65,7 +67,7 @@ xattr -dr com.apple.quarantine /Applications/WireDeck.app
 
 ## 开发
 
-前置：Go 1.27+、Node 20+、Xcode Command Line Tools。
+前置：Go 1.25+、Node 20+、Xcode Command Line Tools。
 
 ```bash
 go install github.com/wailsapp/wails/v2/cmd/wails@latest
