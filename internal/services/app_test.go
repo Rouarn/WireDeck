@@ -29,3 +29,20 @@ func TestSanitizeFileName(t *testing.T) {
 		t.Errorf("sanitizeFileName = %q, want %q", got, want)
 	}
 }
+
+func TestSanitizeDumpTime(t *testing.T) {
+	cases := []struct {
+		in   string
+		want string
+	}{
+		{"2025-12-19 15:59:59", "2025-12-19 15:59:59"},
+		{"1970-01-01 08:00:00", ""},
+		{"  1970-01-01 08:00:00  ", ""},
+		{"", ""},
+	}
+	for _, c := range cases {
+		if got := sanitizeDumpTime(c.in); got != c.want {
+			t.Errorf("sanitizeDumpTime(%q) = %q, want %q", c.in, got, c.want)
+		}
+	}
+}
