@@ -45,6 +45,7 @@ const dialog = useDialog()
 const apps = ref<model.AppSummary[]>([])
 const loading = ref(false)
 const labelLoading = ref(false)
+const labelProgress = ref('')
 const search = ref('')
 const scope = ref<'user' | 'system' | 'all'>('user')
 
@@ -147,6 +148,7 @@ async function loadLabels() {
   }
 
   labelLoading.value = true
+  labelProgress.value = '准备加载…'
   try {
     const mapping = await LoadAppLabels(store.current.serial, pkgs)
     let count = 0
@@ -162,10 +164,12 @@ async function loadLabels() {
     message.error(e instanceof Error ? e.message : String(e))
   } finally {
     labelLoading.value = false
+    labelProgress.value = ''
   }
 }
 
-async function openDetail(pkg: string) {  if (!store.current) {
+async function openDetail(pkg: string) {
+  if (!store.current) {
     return
   }
   showDetail.value = true
@@ -212,6 +216,9 @@ async function exportApp(pkg: string) {
 function onAppProgress(p: AppProgressPayload) {
   if (p.stage === 'label' && p.pkg === pendingDetailPkg.value && detailLoading.value) {
     detailProgress.value = Math.max(detailProgress.value, p.percent)
+  }
+  if (p.stage === 'labels') {
+    labelProgress.value = p.message
   }
   if (p.stage === 'export' && exporting.value) {
     exportProgress.value = Math.max(exportProgress.value, p.percent)
@@ -314,7 +321,9 @@ onMounted(() => {
       <SegmentedControl :options="scopeOptions" :value="scope" @update:value="setScope" />
       <span class="count">{{ visibleApps.length }} / {{ apps.length }}</span>
       <div class="spacer"></div>
-      <NButton size="small" :loading="labelLoading" @click="loadLabels">加载名称</NButton>
+      <NButton size="small" :loading="labelLoading" @click="loadLabels">
+        {{ labelLoading ? labelProgress || '加载中…' : '加载名称' }}
+      </NButton>
       <NButton size="small" :loading="loading" @click="load">刷新</NButton>
     </div>
 

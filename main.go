@@ -44,13 +44,12 @@ func main() {
 		Menu: app.buildMenu(),
 		// 点击窗口关闭按钮时保存窗口状态并直接退出应用。
 		OnBeforeClose: func(ctx context.Context) bool {
-			go func() {
-				x, y := runtime.WindowGetPosition(ctx)
-				width, height := runtime.WindowGetSize(ctx)
-				platform.SaveWindowConfig(platform.WindowConfig{X: x, Y: y, Width: width, Height: height})
-				runtime.Quit(ctx)
-			}()
-			return true
+			// 同步保存窗口状态（关闭后就读不到了），再退出应用。
+			x, y := runtime.WindowGetPosition(ctx)
+			width, height := runtime.WindowGetSize(ctx)
+			platform.SaveWindowConfig(platform.WindowConfig{X: x, Y: y, Width: width, Height: height})
+			go runtime.Quit(ctx)
+			return false
 		},
 		OnShutdown: func(ctx context.Context) {
 			app.shutdown(ctx)
