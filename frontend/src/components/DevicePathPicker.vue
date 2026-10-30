@@ -9,11 +9,13 @@ const props = defineProps<{
   show: boolean
   serial: string
   mode: 'file' | 'dir'
+  multi?: boolean
 }>()
 
 const emit = defineEmits<{
   (e: 'update:show', value: boolean): void
   (e: 'select', path: string): void
+  (e: 'select-many', paths: string[]): void
 }>()
 
 const message = useMessage()
@@ -21,11 +23,11 @@ const message = useMessage()
 const currentPath = ref('/sdcard/Download')
 const files = ref<model.DeviceFile[]>([])
 const loading = ref(false)
-const selectedPath = ref('')
+const selectedPaths = ref<string[]>([])
 
 const quickPaths = ['/sdcard', '/sdcard/Download', '/sdcard/DCIM', '/sdcard/Pictures', '/data/local/tmp']
 
-const canConfirm = computed(() => props.mode === 'dir' || !!selectedPath.value)
+const canConfirm = computed(() => props.mode === 'dir' || selectedPaths.value.length > 0)
 
 function formatSize(bytes: number) {
   if (bytes < 1024) {
@@ -44,7 +46,7 @@ async function load() {
   loading.value = true
   try {
     files.value = await ListDeviceFiles(props.serial, currentPath.value)
-    selectedPath.value = ''
+    selectedPaths.value = []
   } catch (e) {
     message.error(e instanceof Error ? e.message : String(e))
     files.value = []
@@ -59,7 +61,16 @@ function onItem(item: model.DeviceFile) {
     void load()
     return
   }
-  selectedPath.value = item.path
+  if (props.multi) {
+    const index = selectedPaths.value.indexOf(item.path)
+    if (index >= 0) {
+      selectedPaths.value.splice(index, 1)
+    } else {
+      selectedPaths.value.push(item.path)
+    }
+    return
+  }
+  selectedPaths.value = [item.path]
 }
 
 function goUp() {
@@ -79,11 +90,15 @@ function confirm() {
   if (props.mode === 'dir') {
     emit('select', currentPath.value)
   } else {
-    if (!selectedPath.value) {
+    if (!selectedPaths.value.length) {
       message.warning('请选择一个文件')
       return
     }
-    emit('select', selectedPath.value)
+    if (props.multi) {
+      emit('select-many', [...selectedPaths.value])
+    } else {
+      emit('select', selectedPaths.value[0])
+    }
   }
   emit('update:show', false)
 }
@@ -128,7 +143,7 @@ watch(
             v-for="item in files"
             :key="item.path"
             class="row"
-            :class="{ dir: item.isDir, selected: selectedPath === item.path }"
+            :class="{ dir: item.isDir, selected: selectedPaths.includes(item.path) }"
             @click="onItem(item)"
           >
             <NIcon :size="16" :component="item.isDir ? FolderOutline : DocumentOutline" />
@@ -141,11 +156,17 @@ watch(
 
       <div class="footer">
         <span class="hint">
-          {{ mode === 'dir' ? '选择当前目录作为目标' : '选择一个文件后确认' }}
+          {{
+            mode === 'dir'
+              ? '选择当前目录作为目标'
+              : multi
+                ? `已选 ${selectedPaths.length} 个文件`
+                : '选择一个文件后确认'
+          }}
         </span>
         <NButton size="small" @click="emit('update:show', false)">取消</NButton>
         <NButton size="small" type="primary" :disabled="!canConfirm" @click="confirm">
-          {{ mode === 'dir' ? '选择此目录' : '选择此文件' }}
+          {{ mode === 'dir' ? '选择此目录' : multi ? '选择这些文件' : '选择此文件' }}
         </NButton>
       </div>
     </div>

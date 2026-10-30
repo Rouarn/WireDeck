@@ -56,7 +56,7 @@ func (a *App) startup(ctx context.Context) {
 	a.devices.Start(ctx)
 	runtime.OnFileDrop(ctx, func(x, y int, paths []string) {
 		println(fmt.Sprintf("[drop] %d file(s) dropped", len(paths)))
-		a.emit("files:dropped", paths)
+		a.emit("files:dropped", map[string]any{"x": x, "y": y, "paths": paths})
 	})
 
 	// 启动后尝试重连历史设备，避免每次都要手动连接。
