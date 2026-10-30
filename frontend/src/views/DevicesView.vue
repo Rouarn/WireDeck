@@ -111,7 +111,7 @@ async function pair() {
   error.value = ''
   pairHint.value = ''
   if (!host.value.trim() || !pairPort.value || !pairCode.value) {
-    error.value = '请填写 IP、配对端口和配对码'
+    error.value = t('devices.fillPairing')
     return
   }
 
@@ -124,10 +124,10 @@ async function pair() {
     })
     if (res.ok) {
       paired.value = true
-      pairHint.value = '配对成功。现在填写无线调试主页显示的「IP 地址和端口」中的端口，点击连接。'
-      message.success('配对成功')
+      pairHint.value = t('devices.pairingOk')
+      message.success(t('devices.pairedOk'))
     } else {
-      error.value = res.message || '配对失败'
+      error.value = res.message || t('devices.pairingFail')
     }
   } catch (e) {
     error.value = e instanceof Error ? e.message : String(e)
@@ -139,7 +139,7 @@ async function pair() {
 async function connect() {
   error.value = ''
   if (!host.value.trim() || !connectPort.value) {
-    error.value = '请填写 IP 和连接端口'
+    error.value = t('devices.fillConnect')
     return
   }
 
@@ -148,10 +148,10 @@ async function connect() {
     const res = await ConnectDevice({ host: host.value.trim(), port: Number(connectPort.value) })
     if (res.ok) {
       pairHint.value = ''
-      message.success('已连接')
+      message.success(t('devices.connected'))
       await store.refresh()
     } else {
-      error.value = res.message || '连接失败'
+      error.value = res.message || t('devices.connectFail')
     }
   } catch (e) {
     error.value = e instanceof Error ? e.message : String(e)
@@ -164,7 +164,7 @@ async function disconnect(serial: string) {
   try {
     await DisconnectDevice(serial)
     await store.refresh()
-    message.info('已断开')
+    message.info(t('devices.disconnected'))
   } catch (e) {
     error.value = e instanceof Error ? e.message : String(e)
   }
@@ -175,10 +175,10 @@ async function enableWireless(serial: string) {
   try {
     const res = await EnableWireless(serial)
     if (res.ok) {
-      message.success(res.message || '已切换为无线连接')
+      message.success(res.message || t('devices.wirelessOk'))
       await store.refresh()
     } else {
-      message.warning(res.message || '切换失败')
+      message.warning(res.message || t('devices.wirelessFail'))
     }
   } catch (e) {
     message.error(e instanceof Error ? e.message : String(e))
@@ -204,10 +204,9 @@ async function startScrcpy(device: model.Device) {
   if (isXiaomi && !localStorage.getItem(tipKey)) {
     localStorage.setItem(tipKey, '1')
     dialog.info({
-      title: '投屏无法控制手机？',
-      content:
-        '小米 / 红米设备需要在「开发者选项 → USB 调试（安全设置）」中开启该开关，否则投屏画面正常，但鼠标键盘无法操作手机。',
-      positiveText: '继续投屏',
+      title: t('devices.tipTitle'),
+      content: t('devices.tipContent'),
+      positiveText: t('devices.tipContinue'),
       onPositiveClick: () => {
         void doStartScrcpy(device)
       },

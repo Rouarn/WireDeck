@@ -16,7 +16,7 @@ const emit = defineEmits<{
 const message = useMessage()
 
 const qrData = ref('')
-const status = ref('正在生成二维码…')
+const status = ref(t('qr.generating'))
 const waiting = ref(false)
 const error = ref('')
 const sessionName = ref('')
@@ -29,7 +29,7 @@ async function start() {
   const token = ++runToken
   error.value = ''
   waiting.value = true
-  status.value = '正在生成二维码…'
+  status.value = t('qr.generating')
 
   try {
     session = await CreatePairingQR()
@@ -40,7 +40,7 @@ async function start() {
       margin: 1,
       errorCorrectionLevel: 'M',
     })
-    status.value = '请用手机扫描二维码，等待手机广播配对服务…'
+    status.value = t('qr.scanHint')
 
     const result = await WaitQRPairing(session.name, session.password)
     if (token !== runToken) {
@@ -53,13 +53,13 @@ async function start() {
       emit('paired')
       emit('update:show', false)
     } else {
-      error.value = result.message || '配对未完成'
-      status.value = '配对未完成，可刷新二维码重试'
+      error.value = result.message || t('qr.notCompleted')
+      status.value = t('qr.retryHint')
     }
   } catch (e) {
     if (token === runToken) {
       error.value = e instanceof Error ? e.message : String(e)
-      status.value = '配对失败，可刷新二维码重试'
+      status.value = t('qr.failed')
     }
   } finally {
     if (token === runToken) {

@@ -79,7 +79,7 @@ onMounted(async () => {
 
     <main class="main">
       <header class="topbar">
-        <div class="page-title">{{ route.meta.title }}</div>
+        <div class="page-title">{{ t(String(route.meta.titleKey || 'nav.devices')) }}</div>
         <div class="topbar-spacer"></div>
         <div class="device-switcher">
           <span class="dot" :class="{ off: !store.current }"></span>

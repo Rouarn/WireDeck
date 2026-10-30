@@ -60,10 +60,10 @@ function formatSize(bytes: number) {
 
 function clearCache() {
   dialog.warning({
-    title: '清理应用名称缓存',
-    content: '将删除所有已解析的应用名称，下次查看详情或导出时会重新解析。',
-    positiveText: '清理',
-    negativeText: '取消',
+    title: t('settings.cacheDialogTitle'),
+    content: t('settings.cacheDialogContent'),
+    positiveText: t('settings.cacheDialogOk'),
+    negativeText: t('settings.cacheDialogCancel'),
     onPositiveClick: async () => {
       await ClearAppLabelCache()
       await refreshCacheInfo()
@@ -90,9 +90,9 @@ async function checkUpdate() {
   try {
     updateInfo.value = await CheckUpdate()
     if (updateInfo.value.hasUpdate) {
-      message.success(`发现新版本 v${updateInfo.value.latest}`)
+      message.success(t('settings.newVersion', { version: updateInfo.value.latest }))
     } else {
-      message.info('已是最新版本')
+      message.info(t('settings.upToDate'))
     }
   } catch (e) {
     message.error(e instanceof Error ? e.message : String(e))
@@ -191,14 +191,12 @@ async function openUpdate() {
       </div>
       <div class="panel-body">
         <p class="desc">
-          手机「无线调试 → 已配对设备」中显示为
-          <code>{{ identity?.hostname || '—' }}@{{ identity?.lanIP || '—' }}</code>。
-          @ 前是电脑主机名，@ 后是电脑局域网 IP，不是手机信息。
+          {{ t('settings.pairingShown', { id: `${identity?.hostname || '—'}@${identity?.lanIP || '—'}` }) }}
         </p>
-        <p class="desc">该标签由 adb 在配对时上报，配对后不会自动更新。如需显示为 WireDeck，可临时修改主机名：</p>
-        <pre class="cmd">sudo scutil --set HostName WireDeck   # 修改
-sudo scutil --set HostName ""         # 恢复</pre>
-        <p class="desc muted">修改后需在手机上移除旧配对记录并重新配对，才会更新显示。</p>
+        <p class="desc">{{ t('settings.pairingHow') }}</p>
+        <pre class="cmd">sudo scutil --set HostName WireDeck
+sudo scutil --set HostName ""</pre>
+        <p class="desc muted">{{ t('settings.pairingUpdate') }}</p>
       </div>
     </section>
 

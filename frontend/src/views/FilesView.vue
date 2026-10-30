@@ -477,9 +477,11 @@ onMounted(async () => {
 }
 
 .row-label {
-  flex: 0 0 60px;
+  flex: 0 0 auto;
+  min-width: 60px;
   color: var(--text-secondary);
   font-size: 12px;
+  white-space: nowrap;
 }
 
 .shot {

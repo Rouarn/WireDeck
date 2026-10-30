@@ -92,7 +92,7 @@ function confirm() {
     emit('select', currentPath.value)
   } else {
     if (!selectedPaths.value.length) {
-      message.warning('请选择一个文件')
+      message.warning(t('picker.selectFileWarning'))
       return
     }
     if (props.multi) {

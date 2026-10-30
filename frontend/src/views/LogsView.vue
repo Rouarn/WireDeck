@@ -38,22 +38,22 @@ const crashBuffer = ref<string[]>([])
 const listRef = ref<{ scrollToBottom: () => void } | null>(null)
 
 const appOptions = computed(() => [
-  { label: '全部应用', value: '' },
+  { label: t('logs.allApps'), value: '' },
   ...apps.value.map((app) => ({
     label: app.label ? `${app.label} (${app.package})` : app.package,
     value: app.package,
   })),
 ])
 
-const levelOptions = [
-  { label: '警告与错误', value: 'WA' },
-  { label: '全部级别', value: 'ALL' },
+const levelOptions = computed(() => [
+  { label: t('logs.levelWA'), value: 'WA' },
+  { label: t('logs.levelAll'), value: 'ALL' },
   { label: 'ERROR', value: 'E' },
   { label: 'WARN', value: 'W' },
   { label: 'INFO', value: 'I' },
   { label: 'DEBUG', value: 'D' },
   { label: 'VERBOSE', value: 'V' },
-]
+])
 
 const visibleLines = computed(() => {
   let result = lines.value
@@ -128,13 +128,13 @@ function togglePause() {
 
 async function exportLog() {
   if (!lines.value.length) {
-    message.warning('暂无日志可导出')
+    message.warning(t('logs.exportEmpty'))
     return
   }
   try {
     const path = await ExportLogcat(visibleLines.value.map((line) => line.text).join('\n'))
     if (path) {
-      message.success(`已保存到 ${path}`)
+      message.success(t('logs.savedTo', { path }))
     }
   } catch (e) {
     message.error(e instanceof Error ? e.message : String(e))
@@ -154,7 +154,7 @@ watch(
 async function copyCrash() {
   try {
     await CopyText(crashBuffer.value.join('\n'))
-    message.success('崩溃日志已复制')
+    message.success(t('logs.copied'))
   } catch (e) {
     message.error(e instanceof Error ? e.message : String(e))
   }
@@ -179,7 +179,7 @@ async function loadApps() {
 
 async function startLog() {
   if (!store.current) {
-    message.warning('请先在「设备」页选择设备')
+    message.warning(t('common.selectDevice'))
     return
   }
   if (running.value) {

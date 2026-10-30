@@ -125,7 +125,7 @@ function deviceLabel() {
 
 async function start() {
   if (!store.current) {
-    message.warning('请先在「设备」页选择目标设备')
+    message.warning(t('install.selectDeviceFirst'))
     return
   }
 
@@ -145,7 +145,7 @@ async function start() {
         deviceLabel: deviceLabel(),
         stage: 'queued',
         percent: 0,
-        message: '排队中',
+        message: t('install.queued'),
         done: false,
         ok: false,
         code: '',
@@ -189,14 +189,14 @@ function onDone(r: InstallResultPayload) {
 
   if (r.ok) {
     task.percent = 100
-    task.message = `安装成功 · ${(r.durationMs / 1000).toFixed(1)}s`
-    message.success(`${task.name} 安装成功`)
+    task.message = t('install.successWithDuration', { s: (r.durationMs / 1000).toFixed(1) })
+    message.success(`${task.name} · ${t('install.statusInstalled')}`)
   } else if (isCanceled(task)) {
-    task.message = '已取消'
-    message.info(`${task.name} 已取消`)
+    task.message = t('install.cancelled')
+    message.info(`${task.name} · ${t('install.statusCancelled')}`)
   } else {
-    task.message = '安装失败'
-    message.error(`${task.name} 安装失败`)
+    task.message = t('install.failed')
+    message.error(`${task.name} · ${t('install.statusFailed')}`)
   }
 }
 
@@ -206,12 +206,12 @@ function isCanceled(task: TaskRow) {
 
 function statusText(task: TaskRow) {
   if (task.ok) {
-    return '已安装'
+    return t('install.statusInstalled')
   }
   if (isCanceled(task)) {
-    return '已取消'
+    return t('install.statusCancelled')
   }
-  return '安装失败'
+  return t('install.statusFailed')
 }
 
 function statusType(task: TaskRow): 'success' | 'default' | 'error' {

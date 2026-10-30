@@ -154,13 +154,13 @@ watch(
 
 async function loadLabels() {
   if (!store.current) {
-    message.warning('请先选择设备')
+    message.warning(t('apps.selectDeviceShort'))
     return
   }
 
   const pkgs = apps.value.filter((app) => !app.label).map((app) => app.package)
   if (!pkgs.length) {
-    message.info('所有应用都已有中文名')
+    message.info(t('apps.allHaveNames'))
     return
   }
 
@@ -205,7 +205,7 @@ async function exportApp(pkg: string) {
     exporting.value = true
     exportProgress.value = 0
     await ExportApp(store.current.serial, pkg, dir)
-    message.success(`已导出到 ${dir}`)
+    message.success(t('apps.exportedTo', { dir }))
   } catch (e) {
     message.error(e instanceof Error ? e.message : String(e))
   } finally {
@@ -229,7 +229,7 @@ async function uninstall(pkg: string) {
   try {
     const result = await UninstallApp(store.current.serial, pkg, false)
     if (result.ok) {
-      message.success(`${pkg} 已卸载`)
+      message.success(t('apps.uninstalled', { pkg }))
       await load()
     } else {
       message.error(result.message)
@@ -253,10 +253,10 @@ async function onMore(key: string, pkg: string) {
   if (key === 'clear') {
     const serial = store.current.serial
     dialog.warning({
-      title: '清除应用数据',
-      content: `确认清除 ${pkg} 的全部数据？此操作不可撤销。`,
-      positiveText: '清除数据',
-      negativeText: '取消',
+      title: t('apps.clearDataTitle'),
+      content: t('apps.clearDataContent', { pkg }),
+      positiveText: t('apps.clearDataOk'),
+      negativeText: t('common.cancel'),
       onPositiveClick: async () => {
         try {
           const result = await ClearAppData(serial, pkg)

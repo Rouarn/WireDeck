@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { nextTick, ref } from 'vue'
+import { nextTick, ref , computed } from 'vue'
 import { NButton, NIcon, NInput, useMessage } from 'naive-ui'
 import { CopyOutline, PlayOutline, TrashOutline } from '@vicons/ionicons5'
 import { CopyText, ExecShell } from '../../wailsjs/go/main/App'
@@ -25,13 +25,13 @@ const records = ref<ShellRecord[]>([])
 const outputBox = ref<HTMLElement | null>(null)
 const seq = ref(0)
 
-const quickCommands = [
-  { label: '设备型号', command: 'getprop ro.product.model' },
-  { label: '第三方应用', command: 'pm list packages -3' },
-  { label: '电池状态', command: 'dumpsys battery' },
-  { label: '屏幕分辨率', command: 'wm size' },
-  { label: '进程占用', command: 'top -n 1 -b | head -20' },
-]
+const quickCommands = computed(() => [
+  { label: t('shell.quickModel'), command: 'getprop ro.product.model' },
+  { label: t('shell.quickApps'), command: 'pm list packages -3' },
+  { label: t('shell.quickBattery'), command: 'dumpsys battery' },
+  { label: t('shell.quickSize'), command: 'wm size' },
+  { label: t('shell.quickTop'), command: 'top -n 1 -b | head -20' },
+])
 
 function formatTime() {
   return new Date().toLocaleTimeString('zh-CN', { hour12: false })
@@ -46,7 +46,7 @@ function scrollToBottom() {
 
 async function run() {
   if (!store.current) {
-    message.warning('请先在「设备」页选择设备')
+    message.warning(t('common.selectDevice'))
     return
   }
   const cmd = command.value.trim()
@@ -113,7 +113,7 @@ async function copyAll() {
     .join('\n\n')
 
   await CopyText(text)
-  message.success('输出已复制')
+  message.success(t('shell.copied'))
 }
 </script>
 

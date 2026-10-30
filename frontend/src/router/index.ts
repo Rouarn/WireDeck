@@ -12,13 +12,13 @@ const router = createRouter({
   history: createWebHashHistory(),
   routes: [
     { path: '/', redirect: '/devices' },
-    { path: '/devices', component: DevicesView, meta: { title: '设备' } },
-    { path: '/install', component: InstallView, meta: { title: '安装台' } },
-    { path: '/apps', component: AppsView, meta: { title: '应用' } },
-    { path: '/files', component: FilesView, meta: { title: '文件' } },
-    { path: '/logs', component: LogsView, meta: { title: '日志' } },
-    { path: '/shell', component: ShellView, meta: { title: 'Shell' } },
-    { path: '/settings', component: SettingsView, meta: { title: '设置' } },
+    { path: '/devices', component: DevicesView, meta: { titleKey: 'nav.devices' } },
+    { path: '/install', component: InstallView, meta: { titleKey: 'nav.install' } },
+    { path: '/apps', component: AppsView, meta: { titleKey: 'nav.apps' } },
+    { path: '/files', component: FilesView, meta: { titleKey: 'nav.files' } },
+    { path: '/logs', component: LogsView, meta: { titleKey: 'nav.logs' } },
+    { path: '/shell', component: ShellView, meta: { titleKey: 'nav.shell' } },
+    { path: '/settings', component: SettingsView, meta: { titleKey: 'nav.settings' } },
   ],
 })
 
