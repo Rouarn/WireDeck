@@ -201,6 +201,7 @@ func (s *DeviceService) wifiRSSI(ctx context.Context, serial string) int {
 		if fields := strings.Fields(value); len(fields) > 0 {
 			value = fields[0]
 		}
+		value = strings.Trim(value, ",;")
 		if n, err := strconv.Atoi(value); err == nil {
 			return n
 		}

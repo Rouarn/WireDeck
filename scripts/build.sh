@@ -35,40 +35,6 @@ if [ -d "resources/scrcpy" ]; then
   rm -f "$RES/scrcpy/adb"
   chmod +x "$RES/scrcpy/scrcpy" 2>/dev/null || true
 
-  # 用 .app 壳包装 scrcpy，让 Dock 图标使用 WireDeck 的图标。
-  MIRROR="$RES/scrcpy/WireDeck Mirror.app"
-  rm -rf "$MIRROR"
-  mkdir -p "$MIRROR/Contents/MacOS" "$MIRROR/Contents/Resources"
-  cp "$RES/scrcpy/scrcpy" "$RES/scrcpy/scrcpy-server" "$MIRROR/Contents/Resources/" 2>/dev/null || true
-  # scrcpy 会加载同目录的 scrcpy.png 作为窗口图标，用 WireDeck 图标替换它。
-  if [ -f "build/appicon.png" ]; then
-    cp "build/appicon.png" "$MIRROR/Contents/Resources/scrcpy.png"
-  else
-    cp "$RES/scrcpy/scrcpy.png" "$MIRROR/Contents/Resources/" 2>/dev/null || true
-  fi
-  if [ -f "$RES/iconfile.icns" ]; then
-    cp "$RES/iconfile.icns" "$MIRROR/Contents/Resources/iconfile.icns"
-  fi
-  cat > "$MIRROR/Contents/Info.plist" <<'PLIST'
-<?xml version="1.0" encoding="UTF-8"?>
-<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
-<plist version="1.0">
-<dict>
-  <key>CFBundleExecutable</key><string>WireDeck Mirror</string>
-  <key>CFBundleIdentifier</key><string>cn.woyuxiaji.wiredeck.mirror</string>
-  <key>CFBundleName</key><string>WireDeck Mirror</string>
-  <key>CFBundleIconFile</key><string>iconfile</string>
-  <key>CFBundlePackageType</key><string>APPL</string>
-  <key>LSMinimumSystemVersion</key><string>11.0</string>
-</dict>
-</plist>
-PLIST
-  cat > "$MIRROR/Contents/MacOS/WireDeck Mirror" <<'LAUNCHER'
-#!/bin/sh
-DIR="$(cd "$(dirname "$0")/../Resources" && pwd)"
-exec "$DIR/scrcpy" "$@"
-LAUNCHER
-  chmod +x "$MIRROR/Contents/MacOS/WireDeck Mirror"
 fi
 
 # 资源变更后原签名失效，重新做 ad-hoc 签名（Apple Silicon 要求至少 ad-hoc）。
