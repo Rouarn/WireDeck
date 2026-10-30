@@ -2,7 +2,7 @@
 import { computed, onBeforeUnmount, onMounted, ref, watch } from 'vue'
 import { NButton, NIcon, NInput, NSelect, useMessage } from 'naive-ui'
 import { PlayOutline, StopOutline } from '@vicons/ionicons5'
-import { CopyText, ListApps, StartLogcat, StopLogcat } from '../../wailsjs/go/main/App'
+import { CopyText, ExportLogcat, ListApps, StartLogcat, StopLogcat } from '../../wailsjs/go/main/App'
 import type { model } from '../../wailsjs/go/models'
 import { EventsOn } from '../../wailsjs/runtime/runtime'
 import VirtualList from '../components/VirtualList.vue'
@@ -27,6 +27,7 @@ const lines = ref<LogLine[]>([])
 const level = ref('WA')
 const keyword = ref('')
 const paused = ref(false)
+const pending = ref<string[]>([])
 
 const apps = ref<model.AppSummary[]>([])
 const selectedPkg = ref('')
@@ -85,7 +86,16 @@ function trackCrash(raw: string) {
 }
 
 function onBatch(p: LogcatBatchPayload) {
-  if (!running.value || p.streamId !== streamId.value || paused.value) {
+  if (!running.value || p.streamId !== streamId.value) {
+    return
+  }
+
+  if (paused.value) {
+    // 暂停期间先缓冲，恢复时补上，避免丢日志。
+    pending.value.push(...p.lines)
+    if (pending.value.length > 2000) {
+      pending.value.splice(0, pending.value.length - 2000)
+    }
     return
   }
 
@@ -95,6 +105,38 @@ function onBatch(p: LogcatBatchPayload) {
   }
   if (lines.value.length > 2000) {
     lines.value.splice(0, lines.value.length - 2000)
+  }
+}
+
+function togglePause() {
+  if (paused.value) {
+    // 恢复：把暂停期间缓冲的日志补进来。
+    for (const raw of pending.value) {
+      lines.value.push(parseLine(raw))
+      trackCrash(raw)
+    }
+    pending.value = []
+    if (lines.value.length > 2000) {
+      lines.value.splice(0, lines.value.length - 2000)
+    }
+    paused.value = false
+    return
+  }
+  paused.value = true
+}
+
+async function exportLog() {
+  if (!lines.value.length) {
+    message.warning('暂无日志可导出')
+    return
+  }
+  try {
+    const path = await ExportLogcat(visibleLines.value.map((line) => line.text).join('\n'))
+    if (path) {
+      message.success(`已保存到 ${path}`)
+    }
+  } catch (e) {
+    message.error(e instanceof Error ? e.message : String(e))
   }
 }
 
@@ -199,8 +241,9 @@ onBeforeUnmount(() => {
         <template #icon><NIcon><StopOutline /></NIcon></template>
         停止
       </NButton>
-      <NButton size="small" quaternary @click="paused = !paused">{{ paused ? '继续' : '暂停' }}</NButton>
+      <NButton size="small" quaternary @click="togglePause">{{ paused ? '继续' : '暂停' }}</NButton>
       <NButton size="small" quaternary @click="clearLog">清空</NButton>
+      <NButton size="small" quaternary :disabled="!lines.length" @click="exportLog">导出</NButton>
     </div>
 
     <div class="filters">

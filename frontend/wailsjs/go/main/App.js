@@ -54,6 +54,10 @@ export function ExportApp(arg1, arg2, arg3) {
   return window['go']['main']['App']['ExportApp'](arg1, arg2, arg3);
 }
 
+export function ExportLogcat(arg1) {
+  return window['go']['main']['App']['ExportLogcat'](arg1);
+}
+
 export function ForceStopApp(arg1, arg2) {
   return window['go']['main']['App']['ForceStopApp'](arg1, arg2);
 }

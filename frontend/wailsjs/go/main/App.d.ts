@@ -28,6 +28,8 @@ export function ExecShell(arg1:string,arg2:string):Promise<model.ShellResult>;
 
 export function ExportApp(arg1:string,arg2:string,arg3:string):Promise<Array<string>>;
 
+export function ExportLogcat(arg1:string):Promise<string>;
+
 export function ForceStopApp(arg1:string,arg2:string):Promise<model.AppOpResult>;
 
 export function GetHostIdentity():Promise<model.HostIdentity>;

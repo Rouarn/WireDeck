@@ -3,6 +3,8 @@ package main
 import (
 	"context"
 	"fmt"
+	"os"
+	"strings"
 	"time"
 
 	"github.com/wailsapp/wails/v2/pkg/menu"
@@ -420,6 +422,35 @@ func (a *App) StartLogcat(serial, pkg string) (string, error) {
 func (a *App) StopLogcat(streamID string) error {
 	a.logs.Stop(streamID)
 	return nil
+}
+
+// ExportLogcat 把日志内容保存到用户选择的文件，返回保存路径（取消时为空）。
+func (a *App) ExportLogcat(content string) (string, error) {
+	if a.ctx == nil {
+		return "", fmt.Errorf("应用未就绪")
+	}
+
+	path, err := runtime.SaveFileDialog(a.ctx, runtime.SaveDialogOptions{
+		Title:           "导出日志",
+		DefaultFilename: "wiredeck-logcat.txt",
+		Filters: []runtime.FileFilter{
+			{DisplayName: "文本文件", Pattern: "*.txt"},
+		},
+	})
+	if err != nil {
+		return "", err
+	}
+	if path == "" {
+		return "", nil
+	}
+	if !strings.HasSuffix(strings.ToLower(path), ".txt") {
+		path += ".txt"
+	}
+
+	if err := os.WriteFile(path, []byte(content), 0o644); err != nil {
+		return "", err
+	}
+	return path, nil
 }
 
 // CopyText 将文本写入系统剪贴板。
