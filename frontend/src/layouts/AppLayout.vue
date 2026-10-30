@@ -39,6 +39,8 @@ const fullHeightPages = ['/apps', '/logs', '/shell']
 const isFullHeight = computed(() => fullHeightPages.includes(route.path))
 
 onMounted(async () => {
+  // 让整个窗口都可作为拖放目标，避免只有特定容器能接收文件。
+  document.body.style.setProperty('--wails-drop-target', 'drop')
   await store.refresh()
   EventsOn('device:changed', (devices: model.Device[]) => store.apply(devices))
 })
