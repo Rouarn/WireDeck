@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { computed, onMounted, ref } from 'vue'
+import { computed, onMounted, ref, watch } from 'vue'
 import {
   NAlert,
   NButton,
@@ -21,7 +21,6 @@ import {
   ForceStopApp,
   LaunchApp,
   ListApps,
-  LoadAppLabels,
   PickDirectory,
   UninstallApp,
 } from '../../wailsjs/go/main/App'
@@ -30,6 +29,7 @@ import { EventsOn } from '../../wailsjs/runtime/runtime'
 import VirtualList from '../components/VirtualList.vue'
 import SegmentedControl from '../components/SegmentedControl.vue'
 import { useDevicesStore } from '../stores/devices'
+import { useLabelStore } from '../stores/labels'
 
 interface AppProgressPayload {
   pkg: string
@@ -44,8 +44,7 @@ const dialog = useDialog()
 
 const apps = ref<model.AppSummary[]>([])
 const loading = ref(false)
-const labelLoading = ref(false)
-const labelProgress = ref('')
+const labels = useLabelStore()
 const search = ref('')
 const scope = ref<'user' | 'system' | 'all'>('user')
 
@@ -128,12 +127,29 @@ async function load() {
   loading.value = true
   try {
     apps.value = await ListApps(store.current.serial, scope.value)
+    applyLabels()
   } catch (e) {
     message.error(e instanceof Error ? e.message : String(e))
   } finally {
     loading.value = false
   }
 }
+
+function applyLabels() {
+  const mapping = labels.job.results
+  for (const app of apps.value) {
+    const label = mapping[app.package]
+    if (label) {
+      app.label = label
+    }
+  }
+}
+
+watch(
+  () => labels.job.results,
+  () => applyLabels(),
+  { deep: true },
+)
 
 async function loadLabels() {
   if (!store.current) {
@@ -147,25 +163,8 @@ async function loadLabels() {
     return
   }
 
-  labelLoading.value = true
-  labelProgress.value = '准备加载…'
-  try {
-    const mapping = await LoadAppLabels(store.current.serial, pkgs)
-    let count = 0
-    for (const app of apps.value) {
-      const label = mapping[app.package]
-      if (label) {
-        app.label = label
-        count += 1
-      }
-    }
-    message.success(`已加载 ${count} 个应用名称`)
-  } catch (e) {
-    message.error(e instanceof Error ? e.message : String(e))
-  } finally {
-    labelLoading.value = false
-    labelProgress.value = ''
-  }
+  await labels.load(store.current.serial, pkgs)
+  applyLabels()
 }
 
 async function openDetail(pkg: string) {
@@ -216,9 +215,6 @@ async function exportApp(pkg: string) {
 function onAppProgress(p: AppProgressPayload) {
   if (p.stage === 'label' && p.pkg === pendingDetailPkg.value && detailLoading.value) {
     detailProgress.value = Math.max(detailProgress.value, p.percent)
-  }
-  if (p.stage === 'labels') {
-    labelProgress.value = p.message
   }
   if (p.stage === 'export' && exporting.value) {
     exportProgress.value = Math.max(exportProgress.value, p.percent)
@@ -321,8 +317,8 @@ onMounted(() => {
       <SegmentedControl :options="scopeOptions" :value="scope" @update:value="setScope" />
       <span class="count">{{ visibleApps.length }} / {{ apps.length }}</span>
       <div class="spacer"></div>
-      <NButton size="small" :loading="labelLoading" @click="loadLabels">
-        {{ labelLoading ? labelProgress || '加载中…' : '加载名称' }}
+      <NButton size="small" :loading="labels.job.running" @click="loadLabels">
+        {{ labels.job.running ? labels.job.message || '加载中…' : '加载名称' }}
       </NButton>
       <NButton size="small" :loading="loading" @click="load">刷新</NButton>
     </div>
