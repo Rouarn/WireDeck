@@ -99,7 +99,7 @@ Wails v2（系统 WebView）+ Go 后端 + Vue 3 + TypeScript + Vite + Pinia + Na
 
 ## 状态
 
-v0.2.0 已发布（Alpha）。macOS（Apple Silicon）为正式支持平台；Windows 处于实验阶段，由 GitHub Actions 构建，暂不提供正式安装包。
+v0.2.1 已发布（Alpha）。macOS（Apple Silicon）为正式支持平台；Windows 处于实验阶段，由 GitHub Actions 构建，暂不提供正式安装包。
 
 ## 许可证
 
