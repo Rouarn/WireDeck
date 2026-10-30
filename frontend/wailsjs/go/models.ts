@@ -144,6 +144,8 @@ export namespace model {
 	    state: string;
 	    transport: string;
 	    hwSerial: string;
+	    ip: string;
+	    rssi: number;
 	    lastSeen: number;
 	
 	    static createFrom(source: any = {}) {
@@ -159,6 +161,8 @@ export namespace model {
 	        this.state = source["state"];
 	        this.transport = source["transport"];
 	        this.hwSerial = source["hwSerial"];
+	        this.ip = source["ip"];
+	        this.rssi = source["rssi"];
 	        this.lastSeen = source["lastSeen"];
 	    }
 	}

@@ -66,6 +66,37 @@ function stateLabel(state: string): string {
   return state
 }
 
+function signalLabel(rssi: number): string {
+  if (!rssi) {
+    return '—'
+  }
+  if (rssi >= -55) {
+    return '强'
+  }
+  if (rssi >= -70) {
+    return '中'
+  }
+  return '弱'
+}
+
+function lastSeenLabel(ts: number): string {
+  if (!ts) {
+    return '—'
+  }
+  const minutes = Math.floor((Date.now() - ts) / 60000)
+  if (minutes < 1) {
+    return '刚刚'
+  }
+  if (minutes < 60) {
+    return `${minutes} 分钟前`
+  }
+  const hours = Math.floor(minutes / 60)
+  if (hours < 24) {
+    return `${hours} 小时前`
+  }
+  return `${Math.floor(hours / 24)} 天前`
+}
+
 async function discover() {
   try {
     services.value = await DiscoverServices()
@@ -224,15 +255,24 @@ onMounted(() => {
           <div class="meta-grid">
             <div>
               <span class="meta-label">序列号</span>
-              <span class="meta-value"><code>{{ device.serial }}</code></span>
+              <span class="meta-value"><code :title="device.serial">{{ device.serial }}</code></span>
             </div>
             <div>
-              <span class="meta-label">传输方式</span>
-              <span class="meta-value">{{ device.transport === 'wifi' ? 'Wi-Fi' : 'USB' }}</span>
+              <span class="meta-label">IP 地址</span>
+              <span class="meta-value">{{ device.ip || '—' }}</span>
+            </div>
+            <div>
+              <span class="meta-label">信号</span>
+              <span class="meta-value">
+                {{ device.transport === 'wifi' ? signalLabel(device.rssi) : '—' }}
+              </span>
             </div>
             <div>
               <span class="meta-label">状态</span>
-              <span class="meta-value">{{ stateLabel(device.state) }}</span>
+              <span class="meta-value">
+                {{ stateLabel(device.state) }}
+                <template v-if="device.state !== 'device'"> · {{ lastSeenLabel(device.lastSeen) }}</template>
+              </span>
             </div>
           </div>
 
@@ -257,7 +297,7 @@ onMounted(() => {
             >
               转为无线
             </NButton>
-            <NPopconfirm @positive-click="disconnect(device.serial)">
+            <NPopconfirm v-if="device.transport === 'wifi'" @positive-click="disconnect(device.serial)">
               <template #trigger>
                 <NButton size="small" quaternary>断开</NButton>
               </template>
@@ -458,7 +498,7 @@ onMounted(() => {
 
 .meta-grid {
   display: grid;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
+  grid-template-columns: repeat(4, minmax(0, 1fr));
   gap: 8px;
   margin: 14px 0;
   padding: 10px 12px;

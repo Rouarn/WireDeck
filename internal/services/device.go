@@ -146,7 +146,66 @@ func (s *DeviceService) Refresh(ctx context.Context) ([]model.Device, error) {
 	}
 
 	devices := adb.ParseDevices(res.Stdout, time.Now().UnixMilli())
-	return s.mergeDuplicates(ctx, devices), nil
+	return s.enrich(ctx, s.mergeDuplicates(ctx, devices)), nil
+}
+
+// enrich 为在线设备补充 WLAN IP 与 Wi-Fi 信号强度。
+func (s *DeviceService) enrich(ctx context.Context, devices []model.Device) []model.Device {
+	for i := range devices {
+		if devices[i].State != "device" {
+			continue
+		}
+		devices[i].IP = s.deviceIP(ctx, devices[i].Serial)
+		if devices[i].Transport == "wifi" {
+			devices[i].RSSI = s.wifiRSSI(ctx, devices[i].Serial)
+		}
+	}
+	return devices
+}
+
+func (s *DeviceService) deviceIP(ctx context.Context, serial string) string {
+	// Wi-Fi 设备的 serial 形如 192.168.1.23:41257，可直接取出 IP。
+	if host, _, ok := strings.Cut(serial, ":"); ok && strings.Count(host, ".") == 3 {
+		return host
+	}
+
+	res, err := s.server.Run(ctx, 5*time.Second, "-s", serial, "shell", "ip", "route")
+	if err != nil || res.ExitCode != 0 {
+		return ""
+	}
+
+	for _, line := range strings.Split(res.Stdout, "\n") {
+		fields := strings.Fields(line)
+		for i, field := range fields {
+			if field == "src" && i+1 < len(fields) {
+				return fields[i+1]
+			}
+		}
+	}
+	return ""
+}
+
+func (s *DeviceService) wifiRSSI(ctx context.Context, serial string) int {
+	res, err := s.server.Run(ctx, 5*time.Second, "-s", serial, "shell", "cmd", "wifi", "status")
+	if err != nil || res.ExitCode != 0 {
+		return 0
+	}
+
+	for _, line := range strings.Split(res.Stdout, "\n") {
+		idx := strings.Index(line, "RSSI:")
+		if idx < 0 {
+			continue
+		}
+		value := strings.TrimSpace(line[idx+len("RSSI:"):])
+		value = strings.TrimSpace(strings.TrimSuffix(value, "dBm"))
+		if fields := strings.Fields(value); len(fields) > 0 {
+			value = fields[0]
+		}
+		if n, err := strconv.Atoi(value); err == nil {
+			return n
+		}
+	}
+	return 0
 }
 
 // mergeDuplicates 合并同一物理设备的多条连接记录。

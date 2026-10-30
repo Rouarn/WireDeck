@@ -9,6 +9,8 @@ type Device struct {
 	State          string `json:"state"`     // device | offline | unauthorized
 	Transport      string `json:"transport"` // usb | wifi
 	HwSerial       string `json:"hwSerial"`  // ro.serialno，用于合并同一设备的多种连接
+	IP             string `json:"ip"`        // 设备的 WLAN IPv4 地址
+	RSSI           int    `json:"rssi"`      // Wi-Fi 信号强度（dBm），0 表示未知
 	LastSeen       int64  `json:"lastSeen"`
 }
 
