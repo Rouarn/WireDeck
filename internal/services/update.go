@@ -12,7 +12,7 @@ import (
 	"woyuxiaji.cn/wiredeck/internal/model"
 )
 
-const releaseAPI = "https://api.github.com/repos/Rouarn/wiredeck/releases/latest"
+const releasesAPI = "https://api.github.com/repos/Rouarn/wiredeck/releases?per_page=10"
 
 // UpdateService 负责检查 GitHub Releases 上的新版本。
 type UpdateService struct {
@@ -28,9 +28,12 @@ func NewUpdateService(currentVersion string) *UpdateService {
 	}
 }
 
-// Check 拉取最新 Release 并与当前版本比较。
+// Check 拉取发布列表并与当前版本比较。
+//
+// 注意：不能使用 /releases/latest —— 它只返回非 prerelease 的版本，
+// 而测试版（Alpha）都是 prerelease，会返回 404。
 func (s *UpdateService) Check(ctx context.Context) (model.UpdateInfo, error) {
-	req, err := http.NewRequestWithContext(ctx, http.MethodGet, releaseAPI, nil)
+	req, err := http.NewRequestWithContext(ctx, http.MethodGet, releasesAPI, nil)
 	if err != nil {
 		return model.UpdateInfo{}, err
 	}
@@ -47,26 +50,40 @@ func (s *UpdateService) Check(ctx context.Context) (model.UpdateInfo, error) {
 		return model.UpdateInfo{}, fmt.Errorf("检查更新失败: HTTP %d", resp.StatusCode)
 	}
 
-	var release struct {
+	var releases []struct {
 		TagName     string `json:"tag_name"`
 		HTMLURL     string `json:"html_url"`
 		Body        string `json:"body"`
 		PublishedAt string `json:"published_at"`
+		Draft       bool   `json:"draft"`
 	}
-	if err := json.NewDecoder(resp.Body).Decode(&release); err != nil {
+	if err := json.NewDecoder(resp.Body).Decode(&releases); err != nil {
 		return model.UpdateInfo{}, err
 	}
 
+	best := -1
+	for i := range releases {
+		if releases[i].Draft {
+			continue
+		}
+		if best == -1 || compareVersion(releases[i].TagName, releases[best].TagName) > 0 {
+			best = i
+		}
+	}
+	if best == -1 {
+		return model.UpdateInfo{}, fmt.Errorf("没有找到可用的发布版本")
+	}
+
 	current := strings.TrimPrefix(s.currentVersion, "v")
-	latest := strings.TrimPrefix(release.TagName, "v")
+	latest := strings.TrimPrefix(releases[best].TagName, "v")
 
 	return model.UpdateInfo{
 		Current:   current,
 		Latest:    latest,
 		HasUpdate: compareVersion(latest, current) > 0,
-		URL:       release.HTMLURL,
-		Notes:     release.Body,
-		Published: release.PublishedAt,
+		URL:       releases[best].HTMLURL,
+		Notes:     releases[best].Body,
+		Published: releases[best].PublishedAt,
 	}, nil
 }
 

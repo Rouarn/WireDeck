@@ -79,9 +79,15 @@ func findBundledAdb() string {
 // findScrcpy 按优先级查找 scrcpy：应用内置 → 项目 resources → PATH。
 func findScrcpy() (string, error) {
 	if exe, err := os.Executable(); err == nil {
-		bundled := filepath.Join(filepath.Dir(exe), "..", "Resources", "scrcpy", "scrcpy")
-		if info, statErr := os.Stat(bundled); statErr == nil && !info.IsDir() {
-			return bundled, nil
+		base := filepath.Join(filepath.Dir(exe), "..", "Resources", "scrcpy")
+		// 优先使用 .app 壳，Dock 图标会使用 WireDeck 图标。
+		bundle := filepath.Join(base, "WireDeck Mirror.app", "Contents", "MacOS", "WireDeck Mirror")
+		if info, statErr := os.Stat(bundle); statErr == nil && !info.IsDir() {
+			return bundle, nil
+		}
+		direct := filepath.Join(base, "scrcpy")
+		if info, statErr := os.Stat(direct); statErr == nil && !info.IsDir() {
+			return direct, nil
 		}
 	}
 
