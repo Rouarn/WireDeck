@@ -2,7 +2,7 @@
 import { computed, nextTick, onMounted, ref } from 'vue'
 import { NAlert, NButton, NEmpty, NIcon, NInput, NSpin, NTag, useMessage } from 'naive-ui'
 import { AddOutline, InformationCircleOutline, PhonePortraitOutline } from '@vicons/ionicons5'
-import { ConnectDevice, DisconnectDevice, DiscoverServices, PairDevice } from '../../wailsjs/go/main/App'
+import { ConnectDevice, DisconnectDevice, DiscoverServices, EnableWireless, PairDevice } from '../../wailsjs/go/main/App'
 import type { model } from '../../wailsjs/go/models'
 import QRPairDialog from '../components/QRPairDialog.vue'
 import { useDevicesStore } from '../stores/devices'
@@ -137,6 +137,23 @@ async function disconnect(serial: string) {
   }
 }
 
+async function enableWireless(serial: string) {
+  busy.value = true
+  try {
+    const res = await EnableWireless(serial)
+    if (res.ok) {
+      message.success(res.message || '已切换为无线连接')
+      await store.refresh()
+    } else {
+      message.warning(res.message || '切换失败')
+    }
+  } catch (e) {
+    message.error(e instanceof Error ? e.message : String(e))
+  } finally {
+    busy.value = false
+  }
+}
+
 function fillFromService(service: model.MDNSService) {
   host.value = service.host
   if (service.kind === 'pairing') {
@@ -207,6 +224,15 @@ onMounted(() => {
 
           <div class="card-actions">
             <NButton size="small" type="primary" @click="store.select(device.serial)">设为当前</NButton>
+            <NButton
+              v-if="device.transport === 'usb'"
+              size="small"
+              quaternary
+              :loading="busy"
+              @click="enableWireless(device.serial)"
+            >
+              转为无线
+            </NButton>
             <NButton size="small" quaternary @click="disconnect(device.serial)">断开</NButton>
           </div>
         </article>
