@@ -45,250 +45,78 @@ onMounted(async () => {
 </script>
 
 <template>
-  <div class="shell">
-    <aside class="sidebar">
-      <div class="brand">
-        <div class="brand-mark">W</div>
+  <div class="flex h-screen overflow-hidden">
+    <aside class="flex w-[232px] shrink-0 flex-col border-r border-line bg-muted p-3">
+      <div class="flex items-center gap-2.5 px-2 pt-1 pb-4.5">
+        <div class="flex h-7 w-7 items-center justify-center rounded-lg bg-brand text-sm font-700 text-white">
+          W
+        </div>
         <div>
-          <div class="brand-name">WireDeck</div>
-          <div class="brand-version">{{ t('app.tagline') }}</div>
+          <div class="text-sm font-600">WireDeck</div>
+          <div class="text-11px text-fg3">{{ t('app.tagline') }}</div>
         </div>
       </div>
 
-      <nav class="nav">
+      <nav class="flex flex-col gap-0.5">
         <RouterLink
           v-for="item in nav"
           :key="item.to"
           :to="item.to"
-          class="nav-item"
-          active-class="active"
+          class="flex items-center gap-2.5 rounded-sm px-2.5 py-2 text-13px no-underline"
+          :class="route.path === item.to ? 'bg-brand-soft font-600 text-brand-ink' : 'text-fg2 hover:text-fg'"
         >
           <NIcon :size="16" :component="item.icon" />
           <span>{{ t(item.key) }}</span>
-          <span v-if="item.badge && deviceCount" class="nav-badge">{{ deviceCount }}</span>
+          <span
+            v-if="item.badge && deviceCount"
+            class="ml-auto h-[18px] min-w-[18px] rounded-[9px] bg-brand px-1.25 text-center text-11px leading-[18px] text-white"
+          >
+            {{ deviceCount }}
+          </span>
         </RouterLink>
       </nav>
 
-      <div class="sidebar-footer">
-        <div class="adb-status">
-          <span class="dot" :class="{ off: !store.adb }"></span>
+      <div class="mt-auto pt-3">
+        <div class="flex items-center gap-2 rounded-sm border border-line bg-surface px-2.5 py-2 text-11px text-fg2">
+          <span
+            class="h-[7px] w-[7px] rounded-full"
+            :class="store.adb ? 'bg-[#12b76a] shadow-[0_0_0_3px_rgba(18,183,106,0.12)]' : 'bg-fg3'"
+          ></span>
           <span>{{ adbLabel }}</span>
         </div>
       </div>
     </aside>
 
-    <main class="main">
-      <header class="topbar">
-        <div class="page-title">{{ t(String(route.meta.titleKey || 'nav.devices')) }}</div>
-        <div class="topbar-spacer"></div>
-        <div class="device-switcher">
-          <span class="dot" :class="{ off: !store.current }"></span>
+    <main class="flex min-w-0 flex-1 flex-col bg-bg">
+      <header class="flex h-14 shrink-0 items-center gap-3 border-b border-line bg-surface px-5">
+        <div class="text-[15px] font-600">{{ t(String(route.meta.titleKey || 'nav.devices')) }}</div>
+        <div class="flex-1"></div>
+        <div class="flex items-center gap-2 rounded-sm border border-brand-line bg-brand-soft px-2.5 py-1.5 text-xs text-fg2">
+          <span
+            class="h-[7px] w-[7px] rounded-full"
+            :class="store.current ? 'bg-[#12b76a]' : 'bg-fg3'"
+          ></span>
           <span v-if="store.current">
-            <strong>{{ store.current.model || store.current.serial }}</strong>
+            <strong class="font-600 text-brand-ink">{{ store.current.model || store.current.serial }}</strong>
             · {{ store.current.transport === 'wifi' ? 'Wi-Fi' : 'USB' }}
           </span>
           <span v-else>{{ t('common.unknown') }}</span>
         </div>
-        <button class="topbar-btn" :disabled="store.loading" @click="store.refresh()">
+        <button
+          class="h-8 rounded-sm border border-line-strong bg-surface px-3 text-xs text-fg hover:bg-muted disabled:text-fg3"
+          :disabled="store.loading"
+          @click="store.refresh()"
+        >
           {{ store.loading ? t('common.refreshing') : t('common.refresh') }}
         </button>
       </header>
 
-      <div class="content" :class="{ 'content-full': isFullHeight }">
+      <div
+        class="flex-1 px-6 pt-5 pb-8"
+        :class="isFullHeight ? 'flex flex-col overflow-hidden pb-5' : 'overflow-auto'"
+      >
         <RouterView />
       </div>
     </main>
   </div>
 </template>
-
-<style scoped>
-.shell {
-  display: flex;
-  height: 100vh;
-  overflow: hidden;
-}
-
-.sidebar {
-  display: flex;
-  flex-direction: column;
-  flex: 0 0 232px;
-  width: 232px;
-  padding: 16px 12px;
-  border-right: 1px solid var(--border);
-  background: var(--surface-muted);
-}
-
-.brand {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  padding: 4px 8px 18px;
-}
-
-.brand-mark {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  width: 28px;
-  height: 28px;
-  border-radius: 8px;
-  background: var(--primary);
-  color: #fff;
-  font-size: 14px;
-  font-weight: 700;
-}
-
-.brand-name {
-  font-size: 14px;
-  font-weight: 600;
-}
-
-.brand-version {
-  color: var(--text-tertiary);
-  font-size: 11px;
-}
-
-.nav {
-  display: flex;
-  flex-direction: column;
-  gap: 2px;
-}
-
-.nav-item {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  padding: 8px 10px;
-  border-radius: var(--radius-sm);
-  color: var(--text-secondary);
-  font-size: 13px;
-  text-decoration: none;
-}
-
-.nav-item:hover {
-  color: var(--text);
-}
-
-.nav-item.active {
-  background: var(--primary-soft);
-  color: var(--primary-ink);
-  font-weight: 600;
-}
-
-.nav-badge {
-  min-width: 18px;
-  height: 18px;
-  margin-left: auto;
-  padding: 0 5px;
-  border-radius: 9px;
-  background: var(--primary);
-  color: #fff;
-  font-size: 11px;
-  line-height: 18px;
-  text-align: center;
-}
-
-.sidebar-footer {
-  margin-top: auto;
-  padding-top: 12px;
-}
-
-.adb-status {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  padding: 9px 10px;
-  border: 1px solid var(--border);
-  border-radius: var(--radius-sm);
-  background: var(--surface);
-  color: var(--text-secondary);
-  font-size: 11px;
-}
-
-.dot {
-  width: 7px;
-  height: 7px;
-  border-radius: 50%;
-  background: #12b76a;
-  box-shadow: 0 0 0 3px rgba(18, 183, 106, 0.12);
-}
-
-.dot.off {
-  background: var(--text-tertiary);
-  box-shadow: none;
-}
-
-.main {
-  display: flex;
-  flex: 1;
-  flex-direction: column;
-  min-width: 0;
-  background: var(--bg);
-}
-
-.topbar {
-  display: flex;
-  align-items: center;
-  flex: 0 0 56px;
-  gap: 12px;
-  height: 56px;
-  padding: 0 20px;
-  border-bottom: 1px solid var(--border);
-  background: var(--surface);
-}
-
-.page-title {
-  font-size: 15px;
-  font-weight: 600;
-}
-
-.topbar-spacer {
-  flex: 1;
-}
-
-.device-switcher {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  padding: 6px 10px;
-  border: 1px solid var(--primary-border);
-  border-radius: var(--radius-sm);
-  background: var(--primary-soft);
-  color: var(--text-secondary);
-  font-size: 12px;
-}
-
-.device-switcher strong {
-  color: var(--primary-ink);
-  font-weight: 600;
-}
-
-.topbar-btn {
-  height: 32px;
-  padding: 0 12px;
-  border: 1px solid var(--border-strong);
-  border-radius: var(--radius-sm);
-  background: var(--surface);
-  color: var(--text);
-  font-size: 12px;
-  cursor: pointer;
-}
-
-.topbar-btn:disabled {
-  color: var(--text-tertiary);
-  cursor: default;
-}
-
-.content {
-  flex: 1;
-  overflow: auto;
-  padding: 20px 24px 32px;
-}
-
-.content-full {
-  display: flex;
-  flex-direction: column;
-  overflow: hidden;
-  padding-bottom: 20px;
-}
-</style>

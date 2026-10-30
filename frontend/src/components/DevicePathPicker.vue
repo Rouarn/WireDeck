@@ -123,8 +123,8 @@ watch(
     :bordered="false"
     @update:show="(value: boolean) => emit('update:show', value)"
   >
-    <div class="picker">
-      <div class="bar">
+    <div class="flex flex-col gap-2.5">
+      <div class="flex items-center gap-2">
         <NButton size="small" quaternary :title="t('picker.up')" @click="goUp">
           <template #icon><NIcon><ChevronUpOutline /></NIcon></template>
         </NButton>
@@ -132,31 +132,41 @@ watch(
         <NButton size="small" @click="load">{{ t('picker.go') }}</NButton>
       </div>
 
-      <div class="quick">
-        <button v-for="path in quickPaths" :key="path" class="quick-chip" @click="jump(path)">
+      <div class="flex flex-wrap gap-1.5">
+        <button
+          v-for="path in quickPaths"
+          :key="path"
+          class="cursor-pointer rounded-full border border-line bg-surface px-2 py-[3px] font-mono text-[10px] text-fg2 hover:border-brand-line hover:text-brand-ink"
+          @click="jump(path)"
+        >
           {{ path }}
         </button>
       </div>
 
-      <div class="files">
+      <div class="h-[320px] overflow-y-auto rounded-sm border border-line bg-inset p-1">
         <NSpin :show="loading">
           <div
             v-for="item in files"
             :key="item.path"
-            class="row"
-            :class="{ dir: item.isDir, selected: selectedPaths.includes(item.path) }"
+            class="flex h-8 cursor-pointer items-center gap-2 rounded-[6px] px-2 text-xs text-fg hover:bg-surface"
+            :class="[
+              item.isDir ? 'font-500' : '',
+              selectedPaths.includes(item.path) ? 'bg-brand-soft text-brand-ink' : '',
+            ]"
             @click="onItem(item)"
           >
             <NIcon :size="16" :component="item.isDir ? FolderOutline : DocumentOutline" />
-            <span class="name">{{ item.name }}</span>
-            <span class="size">{{ item.isDir ? t('picker.dir') : formatSize(item.size) }}</span>
+            <span class="flex-1 truncate">{{ item.name }}</span>
+            <span class="text-[10px] text-fg3">{{ item.isDir ? t('picker.dir') : formatSize(item.size) }}</span>
           </div>
-          <div v-if="!files.length && !loading" class="empty">{{ t('picker.empty') }}</div>
+          <div v-if="!files.length && !loading" class="py-10 text-center text-xs text-fg3">
+            {{ t('picker.empty') }}
+          </div>
         </NSpin>
       </div>
 
-      <div class="footer">
-        <span class="hint">
+      <div class="flex items-center gap-2">
+        <span class="flex-1 text-[11px] text-fg3">
           {{
             mode === 'dir'
               ? t('picker.selectDirHint')
@@ -173,104 +183,3 @@ watch(
     </div>
   </NModal>
 </template>
-
-<style scoped>
-.picker {
-  display: flex;
-  flex-direction: column;
-  gap: 10px;
-}
-
-.bar {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-}
-
-.quick {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 6px;
-}
-
-.quick-chip {
-  padding: 3px 8px;
-  border: 1px solid var(--border);
-  border-radius: 999px;
-  background: var(--surface);
-  color: var(--text-secondary);
-  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
-  font-size: 10px;
-  cursor: pointer;
-}
-
-.quick-chip:hover {
-  border-color: var(--primary-border);
-  color: var(--primary-ink);
-}
-
-.files {
-  height: 320px;
-  overflow-y: auto;
-  padding: 4px;
-  border: 1px solid var(--border);
-  border-radius: var(--radius-sm);
-  background: var(--surface-inset);
-}
-
-.row {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  height: 32px;
-  padding: 0 8px;
-  border-radius: 6px;
-  color: var(--text);
-  font-size: 12px;
-  cursor: pointer;
-}
-
-.row:hover {
-  background: var(--surface);
-}
-
-.row.dir {
-  font-weight: 500;
-}
-
-.row.selected {
-  background: var(--primary-soft);
-  color: var(--primary-ink);
-}
-
-.row .name {
-  flex: 1;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-}
-
-.row .size {
-  color: var(--text-tertiary);
-  font-size: 10px;
-}
-
-.empty {
-  padding: 40px 0;
-  color: var(--text-tertiary);
-  font-size: 12px;
-  text-align: center;
-}
-
-.footer {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-}
-
-.footer .hint {
-  flex: 1;
-  color: var(--text-tertiary);
-  font-size: 11px;
-}
-</style>

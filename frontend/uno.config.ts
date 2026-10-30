@@ -3,23 +3,43 @@ import { defineConfig, presetWind3 } from 'unocss'
 export default defineConfig({
   presets: [presetWind3()],
   theme: {
-    // 与 design/style.css 的设计令牌保持一致，避免出现第二套色板。
+    // 颜色全部映射到 theme.css 的 CSS 变量，保持明暗两套主题一致。
     colors: {
-      surface: '#ffffff',
-      canvas: '#f6f7f9',
-      line: '#e8eaed',
-      ink: '#111827',
-      'ink-2': '#6b7280',
-      brand: '#2563eb',
-      success: '#067647',
-      warning: '#b54708',
-      danger: '#b42318',
+      bg: 'var(--bg)',
+      surface: 'var(--surface)',
+      muted: 'var(--surface-muted)',
+      inset: 'var(--surface-inset)',
+      line: 'var(--border)',
+      'line-strong': 'var(--border-strong)',
+      fg: 'var(--text)',
+      fg2: 'var(--text-secondary)',
+      fg3: 'var(--text-tertiary)',
+      brand: 'var(--primary)',
+      'brand-hover': 'var(--primary-hover)',
+      'brand-soft': 'var(--primary-soft)',
+      'brand-line': 'var(--primary-border)',
+      'brand-ink': 'var(--primary-ink)',
+      ok: 'var(--success)',
+      warn: 'var(--warning)',
+      err: 'var(--danger)',
+      'err-soft': 'var(--danger-soft)',
+    },
+    radius: {
+      DEFAULT: '10px',
+      sm: '8px',
+    },
+    boxShadow: {
+      sm: 'var(--shadow-sm)',
+      md: 'var(--shadow-md)',
     },
   },
   shortcuts: {
-    // 常用组合，M1 逐步替换手写样式。
-    'wd-card': 'bg-surface border border-line rounded-2.5 p-4 shadow-sm',
-    'wd-row': 'flex items-center gap-3',
-    'wd-btn': 'h-8 px-3 rounded-2 border border-line bg-surface text-xs cursor-pointer',
+    panel: 'border border-line rounded bg-surface shadow-sm',
+    'panel-head': 'flex items-center gap-2 px-4 py-3 border-b border-line',
+    'panel-title': 'm-0 text-[13px] font-600',
+    'panel-body': 'p-4',
+    'field-label': 'text-fg3 text-[11px]',
+    'toolbar-btn':
+      'h-8 px-3 rounded-sm border border-line-strong bg-surface text-fg text-xs cursor-pointer hover:bg-muted',
   },
 })

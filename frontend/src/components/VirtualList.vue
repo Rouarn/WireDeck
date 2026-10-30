@@ -80,13 +80,13 @@ onBeforeUnmount(() => {
 </script>
 
 <template>
-  <div ref="container" class="virtual-list" @scroll.passive="onScroll">
-    <div class="virtual-phantom" :style="{ height: `${totalHeight}px` }">
-      <div class="virtual-window" :style="{ transform: `translateY(${offset}px)` }">
+  <div ref="container" class="relative h-full overflow-y-auto overflow-x-hidden" @scroll.passive="onScroll">
+    <div class="relative w-full" :style="{ height: `${totalHeight}px` }">
+      <div class="absolute inset-x-0 top-0" :style="{ transform: `translateY(${offset}px)` }">
         <div
           v-for="(item, index) in visible"
           :key="startIndex + index"
-          class="virtual-item"
+          class="overflow-hidden"
           :style="{ height: `${itemHeight}px` }"
         >
           <slot :item="item" :index="startIndex + index" />
@@ -95,28 +95,3 @@ onBeforeUnmount(() => {
     </div>
   </div>
 </template>
-
-<style scoped>
-.virtual-list {
-  position: relative;
-  height: 100%;
-  overflow-y: auto;
-  overflow-x: hidden;
-}
-
-.virtual-phantom {
-  position: relative;
-  width: 100%;
-}
-
-.virtual-window {
-  position: absolute;
-  top: 0;
-  right: 0;
-  left: 0;
-}
-
-.virtual-item {
-  overflow: hidden;
-}
-</style>
