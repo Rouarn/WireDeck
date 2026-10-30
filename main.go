@@ -9,6 +9,7 @@ import (
 	"github.com/wailsapp/wails/v2"
 	"github.com/wailsapp/wails/v2/pkg/options"
 	"github.com/wailsapp/wails/v2/pkg/options/assetserver"
+	"github.com/wailsapp/wails/v2/pkg/runtime"
 
 	"woyuxiaji.cn/wiredeck/internal/platform"
 )
@@ -35,6 +36,11 @@ func main() {
 		BackgroundColour: &options.RGBA{R: 247, G: 248, B: 250, A: 1},
 		OnStartup:        app.startup,
 		Menu:             app.buildMenu(),
+		// 点击窗口关闭按钮时直接退出应用，而不是留在后台。
+		OnBeforeClose: func(ctx context.Context) bool {
+			go runtime.Quit(ctx)
+			return true
+		},
 		OnShutdown: func(ctx context.Context) {
 			app.shutdown(ctx)
 			_ = lock.Unlock()
