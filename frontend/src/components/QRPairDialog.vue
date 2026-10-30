@@ -103,28 +103,85 @@ onBeforeUnmount(() => {
     :bordered="false"
     @update:show="(value: boolean) => (value ? null : close())"
   >
-    <div class="flex flex-col items-center gap-3">
-      <div class="flex h-[300px] w-[300px] items-center justify-center rounded border border-line bg-white">
-        <img v-if="qrData" :src="qrData" class="h-[280px] w-[280px]" :alt="t('qr.alt')" />
+    <div class="qr">
+      <div class="qr-box">
+        <img v-if="qrData" :src="qrData" class="qr-image" :alt="t('qr.alt')" />
         <NSpin v-else size="small" />
       </div>
 
-      <p class="m-0 text-center text-xs text-fg2">{{ status }}</p>
-      <p v-if="sessionName" class="m-0 text-center font-mono text-[10px] text-fg3">
-        {{ t('qr.serviceMeta', { name: sessionName, code: sessionPassword }) }}
-      </p>
-      <p v-if="error" class="m-0 break-all text-center text-xs text-err">{{ error }}</p>
+      <p class="status">{{ status }}</p>
+      <p v-if="sessionName" class="meta">{{ t('qr.serviceMeta', { name: sessionName, code: sessionPassword }) }}</p>
+      <p v-if="error" class="error">{{ error }}</p>
 
-      <div class="flex gap-2">
+      <div class="actions">
         <NButton size="small" @click="close">{{ t('common.cancel') }}</NButton>
         <NButton size="small" type="primary" @click="refresh">{{ t('qr.refresh') }}</NButton>
       </div>
 
-      <p class="m-0 text-center text-[11px] leading-relaxed text-fg3">
+      <p class="tip">
         {{ t('qr.hint') }}
       </p>
     </div>
   </NModal>
 </template>
 
+<style scoped>
+.qr {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 12px;
+}
 
+.qr-box {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 300px;
+  height: 300px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  background: #fff;
+}
+
+.qr-image {
+  width: 280px;
+  height: 280px;
+}
+
+.status {
+  margin: 0;
+  color: var(--text-secondary);
+  font-size: 12px;
+  text-align: center;
+}
+
+.meta {
+  margin: 0;
+  color: var(--text-tertiary);
+  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+  font-size: 10px;
+  text-align: center;
+}
+
+.error {
+  margin: 0;
+  color: var(--danger);
+  font-size: 12px;
+  text-align: center;
+  word-break: break-all;
+}
+
+.actions {
+  display: flex;
+  gap: 8px;
+}
+
+.tip {
+  margin: 0;
+  color: var(--text-tertiary);
+  font-size: 11px;
+  line-height: 1.6;
+  text-align: center;
+}
+</style>

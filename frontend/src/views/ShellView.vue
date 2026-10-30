@@ -118,12 +118,12 @@ async function copyAll() {
 </script>
 
 <template>
-  <div class="flex min-h-0 flex-1 flex-col">
-    <div class="mb-2.5 flex items-center gap-2">
-      <span class="text-xs text-fg2">
+  <div class="shell">
+    <div class="toolbar">
+      <span class="device">
         {{ store.current?.model || store.current?.serial || t('common.unknown') }}
       </span>
-      <div class="flex-1"></div>
+      <div class="spacer"></div>
       <NButton size="small" quaternary :disabled="!records.length" @click="copyAll">
         <template #icon><NIcon><CopyOutline /></NIcon></template>
         {{ t('shell.copyAll') }}
@@ -134,51 +134,45 @@ async function copyAll() {
       </NButton>
     </div>
 
-    <div class="mb-2.5 flex flex-wrap items-center gap-2">
-      <span class="text-[11px] text-fg3">{{ t('shell.quick') }}</span>
+    <div class="quick">
+      <span class="quick-label">{{ t('shell.quick') }}</span>
       <button
         v-for="item in quickCommands"
         :key="item.command"
-        class="cursor-pointer rounded-full border border-line bg-surface px-2.5 py-1 text-[11px] text-fg2 hover:border-brand-line hover:text-brand-ink"
+        class="quick-chip"
         @click="useQuick(item.command)"
       >
         {{ item.label }}
       </button>
     </div>
 
-    <div ref="outputBox" class="min-h-0 flex-1 overflow-y-auto rounded border border-line bg-inset p-3">
-      <div v-if="!records.length" class="py-15 text-center text-xs text-fg3">
+    <div ref="outputBox" class="output">
+      <div v-if="!records.length" class="output-empty">
         {{ t('shell.empty') }}
       </div>
-      <div v-for="record in records" :key="record.id" class="mb-3.5 last:mb-0">
-        <div class="flex items-center gap-2 rounded-[6px] border border-line bg-surface px-2.5 py-1.75 font-mono text-xs">
-          <span class="font-700 text-brand-ink">$</span>
-          <span class="break-all font-600 text-fg">{{ record.command }}</span>
-          <span class="ml-auto flex gap-2.5 whitespace-nowrap text-[10px] text-fg3">
-            <span
-              class="rounded-[4px] px-1.5"
-              :class="record.exitCode === 0 ? 'bg-[var(--success-soft)] text-ok' : 'bg-err-soft text-err'"
-            >
-              exit {{ record.exitCode }}
-            </span>
+      <div v-for="record in records" :key="record.id" class="record">
+        <div class="record-head">
+          <span class="prompt">$</span>
+          <span class="record-command">{{ record.command }}</span>
+          <span class="record-meta">
+            <span class="exit" :class="record.exitCode === 0 ? 'ok' : 'bad'">exit {{ record.exitCode }}</span>
             <span>{{ record.durationMs }}ms</span>
             <span>{{ record.at }}</span>
           </span>
         </div>
-        <pre
-          v-if="record.stdout"
-          class="mb-0 ml-3.5 mt-1.25 overflow-auto whitespace-pre-wrap break-all rounded-r-[6px] border-l-2 border-line-strong bg-surface px-2.5 py-2 font-mono text-[11px] leading-[1.7] text-fg2"
-        >{{ record.stdout }}</pre>
-        <pre
-          v-if="record.stderr"
-          class="mb-0 ml-3.5 mt-1.25 overflow-auto whitespace-pre-wrap break-all rounded-r-[6px] border-l-2 border-err bg-surface px-2.5 py-2 font-mono text-[11px] leading-[1.7] text-err"
-        >{{ record.stderr }}</pre>
+        <pre v-if="record.stdout" class="record-out">{{ record.stdout }}</pre>
+        <pre v-if="record.stderr" class="record-err">{{ record.stderr }}</pre>
       </div>
     </div>
 
-    <div class="mt-2.5 flex items-center gap-2">
-      <span class="font-mono text-sm font-700 text-brand-ink">$</span>
-      <NInput v-model:value="command" size="small" :placeholder="t('shell.placeholder')" @keyup.enter="run" />
+    <div class="input-bar">
+      <span class="prompt">$</span>
+      <NInput
+        v-model:value="command"
+        size="small"
+        :placeholder="t('shell.placeholder')"
+        @keyup.enter="run"
+      />
       <NButton size="small" type="primary" :loading="busy" :disabled="!store.current" @click="run">
         <template #icon><NIcon><PlayOutline /></NIcon></template>
         {{ t('shell.run') }}
@@ -186,3 +180,170 @@ async function copyAll() {
     </div>
   </div>
 </template>
+
+<style scoped>
+.shell {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  min-height: 0;
+}
+
+.toolbar {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 10px;
+}
+
+.device {
+  color: var(--text-secondary);
+  font-size: 12px;
+}
+
+.spacer {
+  flex: 1;
+}
+
+.quick {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 10px;
+}
+
+.quick-label {
+  color: var(--text-tertiary);
+  font-size: 11px;
+}
+
+.quick-chip {
+  padding: 4px 10px;
+  border: 1px solid var(--border);
+  border-radius: 999px;
+  background: var(--surface);
+  color: var(--text-secondary);
+  font-size: 11px;
+  cursor: pointer;
+}
+
+.quick-chip:hover {
+  border-color: var(--primary-border);
+  color: var(--primary-ink);
+}
+
+.output {
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+  padding: 12px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  background: var(--surface-inset);
+}
+
+.output-empty {
+  padding: 60px 0;
+  color: var(--text-tertiary);
+  font-size: 12px;
+  text-align: center;
+}
+
+.output-empty code {
+  padding: 1px 6px;
+  border-radius: 5px;
+  background: var(--surface);
+  color: var(--text-secondary);
+}
+
+.record {
+  margin-bottom: 14px;
+}
+
+.record:last-child {
+  margin-bottom: 0;
+}
+
+/* 命令行做成独立卡片，与输出拉开层次 */
+.record-head {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 7px 10px;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  background: var(--surface);
+  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+  font-size: 12px;
+}
+
+.prompt {
+  color: var(--primary-ink);
+  font-weight: 700;
+}
+
+.record-command {
+  color: var(--text);
+  font-weight: 600;
+  word-break: break-all;
+}
+
+.record-meta {
+  display: flex;
+  gap: 10px;
+  margin-left: auto;
+  color: var(--text-tertiary);
+  font-size: 10px;
+  white-space: nowrap;
+}
+
+.exit {
+  padding: 0 6px;
+  border-radius: 4px;
+}
+
+.exit.ok {
+  background: var(--success-soft);
+  color: var(--success);
+}
+
+.exit.bad {
+  background: var(--danger-soft);
+  color: var(--danger);
+}
+
+/* 输出缩进 + 左侧竖线，视觉上从属于上方的命令 */
+.record-out,
+.record-err {
+  margin: 5px 0 0 14px;
+  padding: 8px 10px;
+  overflow: auto;
+  border-left: 2px solid var(--border-strong);
+  border-radius: 0 6px 6px 0;
+  background: var(--surface);
+  color: var(--text-secondary);
+  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+  font-size: 11px;
+  line-height: 1.7;
+  white-space: pre-wrap;
+  word-break: break-all;
+}
+
+.record-err {
+  border-left-color: var(--danger);
+  color: var(--danger);
+}
+
+.input-bar {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-top: 10px;
+}
+
+.input-bar .prompt {
+  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+  font-size: 14px;
+}
+</style>

@@ -234,100 +234,91 @@ onMounted(() => {
 </script>
 
 <template>
-  <div class="flex flex-col">
+  <div class="install">
     <div
-      class="flex cursor-pointer items-center gap-3.5 rounded border border-dashed bg-surface px-5 py-[22px] [--wails-drop-target:drop]"
-      :class="dragging ? 'border-brand bg-brand-soft' : 'border-line-strong'"
+      class="dropzone"
+      :class="{ dragging }"
       @click="pick"
       @dragenter.prevent="dragging = true"
       @dragleave.prevent="dragging = false"
       @dragover.prevent
       @drop.prevent="dragging = false"
     >
-      <div class="flex h-10 w-10 items-center justify-center rounded-[10px] bg-brand-soft text-brand-ink">
+      <div class="drop-icon">
         <NIcon :size="20"><CloudUploadOutline /></NIcon>
       </div>
-      <div class="flex-1">
-        <div class="text-[13px] font-600">{{ t('install.dropTitle') }}</div>
-        <div class="mt-0.5 text-[11px] text-fg3">{{ t('install.dropSub') }}</div>
+      <div class="drop-text">
+        <div class="drop-title">{{ t('install.dropTitle') }}</div>
+        <div class="drop-sub">{{ t('install.dropSub') }}</div>
       </div>
       <NButton size="small" @click.stop="pick">{{ t('install.chooseFile') }}</NButton>
     </div>
 
-    <section v-if="pending.length" class="mt-4 rounded border border-line bg-surface shadow-sm">
-      <div class="flex items-center gap-2 border-b border-line px-4 py-3.5">
-        <h3 class="m-0 text-[13px] font-600">{{ t('install.pending') }}</h3>
-        <span class="ml-auto text-[11px] text-fg3">{{ t('install.fileCount', { n: pending.length }) }}</span>
+    <section v-if="pending.length" class="panel">
+      <div class="panel-head">
+        <h3>{{ t('install.pending') }}</h3>
+        <span class="hint">{{ t('install.fileCount', { n: pending.length }) }}</span>
       </div>
-      <div class="flex flex-col">
-        <div
-          v-for="(item, index) in pending"
-          :key="item.path"
-          class="flex items-center gap-3 border-b border-line px-4 py-2.5 last:border-b-0"
-        >
-          <div class="min-w-0 flex-1">
-            <div class="overflow-hidden text-ellipsis whitespace-nowrap text-xs font-500">{{ item.name }}</div>
-            <div v-if="item.meta" class="mt-0.5 overflow-hidden text-ellipsis whitespace-nowrap text-[11px] text-fg3">
+      <div class="pending-list">
+        <div v-for="(item, index) in pending" :key="item.path" class="pending-row">
+          <div class="pending-main">
+            <div class="file-name">{{ item.name }}</div>
+            <div v-if="item.meta" class="file-meta">
               {{ item.meta.label || item.meta.packageName }} · {{ item.meta.versionName }}
               ({{ item.meta.versionCode }}) · {{ formatSize(item.meta.size) }}
             </div>
-            <div v-else-if="item.error" class="mt-0.5 overflow-hidden text-ellipsis whitespace-nowrap text-[11px] text-err">
-              {{ item.error }}
-            </div>
+            <div v-else-if="item.error" class="file-meta error">{{ item.error }}</div>
           </div>
           <NButton size="tiny" quaternary @click="removeAt(index)">{{ t('install.remove') }}</NButton>
         </div>
       </div>
     </section>
 
-    <div class="mt-4 flex flex-wrap gap-4 rounded-sm border border-line bg-surface px-4 py-3">
+    <div class="options">
       <NCheckbox v-model:checked="options.replace">{{ t('install.optReplace') }}</NCheckbox>
       <NCheckbox v-model:checked="options.allowDowngrade">{{ t('install.optDowngrade') }}</NCheckbox>
       <NCheckbox v-model:checked="options.grantPermissions">{{ t('install.optGrant') }}</NCheckbox>
       <NCheckbox v-model:checked="options.allowTest">{{ t('install.optTest') }}</NCheckbox>
     </div>
 
-    <section class="mt-4 rounded border border-line bg-surface shadow-sm">
-      <div class="flex items-center gap-2 border-b border-line px-4 py-3.5">
-        <h3 class="m-0 text-[13px] font-600">{{ t('install.queue') }}</h3>
-        <span class="ml-auto text-[11px] text-fg3">{{ t('install.queueHint') }}</span>
+    <section class="panel queue">
+      <div class="panel-head">
+        <h3>{{ t('install.queue') }}</h3>
+        <span class="hint">{{ t('install.queueHint') }}</span>
       </div>
-      <table v-if="tasks.length" class="w-full table-fixed border-collapse">
+      <table v-if="tasks.length" class="table">
         <thead>
           <tr>
-            <th class="w-[210px] border-b border-line px-3 py-2 text-left text-[10px] font-500 uppercase text-fg3">{{ t('install.colFile') }}</th>
-            <th class="w-[130px] border-b border-line px-3 py-2 text-left text-[10px] font-500 uppercase text-fg3">{{ t('install.colDevice') }}</th>
-            <th class="w-[220px] border-b border-line px-3 py-2 text-left text-[10px] font-500 uppercase text-fg3">{{ t('install.colProgress') }}</th>
-            <th class="border-b border-line px-3 py-2 pr-4.5 text-left text-[10px] font-500 uppercase text-fg3">{{ t('install.colStatus') }}</th>
+            <th>{{ t('install.colFile') }}</th>
+            <th>{{ t('install.colDevice') }}</th>
+            <th>{{ t('install.colProgress') }}</th>
+            <th>{{ t('install.colStatus') }}</th>
           </tr>
         </thead>
         <tbody>
           <tr v-for="task in tasks" :key="task.taskId">
-            <td class="border-b border-line px-3 py-2.75 align-top text-xs last:border-b-0">
-              <span class="block overflow-hidden text-ellipsis whitespace-nowrap text-xs font-500">{{ task.name }}</span>
-            </td>
-            <td class="border-b border-line px-3 py-2.75 align-top text-xs">{{ task.deviceLabel }}</td>
-            <td class="border-b border-line px-3 py-2.75 align-top text-xs">
+            <td><span class="file-name">{{ task.name }}</span></td>
+            <td>{{ task.deviceLabel }}</td>
+            <td>
               <div
-                class="h-1.5 w-[180px] overflow-hidden rounded-[3px] bg-line"
+                class="progress"
+                :class="{
+                  failed: task.done && !task.ok && !isCanceled(task),
+                  canceled: task.done && isCanceled(task),
+                }"
               >
-                <i
-                  class="block h-full rounded-[3px] transition-[width] duration-300"
-                  :class="
-                    task.done && !task.ok && !isCanceled(task)
-                      ? 'bg-err'
-                      : task.done && isCanceled(task)
-                        ? 'bg-fg3'
-                        : 'bg-brand'
-                  "
-                  :style="{ width: `${task.percent >= 0 ? task.percent : 35}%` }"
-                ></i>
+                <i :style="{ width: `${task.percent >= 0 ? task.percent : 35}%` }"></i>
               </div>
-              <div class="mt-1 break-all text-[11px] leading-normal text-fg3">{{ task.message }}</div>
+              <div class="hint-text">{{ task.message }}</div>
             </td>
-            <td class="border-b border-line px-3 py-2.75 pr-4.5 align-top text-xs last:border-b-0">
-              <div class="flex items-center gap-2">
-                <NTag v-if="task.done" size="small" :type="statusType(task)" :bordered="false">
+            <td>
+              <div class="status-cell">
+                <NTag
+                  v-if="task.done"
+                  size="small"
+                  :type="statusType(task)"
+                  :bordered="false"
+                >
                   {{ statusText(task) }}
                 </NTag>
                 <template v-else>
@@ -335,12 +326,12 @@ onMounted(() => {
                   <NButton size="tiny" quaternary @click="cancel(task.taskId)">{{ t('install.cancel') }}</NButton>
                 </template>
               </div>
-              <div v-if="task.done && !task.ok && task.advice" class="mt-1 break-all text-[11px] leading-normal text-fg3">
+              <div v-if="task.done && !task.ok && task.advice" class="hint-text">
                 {{ task.advice }}
               </div>
               <div
                 v-if="task.done && !task.ok && task.code && !isCanceled(task)"
-                class="mt-1 break-all text-[10px] leading-normal text-fg3"
+                class="hint-text code"
               >
                 {{ t('install.errorCode', { code: task.code }) }}
               </div>
@@ -348,16 +339,254 @@ onMounted(() => {
           </tr>
         </tbody>
       </table>
-      <NEmpty v-else class="py-7" :description="t('install.emptyQueue')" />
+      <NEmpty v-else class="empty" :description="t('install.emptyQueue')" />
     </section>
 
-    <div class="mt-4 flex items-center gap-3">
+    <div class="actions">
       <NButton type="primary" :disabled="!canInstall" :loading="busy" @click="start">
         {{ t('install.installingTo', { name: store.current?.model || store.current?.serial || t('common.thisDevice') }) }}
       </NButton>
-      <span class="text-xs text-fg3">
+      <span class="actions-hint">
         {{ pending.length ? t('install.pendingCount', { n: pending.length }) : t('install.noPending') }}
       </span>
     </div>
   </div>
 </template>
+
+<style scoped>
+.install {
+  --wails-drop-target: drop;
+  display: flex;
+  flex-direction: column;
+}
+
+.dropzone {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 22px 20px;
+  border: 1px dashed var(--border-strong);
+  border-radius: var(--radius);
+  background: var(--surface);
+  cursor: pointer;
+}
+
+.dropzone.dragging {
+  border-color: var(--primary);
+  background: var(--primary-soft);
+}
+
+.drop-icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 40px;
+  height: 40px;
+  border-radius: 10px;
+  background: var(--primary-soft);
+  color: var(--primary-ink);
+}
+
+.drop-text {
+  flex: 1;
+}
+
+.drop-title {
+  font-size: 13px;
+  font-weight: 600;
+}
+
+.drop-sub {
+  margin-top: 2px;
+  color: var(--text-tertiary);
+  font-size: 11px;
+}
+
+.panel {
+  margin-top: 16px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  background: var(--surface);
+  box-shadow: var(--shadow-sm);
+}
+
+.panel-head {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 14px 16px;
+  border-bottom: 1px solid var(--border);
+}
+
+.panel-head h3 {
+  margin: 0;
+  font-size: 13px;
+  font-weight: 600;
+}
+
+.panel-head .hint {
+  margin-left: auto;
+  color: var(--text-tertiary);
+  font-size: 11px;
+}
+
+.pending-list {
+  display: flex;
+  flex-direction: column;
+}
+
+.pending-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 10px 16px;
+  border-bottom: 1px solid var(--border);
+}
+
+.pending-row:last-child {
+  border-bottom: none;
+}
+
+.pending-main {
+  flex: 1;
+  min-width: 0;
+}
+
+.file-name {
+  overflow: hidden;
+  font-size: 12px;
+  font-weight: 500;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.file-meta {
+  margin-top: 2px;
+  overflow: hidden;
+  color: var(--text-tertiary);
+  font-size: 11px;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.file-meta.error {
+  color: var(--danger);
+}
+
+.options {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 16px;
+  margin-top: 16px;
+  padding: 12px 16px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  background: var(--surface);
+}
+
+.table {
+  width: 100%;
+  border-collapse: collapse;
+  table-layout: fixed;
+}
+
+.table th {
+  padding: 8px 12px;
+  border-bottom: 1px solid var(--border);
+  color: var(--text-tertiary);
+  font-size: 10px;
+  font-weight: 500;
+  text-align: left;
+  text-transform: uppercase;
+}
+
+.table th:nth-child(1),
+.table td:nth-child(1) {
+  width: 210px;
+}
+
+.table th:nth-child(2),
+.table td:nth-child(2) {
+  width: 130px;
+}
+
+.table th:nth-child(3),
+.table td:nth-child(3) {
+  width: 220px;
+}
+
+.table td {
+  padding: 11px 12px;
+  border-bottom: 1px solid var(--border);
+  font-size: 12px;
+  vertical-align: top;
+}
+
+.table tr:last-child td {
+  border-bottom: none;
+}
+
+.table th:last-child,
+.table td:last-child {
+  padding-right: 18px;
+}
+
+.status-cell {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.progress {
+  width: 180px;
+  height: 6px;
+  border-radius: 3px;
+  background: var(--border);
+  overflow: hidden;
+}
+
+.progress > i {
+  display: block;
+  height: 100%;
+  border-radius: 3px;
+  background: var(--primary);
+  transition: width 0.3s ease;
+}
+
+.progress.failed > i {
+  background: var(--danger);
+}
+
+.progress.canceled > i {
+  background: var(--text-tertiary);
+}
+
+.hint-text.code {
+  color: var(--text-tertiary);
+  font-size: 10px;
+}
+
+.hint-text {
+  margin-top: 4px;
+  color: var(--text-tertiary);
+  font-size: 11px;
+  line-height: 1.5;
+  word-break: break-all;
+}
+
+.empty {
+  padding: 28px 0;
+}
+
+.actions {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-top: 16px;
+}
+
+.actions-hint {
+  color: var(--text-tertiary);
+  font-size: 12px;
+}
+</style>
