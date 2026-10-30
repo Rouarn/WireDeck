@@ -26,7 +26,7 @@ WireDeck 把这些步骤封装成图形界面——手机扫一下电脑上的�
 - **Shell 控制台**：常用命令快捷入口、输出与退出码清晰展示、支持复制
 - **界面语言**：中文 / English 切换，立即生效
 - **检查更新**：从 GitHub Releases 检查新版本
-- **内置 adb**：无需安装 Android SDK
+- **开箱即用**：内置 adb / aapt2 / scrcpy，无需安装 Android SDK
 
 ## 安装
 
@@ -42,6 +42,12 @@ xattr -dr com.apple.quarantine /Applications/WireDeck.app
 
 然后到「系统设置 → 隐私与安全性」点「仍要打开」。
 
+### Windows（实验性）
+
+1. 从 Releases 下载 `WireDeck-windows-amd64.zip` 并解压（不要只解压 exe）；
+2. 运行 `WireDeck.exe`；
+3. 若 SmartScreen 提示，点「更多信息 → 仍要运行」。
+
 ## 连接手机
 
 1. 手机：设置 → 关于手机 → 连续点击「版本号」，开启开发者选项；
@@ -53,7 +59,8 @@ xattr -dr com.apple.quarantine /Applications/WireDeck.app
 
 ## 系统要求
 
-- macOS 11 及以上（Apple Silicon）
+- macOS 11 及以上（Apple Silicon）— 正式支持
+- Windows 10 / 11 x64 — 实验性支持
 - Android 11 及以上
 
 ## 开发
@@ -67,7 +74,7 @@ export PATH="$PATH:$(go env GOPATH)/bin"
 cd frontend && pnpm install && cd ..
 
 ./scripts/build.sh           # 构建 + 中文本地化 + 内置 adb + ad-hoc 签名
-./scripts/package.sh 0.1.0   # 生成 build/WireDeck-0.1.0.dmg
+./scripts/package.sh 1.0.0   # 生成 build/WireDeck-1.0.0.dmg
 go test ./...                # 单元测试
 ```
 
@@ -99,7 +106,7 @@ Wails v2（系统 WebView）+ Go 后端 + Vue 3 + TypeScript + Vite + Pinia + Na
 
 ## 状态
 
-v0.2.2 已发布（Alpha）。macOS（Apple Silicon）为正式支持平台；Windows 处于实验阶段，由 GitHub Actions 构建，暂不提供正式安装包。
+v1.0.0 正式版已发布。macOS（Apple Silicon）为正式支持平台；Windows 10/11 x64 提供实验性构建（随 Release 一起发布，未充分验证）。
 
 ## 许可证
 

@@ -33,10 +33,15 @@ WireDeck 安装说明
    小米 / 红米设备需要在「开发者选项 → USB 调试（安全设置）」中
    打开开关，否则投屏画面正常但无法用鼠标键盘操作。
 
-6. 关于 adb
-   应用已内置 adb，无需安装 Android SDK。
+6. 关于 adb / aapt2 / scrcpy
+   应用已内置 adb、aapt2 与 scrcpy，无需安装 Android SDK。
+
+Windows（实验性）
+1. 下载 WireDeck-windows-amd64.zip 后完整解压（不要只解压 exe）；
+2. 运行 WireDeck.exe；
+3. 若 SmartScreen 提示，点「更多信息 → 仍要运行」。
 
 系统要求
-- macOS 11 及以上
-- Apple Silicon（当前版本）
+- macOS 11 及以上 / Apple Silicon（正式支持）
+- Windows 10 / 11 x64（实验性）
 - Android 11 及以上
