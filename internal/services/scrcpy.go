@@ -78,10 +78,21 @@ func findBundledAdb() string {
 
 // findScrcpy 按优先级查找 scrcpy：应用内置 → 项目 resources → PATH。
 func findScrcpy() (string, error) {
+	name := "scrcpy"
+	if runtime.GOOS == "windows" {
+		name = "scrcpy.exe"
+	}
 	if exe, err := os.Executable(); err == nil {
-		direct := filepath.Join(filepath.Dir(exe), "..", "Resources", "scrcpy", "scrcpy")
-		if info, statErr := os.Stat(direct); statErr == nil && !info.IsDir() {
-			return direct, nil
+		base := filepath.Dir(exe)
+		candidates := []string{
+			filepath.Join(base, "..", "Resources", "scrcpy", name),
+			filepath.Join(base, "scrcpy", name),
+			filepath.Join(base, "resources", "scrcpy", name),
+		}
+		for _, c := range candidates {
+			if info, statErr := os.Stat(c); statErr == nil && !info.IsDir() {
+				return c, nil
+			}
 		}
 	}
 

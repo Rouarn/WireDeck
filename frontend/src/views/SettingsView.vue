@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { onMounted, ref } from 'vue'
+import { computed, onMounted, ref } from 'vue'
 import {
   AppLabelCacheInfo as fetchLabelCacheInfo,
   AppVersion,
@@ -14,6 +14,7 @@ import SegmentedControl from '../components/SegmentedControl.vue'
 import { useThemeStore } from '../stores/theme'
 import { useDevicesStore } from '../stores/devices'
 import type { ThemeMode } from '../stores/theme'
+import { t, useLang, type Lang } from '../i18n'
 
 const theme = useThemeStore()
 const devices = useDevicesStore()
@@ -25,10 +26,17 @@ const updateInfo = ref<model.UpdateInfo | null>(null)
 const checking = ref(false)
 const message = useMessage()
 
-const themeOptions: { label: string; value: ThemeMode }[] = [
-  { label: '跟随系统', value: 'system' },
-  { label: '浅色', value: 'light' },
-  { label: '深色', value: 'dark' },
+const { lang, setLang } = useLang()
+
+const themeOptions = computed<{ label: string; value: ThemeMode }[]>(() => [
+  { label: t('settings.theme.system'), value: 'system' },
+  { label: t('settings.theme.light'), value: 'light' },
+  { label: t('settings.theme.dark'), value: 'dark' },
+])
+
+const languageOptions: { label: string; value: Lang }[] = [
+  { label: '中文', value: 'zh' },
+  { label: 'English', value: 'en' },
 ]
 
 function onChange(value: ThemeMode) {
@@ -134,11 +142,21 @@ async function openUpdate() {
 
     <section class="panel">
       <div class="panel-head">
-        <h3>外观</h3>
-        <span class="hint">切换后立即生效</span>
+        <h3>{{ t('settings.appearance') }}</h3>
+        <span class="hint">{{ t('settings.appearanceHint') }}</span>
       </div>
       <div class="panel-body">
         <SegmentedControl :options="themeOptions" :value="theme.mode" @update:value="onChange" />
+      </div>
+    </section>
+
+    <section class="panel">
+      <div class="panel-head">
+        <h3>{{ t('settings.language') }}</h3>
+        <span class="hint">{{ t('settings.languageHint') }}</span>
+      </div>
+      <div class="panel-body">
+        <SegmentedControl :options="languageOptions" :value="lang" @update:value="setLang" />
       </div>
     </section>
 

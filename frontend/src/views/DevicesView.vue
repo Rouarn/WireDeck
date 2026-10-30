@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { computed, nextTick, onMounted, ref } from 'vue'
-import { NAlert, NButton, NEmpty, NIcon, NInput, NPopconfirm, NSpin, NTag, useDialog, useMessage } from 'naive-ui'
+import { NAlert, NButton, NEmpty, NIcon, NInput, NPopconfirm, NSpin, NTag, NTooltip, useDialog, useMessage } from 'naive-ui'
 import { AddOutline, InformationCircleOutline, PhonePortraitOutline } from '@vicons/ionicons5'
 import { ConnectDevice, DisconnectDevice, DiscoverServices, EnableWireless, PairDevice, StartScrcpy } from '../../wailsjs/go/main/App'
 import type { model } from '../../wailsjs/go/models'
@@ -302,14 +302,19 @@ onMounted(() => {
           <div class="card-actions">
             <span v-if="store.current?.serial === device.serial" class="current-tag">当前设备</span>
             <NButton v-else size="small" type="primary" @click="store.select(device.serial)">设为当前</NButton>
-            <NButton
-              size="small"
-              quaternary
-              :disabled="device.state !== 'device'"
-              @click="startScrcpy(device)"
-            >
-              投屏
-            </NButton>
+            <NTooltip>
+              <template #trigger>
+                <NButton
+                  size="small"
+                  quaternary
+                  :disabled="device.state !== 'device'"
+                  @click="startScrcpy(device)"
+                >
+                  投屏
+                </NButton>
+              </template>
+              投屏后若鼠标 / 键盘无效：小米、红米设备需在「开发者选项 → USB 调试（安全设置）」中开启开关。
+            </NTooltip>
             <NButton
               v-if="device.transport === 'usb'"
               size="small"

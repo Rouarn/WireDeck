@@ -14,22 +14,23 @@ import {
 import { EventsOn } from '../../wailsjs/runtime/runtime'
 import type { model } from '../../wailsjs/go/models'
 import { useDevicesStore } from '../stores/devices'
+import { t } from '../i18n'
 
 const route = useRoute()
 const store = useDevicesStore()
 
 const nav = [
-  { to: '/devices', label: '设备', icon: PhonePortraitOutline, badge: true },
-  { to: '/install', label: '安装台', icon: CloudDownloadOutline, badge: false },
-  { to: '/apps', label: '应用', icon: GridOutline, badge: false },
-  { to: '/files', label: '文件', icon: FolderOutline, badge: false },
-  { to: '/logs', label: '日志', icon: DocumentTextOutline, badge: false },
-  { to: '/shell', label: 'Shell', icon: CodeSlashOutline, badge: false },
-  { to: '/settings', label: '设置', icon: SettingsOutline, badge: false },
+  { to: '/devices', key: 'nav.devices', icon: PhonePortraitOutline, badge: true },
+  { to: '/install', key: 'nav.install', icon: CloudDownloadOutline, badge: false },
+  { to: '/apps', key: 'nav.apps', icon: GridOutline, badge: false },
+  { to: '/files', key: 'nav.files', icon: FolderOutline, badge: false },
+  { to: '/logs', key: 'nav.logs', icon: DocumentTextOutline, badge: false },
+  { to: '/shell', key: 'nav.shell', icon: CodeSlashOutline, badge: false },
+  { to: '/settings', key: 'nav.settings', icon: SettingsOutline, badge: false },
 ]
 
 const adbLabel = computed(() =>
-  store.adb ? `adb ${store.adb.version} · :${store.adb.serverPort}` : 'adb 未就绪',
+  store.adb ? `adb ${store.adb.version} · :${store.adb.serverPort}` : t('common.adbNotReady'),
 )
 const deviceCount = computed(() => store.list.length)
 
@@ -63,7 +64,7 @@ onMounted(async () => {
           active-class="active"
         >
           <NIcon :size="16" :component="item.icon" />
-          <span>{{ item.label }}</span>
+          <span>{{ t(item.key) }}</span>
           <span v-if="item.badge && deviceCount" class="nav-badge">{{ deviceCount }}</span>
         </RouterLink>
       </nav>

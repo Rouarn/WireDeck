@@ -34,3 +34,41 @@ jobs:
 
       - name: Go tests
         run: go test ./...
+
+  build-windows:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-go@v5
+        with:
+          go-version-file: go.mod
+          cache: true
+
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 10
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: pnpm
+          cache-dependency-path: frontend/pnpm-lock.yaml
+
+      - name: Install frontend dependencies
+        run: cd frontend; pnpm install --frozen-lockfile
+
+      - name: Install Wails CLI
+        run: go install github.com/wailsapp/wails/v2/cmd/wails@v2.17.0
+
+      - name: Build Windows application
+        run: |
+          $env:Path = "$(go env GOPATH)\bin;$env:Path"
+          wails build -platform windows/amd64 -o WireDeck.exe
+
+      - name: Upload Windows artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: WireDeck-windows-amd64
+          path: build/bin/WireDeck.exe
+          if-no-files-found: error

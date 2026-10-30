@@ -6,6 +6,7 @@ import (
 	"os"
 	"os/exec"
 	"path/filepath"
+	"runtime"
 	"strings"
 	"sync"
 	"time"
@@ -83,12 +84,24 @@ func FindBinary(explicit string) (string, error) {
 		return explicit, nil
 	}
 
-	// 发布包内置的 adb（Contents/Resources/platform-tools/adb），
-	// 让没有安装 Android SDK 的电脑也能直接使用。
+	// 发布包内置的 adb，让没有安装 Android SDK 的电脑也能直接使用。
+	// macOS：Contents/Resources/platform-tools/adb
+	// Windows：WireDeck.exe 同目录的 platform-tools/adb.exe 或 resources/platform-tools/adb.exe
 	if exe, err := os.Executable(); err == nil {
-		bundled := filepath.Join(filepath.Dir(exe), "..", "Resources", "platform-tools", "adb")
-		if info, statErr := os.Stat(bundled); statErr == nil && !info.IsDir() {
-			return bundled, nil
+		base := filepath.Dir(exe)
+		name := "adb"
+		if runtime.GOOS == "windows" {
+			name = "adb.exe"
+		}
+		candidates := []string{
+			filepath.Join(base, "..", "Resources", "platform-tools", name),
+			filepath.Join(base, "platform-tools", name),
+			filepath.Join(base, "resources", "platform-tools", name),
+		}
+		for _, c := range candidates {
+			if info, statErr := os.Stat(c); statErr == nil && !info.IsDir() {
+				return c, nil
+			}
 		}
 	}
 
@@ -102,6 +115,7 @@ func FindBinary(explicit string) (string, error) {
 		"/usr/local/bin/adb",
 		filepath.Join(home, "Library/Android/sdk/platform-tools/adb"),
 		filepath.Join(home, "Android/Sdk/platform-tools/adb"),
+		filepath.Join(home, "AppData", "Local", "Android", "Sdk", "platform-tools", "adb.exe"),
 	}
 	for _, c := range candidates {
 		if info, err := os.Stat(c); err == nil && !info.IsDir() {
