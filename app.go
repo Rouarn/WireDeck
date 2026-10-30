@@ -16,6 +16,9 @@ import (
 	"woyuxiaji.cn/wiredeck/internal/services"
 )
 
+// appVersion 当前版本号，与 wails.json 的 info.productVersion 保持一致。
+const appVersion = "0.1.0"
+
 // App 是 Wails 绑定的根对象。导出方法会自动生成前端 TypeScript 绑定。
 type App struct {
 	ctx      context.Context
@@ -74,7 +77,7 @@ func (a *App) buildMenu() *menu.Menu {
 		runtime.MessageDialog(a.ctx, runtime.MessageDialogOptions{
 			Type:    runtime.InfoDialog,
 			Title:   "关于 WireDeck",
-			Message: "WireDeck v0.1\n无线 ADB 桌面控制台\n\n通过 Wi-Fi 或 USB 管理安卓设备。",
+			Message: fmt.Sprintf("WireDeck v%s\n无线 ADB 桌面控制台\n\n通过 Wi-Fi 或 USB 管理安卓设备。", appVersion),
 		})
 	})
 	appMenu.AddSeparator()

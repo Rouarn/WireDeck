@@ -9,5 +9,12 @@
   "author": {
     "name": "夏季",
     "email": "2937375029@qq.com"
+  },
+  "info": {
+    "companyName": "woyuxiaji.cn",
+    "productName": "WireDeck",
+    "productVersion": "0.1.0",
+    "copyright": "© 2026 Rouarn",
+    "comments": "无线 ADB 桌面控制台"
   }
 }
