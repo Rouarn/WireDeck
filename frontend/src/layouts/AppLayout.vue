@@ -250,15 +250,15 @@ onMounted(async () => {
   align-items: center;
   gap: 8px;
   padding: 6px 10px;
-  border: 1px solid var(--border);
+  border: 1px solid var(--primary-border);
   border-radius: var(--radius-sm);
-  background: var(--surface);
+  background: var(--primary-soft);
   color: var(--text-secondary);
   font-size: 12px;
 }
 
 .device-switcher strong {
-  color: var(--text);
+  color: var(--primary-ink);
   font-weight: 600;
 }
 
