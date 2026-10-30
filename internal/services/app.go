@@ -196,6 +196,15 @@ func (s *AppService) List(ctx context.Context, serial, scope string) ([]model.Ap
 }
 
 // Detail 读取应用详情（版本、SDK、首次安装时间、已授予权限）。
+// sanitizeDumpTime 清理 dumpsys 返回的 1970 占位时间（部分预装应用没有真实安装时间）。
+func sanitizeDumpTime(value string) string {
+	value = strings.TrimSpace(value)
+	if strings.HasPrefix(value, "1970-01-01") {
+		return ""
+	}
+	return value
+}
+
 func (s *AppService) Detail(ctx context.Context, serial, pkg string) (*model.AppDetail, error) {
 	if serial == "" || pkg == "" {
 		return nil, fmt.Errorf("设备与应用包名不能为空")
@@ -234,9 +243,14 @@ func (s *AppService) Detail(ctx context.Context, serial, pkg string) (*model.App
 		case strings.HasPrefix(line, "versionName="):
 			detail.VersionName = strings.TrimPrefix(line, "versionName=")
 		case strings.HasPrefix(line, "firstInstallTime="):
-			detail.FirstInstall = strings.TrimPrefix(line, "firstInstallTime=")
+			// 同一个包可能输出多条（多用户/拆分），优先取第一个真实时间，忽略 1970 占位。
+			if candidate := sanitizeDumpTime(strings.TrimPrefix(line, "firstInstallTime=")); candidate != "" && detail.FirstInstall == "" {
+				detail.FirstInstall = candidate
+			}
 		case strings.HasPrefix(line, "lastUpdateTime="):
-			detail.LastUpdate = strings.TrimPrefix(line, "lastUpdateTime=")
+			if candidate := sanitizeDumpTime(strings.TrimPrefix(line, "lastUpdateTime=")); candidate != "" {
+				detail.LastUpdate = candidate
+			}
 		case strings.HasPrefix(line, "dataDir="):
 			detail.DataDir = strings.TrimPrefix(line, "dataDir=")
 		case strings.Contains(line, ".permission.") && strings.Contains(line, "granted=true"):
