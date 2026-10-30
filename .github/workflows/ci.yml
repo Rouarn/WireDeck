@@ -72,20 +72,22 @@ jobs:
           $bin = "build/bin"
           $pt = Join-Path $bin "platform-tools"
           New-Item -ItemType Directory -Force -Path $pt | Out-Null
-          Invoke-WebRequest -Uri "https://dl.google.com/android/repository/platform-tools-latest-windows.zip" -OutFile "$env:TEMP\pt.zip"
-          Expand-Archive "$env:TEMP\pt.zip" -DestinationPath "$env:TEMP\pt" -Force
-          Copy-Item "$env:TEMP\pt\platform-toolsdb.exe" $pt
-          Copy-Item "$env:TEMP\pt\platform-tools\AdbWinApi.dll" $pt -ErrorAction SilentlyContinue
-          Copy-Item "$env:TEMP\pt\platform-tools\AdbWinUsbApi.dll" $pt -ErrorAction SilentlyContinue
+          Invoke-WebRequest -Uri "https://dl.google.com/android/repository/platform-tools-latest-windows.zip" -OutFile (Join-Path $env:TEMP "pt.zip")
+          Expand-Archive (Join-Path $env:TEMP "pt.zip") -DestinationPath (Join-Path $env:TEMP "pt") -Force
+          $ptSrc = Join-Path $env:TEMP "pt/platform-tools"
+          Copy-Item (Join-Path $ptSrc "adb.exe") $pt
+          Copy-Item (Join-Path $ptSrc "AdbWinApi.dll") $pt -ErrorAction SilentlyContinue
+          Copy-Item (Join-Path $ptSrc "AdbWinUsbApi.dll") $pt -ErrorAction SilentlyContinue
 
           $sc = Join-Path $bin "scrcpy"
           New-Item -ItemType Directory -Force -Path $sc | Out-Null
-          Invoke-WebRequest -Uri "https://github.com/Genymobile/scrcpy/releases/download/v5.0.1/scrcpy-win64-v5.0.1.zip" -OutFile "$env:TEMP\scrcpy.zip"
-          Expand-Archive "$env:TEMP\scrcpy.zip" -DestinationPath "$env:TEMP\scrcpy" -Force
-          Copy-Item "$env:TEMP\scrcpy\scrcpy-win64-v5.0.1\*" $sc -Recurse -Force
+          Invoke-WebRequest -Uri "https://github.com/Genymobile/scrcpy/releases/download/v5.0.1/scrcpy-win64-v5.0.1.zip" -OutFile (Join-Path $env:TEMP "scrcpy.zip")
+          Expand-Archive (Join-Path $env:TEMP "scrcpy.zip") -DestinationPath (Join-Path $env:TEMP "scrcpy") -Force
+          $scSrc = Join-Path $env:TEMP "scrcpy/scrcpy-win64-v5.0.1"
+          Copy-Item (Join-Path $scSrc "*") $sc -Recurse -Force
           Remove-Item (Join-Path $sc "adb.exe") -ErrorAction SilentlyContinue
 
-          Compress-Archive -Path "$bin\WireDeck.exe", $pt, $sc -DestinationPath "$bin\WireDeck-windows-amd64.zip" -Force
+          Compress-Archive -Path (Join-Path $bin "WireDeck.exe"), $pt, $sc -DestinationPath (Join-Path $bin "WireDeck-windows-amd64.zip") -Force
 
       - name: Upload Windows artifact
         uses: actions/upload-artifact@v4
