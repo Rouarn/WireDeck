@@ -7,7 +7,6 @@ import (
 	"os/exec"
 	"path/filepath"
 	"runtime"
-	"syscall"
 )
 
 // ScrcpyService 负责启动 scrcpy 投屏窗口（独立进程，不嵌入应用）。
@@ -44,10 +43,8 @@ func (s *ScrcpyService) Start(_ context.Context, serial, title string) error {
 	}
 	cmd.Env = env
 
-	if runtime.GOOS != "windows" {
-		// 让 scrcpy 独立于应用运行，应用退出时不连带关闭窗口。
-		cmd.SysProcAttr = &syscall.SysProcAttr{Setsid: true}
-	}
+	// 让 scrcpy 独立于应用运行，应用退出时不连带关闭窗口。
+	setDetached(cmd)
 
 	if err := cmd.Start(); err != nil {
 		return fmt.Errorf("启动投屏失败: %w", err)
