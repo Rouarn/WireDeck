@@ -4,7 +4,6 @@ import DevicesView from '../views/DevicesView.vue'
 import FilesView from '../views/FilesView.vue'
 import InstallView from '../views/InstallView.vue'
 import LogsView from '../views/LogsView.vue'
-import PlaceholderView from '../views/PlaceholderView.vue'
 import SettingsView from '../views/SettingsView.vue'
 import ShellView from '../views/ShellView.vue'
 
