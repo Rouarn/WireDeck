@@ -22,6 +22,8 @@ export function DisconnectDevice(arg1:string):Promise<void>;
 
 export function DiscoverServices():Promise<Array<model.MDNSService>>;
 
+export function EnableWireless(arg1:string):Promise<model.ConnectResult>;
+
 export function EnsureAdbReady():Promise<model.AdbEnv>;
 
 export function ExecShell(arg1:string,arg2:string):Promise<model.ShellResult>;

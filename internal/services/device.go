@@ -238,6 +238,55 @@ func isMDNSSerial(serial string) bool {
 	return strings.Contains(serial, "_adb-tls-connect._tcp")
 }
 
+// EnableWireless 将 USB 连接的设备切换为无线调试（tcpip 5555）并连接。
+func (s *DeviceService) EnableWireless(ctx context.Context, serial string) (model.ConnectResult, error) {
+	ip := s.wlanIP(ctx, serial)
+	if ip == "" {
+		return model.ConnectResult{
+			OK:      false,
+			Message: "无法获取手机 Wi-Fi IP，请确认手机已连接 Wi-Fi",
+		}, nil
+	}
+
+	res, err := s.server.Run(ctx, 20*time.Second, "-s", serial, "tcpip", "5555")
+	if err != nil {
+		return model.ConnectResult{}, err
+	}
+	if res.ExitCode != 0 {
+		return model.ConnectResult{OK: false, Message: strings.TrimSpace(res.Output())}, nil
+	}
+
+	// adbd 需要一点时间重启为 TCP 模式。
+	time.Sleep(2 * time.Second)
+
+	result, err := s.Connect(ctx, model.ConnectRequest{Host: ip, Port: 5555})
+	if err != nil {
+		return result, err
+	}
+	if result.OK {
+		s.RecordConnection(ip, 5555, "")
+	}
+	return result, nil
+}
+
+// wlanIP 读取设备的 wlan0 IPv4 地址。
+func (s *DeviceService) wlanIP(ctx context.Context, serial string) string {
+	res, err := s.server.Run(ctx, 6*time.Second, "-s", serial, "shell", "ip", "-f", "inet", "addr", "show", "wlan0")
+	if err != nil || res.ExitCode != 0 {
+		return ""
+	}
+
+	for _, line := range strings.Split(res.Stdout, "\n") {
+		fields := strings.Fields(line)
+		for i, field := range fields {
+			if field == "inet" && i+1 < len(fields) {
+				return strings.Split(fields[i+1], "/")[0]
+			}
+		}
+	}
+	return ""
+}
+
 // Discover 执行 `adb mdns services` 并解析配对/连接服务。
 func (s *DeviceService) Discover(ctx context.Context) ([]model.MDNSService, error) {
 	res, err := s.server.Run(ctx, 6*time.Second, "mdns", "services")

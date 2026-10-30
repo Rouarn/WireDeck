@@ -42,6 +42,10 @@ export function DiscoverServices() {
   return window['go']['main']['App']['DiscoverServices']();
 }
 
+export function EnableWireless(arg1) {
+  return window['go']['main']['App']['EnableWireless'](arg1);
+}
+
 export function EnsureAdbReady() {
   return window['go']['main']['App']['EnsureAdbReady']();
 }

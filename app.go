@@ -255,6 +255,18 @@ func (a *App) DisconnectDevice(serial string) error {
 	return nil
 }
 
+// EnableWireless 把 USB 连接的设备切换为无线调试并连接。
+func (a *App) EnableWireless(serial string) (model.ConnectResult, error) {
+	if _, err := a.EnsureAdbReady(); err != nil {
+		return model.ConnectResult{}, err
+	}
+	res, err := a.devices.EnableWireless(a.context(), serial)
+	if err == nil && res.OK {
+		a.devices.RefreshAndEmit(a.context())
+	}
+	return res, err
+}
+
 // ReconnectDevices 尝试重连历史设备并自动连接 mDNS 发现的无线设备。
 func (a *App) ReconnectDevices() error {
 	if _, err := a.EnsureAdbReady(); err != nil {
