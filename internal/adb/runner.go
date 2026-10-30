@@ -8,6 +8,7 @@ import (
 	"os"
 	"os/exec"
 	"regexp"
+	"runtime"
 	"strconv"
 	"strings"
 	"time"
@@ -189,6 +190,26 @@ func (r *Runner) runWithProgress(
 	cmd := exec.CommandContext(runCtx, r.AdbPath, r.commandArgs(args...)...)
 	platform.PrepareCmd(cmd)
 	cmd.Env = append(os.Environ(), "LANG=C", "LC_ALL=C", "TERM=xterm-256color")
+
+	// Windows 不支持伪终端：直接执行，给出大致进度（0 → 100）。
+	if runtime.GOOS == "windows" {
+		var out bytes.Buffer
+		cmd.Stdout = &out
+		cmd.Stderr = &out
+		if onPercent != nil {
+			onPercent(0)
+		}
+		if err := cmd.Run(); err != nil {
+			if runCtx.Err() == context.Canceled {
+				return fmt.Errorf("%w: %v", ErrCanceled, err)
+			}
+			return fmt.Errorf("%w: %v: %s", failErr, err, lastOutputLine(out.String()))
+		}
+		if onPercent != nil {
+			onPercent(100)
+		}
+		return nil
+	}
 
 	ptmx, err := pty.StartWithSize(cmd, &pty.Winsize{Rows: 24, Cols: 120})
 	if err != nil {

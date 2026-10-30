@@ -79,6 +79,14 @@ jobs:
           Copy-Item (Join-Path $ptSrc "AdbWinApi.dll") $pt -ErrorAction SilentlyContinue
           Copy-Item (Join-Path $ptSrc "AdbWinUsbApi.dll") $pt -ErrorAction SilentlyContinue
 
+          # aapt2 用于解析 APK 应用名，platform-tools 里没有，需要单独从 build-tools 取。
+          Invoke-WebRequest -Uri "https://dl.google.com/android/repository/build-tools_r34-windows.zip" -OutFile (Join-Path $env:TEMP "bt.zip")
+          Expand-Archive (Join-Path $env:TEMP "bt.zip") -DestinationPath (Join-Path $env:TEMP "bt") -Force
+          $btDir = Get-ChildItem (Join-Path $env:TEMP "bt") -Directory | Select-Object -First 1
+          Copy-Item (Join-Path $btDir.FullName "aapt2.exe") $pt
+          Copy-Item (Join-Path $btDir.FullName "libwinpthread-1.dll") $pt -ErrorAction SilentlyContinue
+          Copy-Item (Join-Path $btDir.FullName "libc++_shared.dll") $pt -ErrorAction SilentlyContinue
+
           $sc = Join-Path $bin "scrcpy"
           New-Item -ItemType Directory -Force -Path $sc | Out-Null
           Invoke-WebRequest -Uri "https://github.com/Genymobile/scrcpy/releases/download/v5.0.1/scrcpy-win64-v5.0.1.zip" -OutFile (Join-Path $env:TEMP "scrcpy.zip")

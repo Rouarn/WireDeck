@@ -6,6 +6,7 @@ import (
 	"os"
 	"os/exec"
 	"path/filepath"
+	"runtime"
 	"sort"
 	"strconv"
 	"strings"
@@ -19,8 +20,29 @@ var ErrAapt2NotFound = errors.New("未找到 aapt2，无法解析 APK 信息；�
 
 // FindAapt2 按 PATH → Android SDK build-tools 的顺序查找 aapt2。
 func FindAapt2() string {
+	name := "aapt2"
+	if runtime.GOOS == "windows" {
+		name = "aapt2.exe"
+	}
+
 	if path, err := exec.LookPath("aapt2"); err == nil {
 		return path
+	}
+
+	// 安装包内置的 aapt2（Windows 发布包会带在 platform-tools 目录）。
+	if exe, err := os.Executable(); err == nil {
+		base := filepath.Dir(exe)
+		candidates := []string{
+			filepath.Join(base, name),
+			filepath.Join(base, "platform-tools", name),
+			filepath.Join(base, "build-tools", name),
+			filepath.Join(base, "..", "Resources", "platform-tools", name),
+		}
+		for _, candidate := range candidates {
+			if info, statErr := os.Stat(candidate); statErr == nil && !info.IsDir() {
+				return candidate
+			}
+		}
 	}
 
 	home, _ := os.UserHomeDir()
@@ -35,7 +57,7 @@ func FindAapt2() string {
 		if root == "" {
 			continue
 		}
-		matches, err := filepath.Glob(filepath.Join(root, "build-tools", "*", "aapt2"))
+		matches, err := filepath.Glob(filepath.Join(root, "build-tools", "*", name))
 		if err != nil || len(matches) == 0 {
 			continue
 		}

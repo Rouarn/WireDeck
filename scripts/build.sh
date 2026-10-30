@@ -27,6 +27,15 @@ else
   echo "warning: 未找到 adb（$ADB_SRC），发布包将依赖系统 adb" >&2
 fi
 
+# 内置 aapt2，用于解析 APK 应用名；没有 Android SDK 的电脑也能用。
+AAPT2_SRC=$(ls -d "$HOME"/Library/Android/sdk/build-tools/*/aapt2 2>/dev/null | sort -V | tail -1)
+if [ -n "${AAPT2_SRC:-}" ] && [ -f "$AAPT2_SRC" ]; then
+  cp "$AAPT2_SRC" "$RES/platform-tools/aapt2"
+  chmod +x "$RES/platform-tools/aapt2"
+else
+  echo "warning: 未找到 aapt2，应用名解析将依赖系统环境" >&2
+fi
+
 # 内置 scrcpy，用于投屏。
 if [ -d "resources/scrcpy" ]; then
   mkdir -p "$RES/scrcpy"

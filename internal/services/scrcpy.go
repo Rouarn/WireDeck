@@ -7,6 +7,8 @@ import (
 	"os/exec"
 	"path/filepath"
 	"runtime"
+	"strings"
+	"time"
 
 	"woyuxiaji.cn/wiredeck/internal/platform"
 )
@@ -49,25 +51,82 @@ func (s *ScrcpyService) Start(_ context.Context, serial, title string) error {
 	// 让 scrcpy 独立于应用运行，应用退出时不连带关闭窗口。
 	setDetached(cmd)
 
+	if _, statErr := os.Stat(filepath.Join(dir, "scrcpy-server")); statErr != nil {
+		return fmt.Errorf("安装包不完整：缺少 scrcpy-server，请重新解压完整压缩包")
+	}
+
+	// 把 scrcpy 的输出写入日志，便于排查无法唤起的问题。
+	logPath := ""
+	if cacheDir, cacheErr := os.UserCacheDir(); cacheErr == nil {
+		logPath = filepath.Join(cacheDir, "WireDeck", "scrcpy.log")
+		if mkErr := os.MkdirAll(filepath.Dir(logPath), 0o755); mkErr == nil {
+			if f, createErr := os.Create(logPath); createErr == nil {
+				cmd.Stdout = f
+				cmd.Stderr = f
+			}
+		}
+	}
+
 	if err := cmd.Start(); err != nil {
 		return fmt.Errorf("启动投屏失败: %w", err)
 	}
-	go func() { _ = cmd.Wait() }()
 
+	done := make(chan error, 1)
+	go func() { done <- cmd.Wait() }()
+
+	// scrcpy 正常启动后会持续运行；3 秒内退出说明启动失败，直接返回原因。
+	select {
+	case err := <-done:
+		if err != nil {
+			return fmt.Errorf("投屏启动失败: %v\n%s", err, tailLog(logPath, 600))
+		}
+		return fmt.Errorf("投屏进程已退出，日志：%s", logPath)
+	case <-time.After(3 * time.Second):
+	}
+
+	go func() { <-done }()
 	return nil
+}
+
+// tailLog 读取日志文件末尾，用于错误提示。
+func tailLog(path string, limit int) string {
+	if path == "" {
+		return ""
+	}
+	data, err := os.ReadFile(path)
+	if err != nil || len(data) == 0 {
+		return ""
+	}
+	text := strings.TrimSpace(string(data))
+	if len(text) > limit {
+		text = text[len(text)-limit:]
+	}
+	return "日志：" + path + "\n" + text
 }
 
 // findBundledAdb 返回应用内置的 adb（发布包或开发目录）。
 func findBundledAdb() string {
+	name := "adb"
+	if runtime.GOOS == "windows" {
+		name = "adb.exe"
+	}
+
 	if exe, err := os.Executable(); err == nil {
-		bundled := filepath.Join(filepath.Dir(exe), "..", "Resources", "platform-tools", "adb")
-		if info, statErr := os.Stat(bundled); statErr == nil && !info.IsDir() {
-			return bundled
+		base := filepath.Dir(exe)
+		candidates := []string{
+			filepath.Join(base, "..", "Resources", "platform-tools", name),
+			filepath.Join(base, "platform-tools", name),
+			filepath.Join(base, "resources", "platform-tools", name),
+		}
+		for _, candidate := range candidates {
+			if info, statErr := os.Stat(candidate); statErr == nil && !info.IsDir() {
+				return candidate
+			}
 		}
 	}
 
 	if wd, err := os.Getwd(); err == nil {
-		dev := filepath.Join(wd, "resources", "platform-tools", "adb")
+		dev := filepath.Join(wd, "resources", "platform-tools", name)
 		if info, statErr := os.Stat(dev); statErr == nil && !info.IsDir() {
 			return dev
 		}
