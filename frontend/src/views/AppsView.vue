@@ -297,18 +297,17 @@ onMounted(() => {
 </script>
 
 <template>
-  <div class="apps">
-    <NAlert v-if="!store.current" type="warning" class="alert">
+  <div class="flex min-h-0 flex-1 flex-col">
+    <NAlert v-if="!store.current" type="warning" class="mb-4">
       {{ t('apps.selectDevice') }}
     </NAlert>
 
-    <div class="toolbar">
+    <div class="mb-3 flex items-center gap-3">
       <NInput
         v-model:value="search"
         size="small"
         :placeholder="t('apps.searchPlaceholder')"
         clearable
-        class="search-input"
         style="width: 260px"
       >
         <template #prefix>
@@ -316,32 +315,37 @@ onMounted(() => {
         </template>
       </NInput>
       <SegmentedControl :options="scopeOptions" :value="scope" @update:value="setScope" />
-      <span class="count">{{ visibleApps.length }} / {{ apps.length }}</span>
-      <div class="spacer"></div>
+      <span class="text-[11px] text-fg3">{{ visibleApps.length }} / {{ apps.length }}</span>
+      <div class="flex-1"></div>
       <NButton size="small" :loading="labels.job.running" @click="loadLabels">
         {{ labels.job.running ? labels.job.message || t('apps.loadingNames') : t('apps.loadNames') }}
       </NButton>
       <NButton size="small" :loading="loading" @click="load">{{ t('apps.refresh') }}</NButton>
     </div>
 
-    <div v-if="exporting" class="export-bar">
-      <span class="export-label">{{ t('apps.exporting') }}</span>
-      <div class="export-progress"><i :style="{ width: `${exportProgress}%` }"></i></div>
-      <span class="export-percent">{{ exportProgress }}%</span>
+    <div
+      v-if="exporting"
+      class="mb-3 flex items-center gap-2.5 rounded-sm border border-brand-line bg-brand-soft px-3 py-2 text-xs text-brand-ink"
+    >
+      <span class="w-[110px] whitespace-nowrap">{{ t('apps.exporting') }}</span>
+      <div class="h-[5px] flex-1 overflow-hidden rounded-[3px] bg-line">
+        <i class="block h-full bg-brand transition-[width] duration-200" :style="{ width: `${exportProgress}%` }"></i>
+      </div>
+      <span class="w-9 text-right tabular-nums">{{ exportProgress }}%</span>
     </div>
 
-    <section class="panel">
-      <div class="table-head">
+    <section class="flex min-h-0 flex-1 flex-col overflow-hidden rounded border border-line bg-surface shadow-sm">
+      <div class="grid grid-cols-[1fr_260px] gap-3 border-b border-line px-3.5 py-2 text-[10px] font-500 uppercase text-fg3">
         <span>{{ t('apps.colApp') }}</span>
-        <span class="head-ops">{{ t('apps.colOps') }}</span>
+        <span class="text-right">{{ t('apps.colOps') }}</span>
       </div>
-      <div class="table-body">
+      <div class="min-h-0 flex-1">
         <VirtualList v-if="visibleApps.length" :items="visibleApps" :item-height="48">
           <template #default="{ item }">
-            <div class="app-row">
-              <div class="app-cell">
+            <div class="grid h-12 grid-cols-[1fr_260px] items-center gap-3 border-b border-line px-3.5 text-xs hover:bg-inset">
+              <div class="flex min-w-0 items-center gap-2.5">
                 <div
-                  class="avatar"
+                  class="flex h-7 w-7 shrink-0 items-center justify-center rounded-lg text-xs font-700"
                   :style="{
                     background: avatarStyle(item.package).bg,
                     color: avatarStyle(item.package).fg,
@@ -349,12 +353,19 @@ onMounted(() => {
                 >
                   {{ avatarText(item) }}
                 </div>
-                <div class="app-info">
-                  <div class="app-name">{{ item.label || item.package }}</div>
-                  <div v-if="item.label" class="app-pkg">{{ item.package }}</div>
+                <div class="min-w-0">
+                  <div class="overflow-hidden text-ellipsis whitespace-nowrap text-xs font-600 leading-[1.4] text-fg">
+                    {{ item.label || item.package }}
+                  </div>
+                  <div
+                    v-if="item.label"
+                    class="overflow-hidden text-ellipsis whitespace-nowrap font-mono text-[10px] leading-[1.4] text-fg3"
+                  >
+                    {{ item.package }}
+                  </div>
                 </div>
               </div>
-              <div class="ops">
+              <div class="flex items-center justify-end gap-1.5">
                 <NButton size="tiny" quaternary @click="openDetail(item.package)">{{ t('apps.detail') }}</NButton>
                 <NButton size="tiny" quaternary @click="exportApp(item.package)">{{ t('apps.export') }}</NButton>
                 <NPopconfirm @positive-click="uninstall(item.package)">
@@ -370,7 +381,7 @@ onMounted(() => {
             </div>
           </template>
         </VirtualList>
-        <div v-else class="empty">
+        <div v-else class="py-10 text-center text-xs text-fg3">
           {{ store.current ? t('apps.noMatch') : t('apps.selectDeviceShort') }}
         </div>
       </div>
@@ -379,14 +390,16 @@ onMounted(() => {
     <NDrawer v-model:show="showDetail" :width="600">
       <NDrawerContent :title="t('apps.detailTitle')" closable :native-scrollbar="false">
         <NSpin :show="detailLoading">
-          <div v-if="detail" class="detail">
-            <div class="detail-hero">
-              <div class="hero-avatar">{{ avatarLetter(detail) }}</div>
-              <div class="hero-main">
-                <div class="hero-name">{{ detail.label || detail.package }}</div>
-                <div class="hero-pkg">{{ detail.package }}</div>
+          <div v-if="detail" class="flex flex-col">
+            <div class="flex items-center gap-3.5 rounded border border-line bg-gradient-to-br from-inset to-surface p-4">
+              <div class="flex h-12 w-12 items-center justify-center rounded-xl bg-brand-soft text-xl font-700 text-brand-ink">
+                {{ avatarLetter(detail) }}
               </div>
-              <div class="hero-actions">
+              <div class="min-w-0 flex-1">
+                <div class="text-[15px] font-600">{{ detail.label || detail.package }}</div>
+                <div class="mt-0.5 break-all font-mono text-[11px] text-fg3">{{ detail.package }}</div>
+              </div>
+              <div class="flex gap-2">
                 <NButton size="small" @click="onMore('launch', detail.package)">{{ t('apps.launch') }}</NButton>
                 <NButton size="small" @click="exportApp(detail.package)">{{ t('apps.export') }}</NButton>
                 <NPopconfirm @positive-click="uninstallAndClose(detail.package)">
@@ -398,413 +411,62 @@ onMounted(() => {
               </div>
             </div>
 
-            <div class="detail-grid">
-              <div class="grid-item">
-                <span class="grid-label">{{ t('apps.version') }}</span>
-                <span class="grid-value">{{ detail.versionName }} ({{ detail.versionCode }})</span>
+            <div class="mt-3.5 grid grid-cols-2 gap-2.5">
+              <div class="rounded-sm border border-line bg-surface px-3 py-2.5">
+                <span class="block text-[10px] text-fg3">{{ t('apps.version') }}</span>
+                <span class="mt-[3px] block break-all text-xs">{{ detail.versionName }} ({{ detail.versionCode }})</span>
               </div>
-              <div class="grid-item">
-                <span class="grid-label">SDK</span>
-                <span class="grid-value">min {{ detail.minSdk }} · target {{ detail.targetSdk }}</span>
+              <div class="rounded-sm border border-line bg-surface px-3 py-2.5">
+                <span class="block text-[10px] text-fg3">SDK</span>
+                <span class="mt-[3px] block break-all text-xs">min {{ detail.minSdk }} · target {{ detail.targetSdk }}</span>
               </div>
-              <div class="grid-item">
-                <span class="grid-label">{{ t('apps.firstInstall') }}</span>
-                <span class="grid-value">{{ detail.firstInstall || '—' }}</span>
+              <div class="rounded-sm border border-line bg-surface px-3 py-2.5">
+                <span class="block text-[10px] text-fg3">{{ t('apps.firstInstall') }}</span>
+                <span class="mt-[3px] block break-all text-xs">{{ detail.firstInstall || '—' }}</span>
               </div>
-              <div class="grid-item">
-                <span class="grid-label">{{ t('apps.lastUpdate') }}</span>
-                <span class="grid-value">{{ detail.lastUpdate || '—' }}</span>
+              <div class="rounded-sm border border-line bg-surface px-3 py-2.5">
+                <span class="block text-[10px] text-fg3">{{ t('apps.lastUpdate') }}</span>
+                <span class="mt-[3px] block break-all text-xs">{{ detail.lastUpdate || '—' }}</span>
               </div>
-              <div class="grid-item wide">
-                <span class="grid-label">{{ t('apps.dataDir') }}</span>
-                <span class="grid-value mono">{{ detail.dataDir || '—' }}</span>
+              <div class="col-span-2 rounded-sm border border-line bg-surface px-3 py-2.5">
+                <span class="block text-[10px] text-fg3">{{ t('apps.dataDir') }}</span>
+                <span class="mt-[3px] block break-all font-mono text-[11px]">{{ detail.dataDir || '—' }}</span>
               </div>
             </div>
 
-            <div class="detail-section">
-              <div class="section-header">
-                <span>{{ t('apps.grantedPerms') }} <em>{{ detail.permissions.length }}</em></span>
-                <NButton
-                  v-if="detail.permissions.length > 6"
-                  text
-                  size="tiny"
-                  @click="showAllPerms = !showAllPerms"
-                >
+            <div class="mt-4.5">
+              <div class="mb-2 flex items-center justify-between text-xs font-600 text-fg">
+                <span>
+                  {{ t('apps.grantedPerms') }}
+                  <em class="ml-1 font-400 not-italic text-fg3">{{ detail.permissions.length }}</em>
+                </span>
+                <NButton v-if="detail.permissions.length > 6" text size="tiny" @click="showAllPerms = !showAllPerms">
                   {{ showAllPerms ? t('apps.collapse') : t('apps.expandAll') }}
                 </NButton>
               </div>
-              <ul v-if="detail.permissions.length" class="perm-list">
-                <li v-for="perm in visiblePerms" :key="perm">{{ perm }}</li>
+              <ul v-if="detail.permissions.length" class="m-0 list-none overflow-hidden rounded-sm border border-line p-0">
+                <li
+                  v-for="perm in visiblePerms"
+                  :key="perm"
+                  class="break-all border-b border-line px-2.5 py-1.5 font-mono text-[11px] last:border-b-0 even:bg-inset"
+                >
+                  {{ perm }}
+                </li>
               </ul>
-              <div v-else class="empty-perm">{{ t('apps.noPerms') }}</div>
+              <div v-else class="rounded-sm border border-dashed border-line p-4 text-center text-xs text-fg3">
+                {{ t('apps.noPerms') }}
+              </div>
             </div>
           </div>
-          <div v-else-if="detailLoading" class="detail-loading">
-            <div class="loading-title">{{ t('apps.loading') }}</div>
-            <div class="loading-progress">
-              <i :style="{ width: `${detailProgress}%` }"></i>
+          <div v-else-if="detailLoading" class="flex min-h-[240px] flex-col items-center justify-center gap-2.5 text-xs text-fg2">
+            <div class="text-[13px]">{{ t('apps.loading') }}</div>
+            <div class="h-1.5 w-[220px] overflow-hidden rounded-[3px] bg-line">
+              <i class="block h-full bg-brand transition-[width] duration-200" :style="{ width: `${detailProgress}%` }"></i>
             </div>
-            <div class="loading-hint">{{ detailProgress }}%</div>
+            <div class="text-[11px] tabular-nums text-fg3">{{ detailProgress }}%</div>
           </div>
         </NSpin>
       </NDrawerContent>
     </NDrawer>
   </div>
 </template>
-
-<style scoped>
-.apps {
-  display: flex;
-  flex: 1;
-  flex-direction: column;
-  min-height: 0;
-}
-
-.alert {
-  margin-bottom: 16px;
-}
-
-.toolbar {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  margin-bottom: 12px;
-}
-
-.toolbar .count {
-  color: var(--text-tertiary);
-  font-size: 11px;
-}
-
-/* 让工具栏控件与 32px 的分段控件保持同一高度 */
-.toolbar :deep(.n-input) {
-  height: 32px;
-}
-
-.toolbar :deep(.n-input .n-input__input-el),
-.toolbar :deep(.n-input .n-input__placeholder) {
-  height: 32px;
-  line-height: 32px;
-}
-
-.toolbar :deep(.n-button) {
-  height: 32px;
-}
-
-.spacer {
-  flex: 1;
-}
-
-.panel {
-  display: flex;
-  flex: 1;
-  flex-direction: column;
-  min-height: 0;
-  overflow: hidden;
-  border: 1px solid var(--border);
-  border-radius: var(--radius);
-  background: var(--surface);
-  box-shadow: var(--shadow-sm);
-}
-
-.table-head {
-  display: grid;
-  flex: 0 0 auto;
-  grid-template-columns: 1fr var(--ops-col, 260px);
-  gap: 12px;
-  padding: 8px 14px;
-  border-bottom: 1px solid var(--border);
-  color: var(--text-tertiary);
-  font-size: 10px;
-  font-weight: 500;
-  text-transform: uppercase;
-}
-
-.table-head .head-ops {
-  text-align: right;
-}
-
-.table-body {
-  flex: 1;
-  min-height: 0;
-}
-
-.app-row {
-  display: grid;
-  grid-template-columns: 1fr var(--ops-col, 260px);
-  gap: 12px;
-  align-items: center;
-  height: 48px;
-  padding: 0 14px;
-  border-bottom: 1px solid var(--border);
-  font-size: 12px;
-}
-
-.app-row:hover {
-  background: var(--surface-inset);
-}
-
-.app-cell {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  min-width: 0;
-}
-
-.avatar {
-  display: flex;
-  flex-shrink: 0;
-  align-items: center;
-  justify-content: center;
-  width: 28px;
-  height: 28px;
-  border-radius: 8px;
-  font-size: 12px;
-  font-weight: 700;
-}
-
-.app-info {
-  min-width: 0;
-}
-
-.app-name {
-  overflow: hidden;
-  color: var(--text);
-  font-size: 12px;
-  font-weight: 600;
-  line-height: 1.4;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-}
-
-.app-pkg {
-  overflow: hidden;
-  color: var(--text-tertiary);
-  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
-  font-size: 10px;
-  line-height: 1.4;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-}
-
-.ops {
-  display: flex;
-  align-items: center;
-  justify-content: flex-end;
-  gap: 6px;
-}
-
-.empty {
-  padding: 40px 0;
-  color: var(--text-tertiary);
-  font-size: 12px;
-  text-align: center;
-}
-
-.export-bar {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  margin-bottom: 12px;
-  padding: 8px 12px;
-  border: 1px solid var(--primary-border);
-  border-radius: var(--radius-sm);
-  background: var(--primary-soft);
-  color: var(--primary-ink);
-  font-size: 12px;
-}
-
-.export-progress {
-  flex: 1;
-  height: 5px;
-  overflow: hidden;
-  border-radius: 3px;
-  background: var(--border);
-}
-
-.export-progress > i {
-  display: block;
-  height: 100%;
-  background: var(--primary);
-  transition: width 0.2s ease;
-}
-
-.export-percent {
-  width: 36px;
-  font-variant-numeric: tabular-nums;
-  text-align: right;
-}
-
-.detail-loading {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  gap: 10px;
-  min-height: 240px;
-  color: var(--text-secondary);
-  font-size: 12px;
-}
-
-.loading-title {
-  font-size: 13px;
-}
-
-.loading-progress {
-  width: 220px;
-  height: 6px;
-  overflow: hidden;
-  border-radius: 3px;
-  background: var(--border);
-}
-
-.loading-progress > i {
-  display: block;
-  height: 100%;
-  background: var(--primary);
-  transition: width 0.2s ease;
-}
-
-.loading-hint {
-  color: var(--text-tertiary);
-  font-size: 11px;
-  font-variant-numeric: tabular-nums;
-}
-
-.detail-hero {
-  display: flex;
-  align-items: center;
-  gap: 14px;
-  padding: 16px;
-  border: 1px solid var(--border);
-  border-radius: var(--radius);
-  background: linear-gradient(135deg, var(--surface-inset), var(--surface));
-}
-
-.hero-avatar {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  width: 48px;
-  height: 48px;
-  border-radius: 12px;
-  background: var(--primary-soft);
-  color: var(--primary-ink);
-  font-size: 20px;
-  font-weight: 700;
-}
-
-.hero-main {
-  flex: 1;
-  min-width: 0;
-}
-
-.hero-name {
-  font-size: 15px;
-  font-weight: 600;
-}
-
-.hero-pkg {
-  margin-top: 2px;
-  color: var(--text-tertiary);
-  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
-  font-size: 11px;
-  word-break: break-all;
-}
-
-.hero-actions {
-  display: flex;
-  gap: 8px;
-}
-
-.detail-grid {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 10px;
-  margin-top: 14px;
-}
-
-.grid-item {
-  padding: 10px 12px;
-  border: 1px solid var(--border);
-  border-radius: var(--radius-sm);
-  background: var(--surface);
-}
-
-.grid-item.wide {
-  grid-column: span 2;
-}
-
-.grid-label {
-  display: block;
-  color: var(--text-tertiary);
-  font-size: 10px;
-}
-
-.grid-value {
-  display: block;
-  margin-top: 3px;
-  font-size: 12px;
-  word-break: break-all;
-}
-
-.grid-value.mono {
-  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
-  font-size: 11px;
-}
-
-.detail-section {
-  margin-top: 18px;
-}
-
-.section-header {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  margin-bottom: 8px;
-  color: var(--text);
-  font-size: 12px;
-  font-weight: 600;
-}
-
-.section-header em {
-  margin-left: 4px;
-  color: var(--text-tertiary);
-  font-style: normal;
-  font-weight: 400;
-}
-
-.perm-list {
-  margin: 0;
-  padding: 0;
-  overflow: hidden;
-  border: 1px solid var(--border);
-  border-radius: var(--radius-sm);
-  list-style: none;
-}
-
-.perm-list li {
-  padding: 6px 10px;
-  border-bottom: 1px solid var(--border);
-  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
-  font-size: 11px;
-  word-break: break-all;
-}
-
-.perm-list li:nth-child(even) {
-  background: var(--surface-inset);
-}
-
-.perm-list li:last-child {
-  border-bottom: none;
-}
-
-.empty-perm {
-  padding: 16px;
-  border: 1px dashed var(--border);
-  border-radius: var(--radius-sm);
-  color: var(--text-tertiary);
-  font-size: 12px;
-  text-align: center;
-}
-</style>

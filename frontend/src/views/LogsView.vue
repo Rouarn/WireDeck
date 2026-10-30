@@ -230,10 +230,10 @@ onBeforeUnmount(() => {
 </script>
 
 <template>
-  <div class="logs">
-    <div class="toolbar">
-      <span class="count">{{ t('logs.lineCount', { visible: visibleLines.length, total: lines.length }) }}</span>
-      <div class="spacer"></div>
+  <div class="flex min-h-0 flex-1 flex-col">
+    <div class="mb-3 flex items-center gap-2">
+      <span class="text-[11px] text-fg3">{{ t('logs.lineCount', { visible: visibleLines.length, total: lines.length }) }}</span>
+      <div class="flex-1"></div>
       <NButton size="small" type="primary" :disabled="running || !store.current" @click="startLog">
         <template #icon><NIcon><PlayOutline /></NIcon></template>
         {{ t('logs.start') }}
@@ -247,7 +247,7 @@ onBeforeUnmount(() => {
       <NButton size="small" quaternary :disabled="!lines.length" @click="exportLog">{{ t('logs.export') }}</NButton>
     </div>
 
-    <div class="filters">
+    <div class="mb-2.5 flex items-center gap-2.5">
       <NSelect
         v-model:value="selectedPkg"
         size="small"
@@ -259,127 +259,40 @@ onBeforeUnmount(() => {
       />
       <NSelect v-model:value="level" size="small" :options="levelOptions" style="width: 140px" />
       <NInput v-model:value="keyword" size="small" clearable :placeholder="t('logs.keyword')" style="width: 200px" />
-      <span class="hint">{{ t('logs.keepHint') }}</span>
+      <span class="text-[11px] text-fg3">{{ t('logs.keepHint') }}</span>
     </div>
 
-    <div v-if="crashActive" class="crash-bar">
+    <div
+      v-if="crashActive"
+      class="mb-2.5 flex items-center gap-2 rounded-sm border border-err-soft bg-err-soft px-3 py-2 text-xs text-err"
+    >
       <span>{{ t('logs.crashDetected', { n: crashBuffer.length }) }}</span>
-      <div class="spacer"></div>
+      <div class="flex-1"></div>
       <NButton size="tiny" type="primary" @click="copyCrash">{{ t('logs.copyCrash') }}</NButton>
       <NButton size="tiny" quaternary @click="dismissCrash">{{ t('logs.ignore') }}</NButton>
     </div>
 
-    <div class="log-box">
+    <div class="relative min-h-0 flex-1 overflow-hidden rounded border border-line bg-inset">
       <VirtualList ref="listRef" :items="visibleLines" :item-height="19">
         <template #default="{ item }">
-          <div class="log-line" :class="`level-${item.level}`" :title="item.text">{{ item.text }}</div>
+          <div
+            class="h-[19px] overflow-hidden overflow-ellipsis whitespace-nowrap px-3 font-mono text-[11px] leading-[19px]"
+            :class="{
+              'text-fg3': item.level === 'V',
+              'text-fg2': item.level === 'D',
+              'text-brand-ink': item.level === 'I',
+              'text-warn': item.level === 'W',
+              'text-err': item.level === 'E' || item.level === 'F',
+            }"
+            :title="item.text"
+          >
+            {{ item.text }}
+          </div>
         </template>
       </VirtualList>
-      <div v-if="!visibleLines.length" class="log-empty">
+      <div v-if="!visibleLines.length" class="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 text-xs text-fg3">
         {{ running ? t('logs.waiting') : t('logs.idleHint') }}
       </div>
     </div>
   </div>
 </template>
-
-<style scoped>
-.logs {
-  display: flex;
-  flex: 1;
-  flex-direction: column;
-  min-height: 0;
-}
-
-.toolbar {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  margin-bottom: 12px;
-}
-
-.toolbar .count {
-  color: var(--text-tertiary);
-  font-size: 11px;
-}
-
-.spacer {
-  flex: 1;
-}
-
-.filters {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  margin-bottom: 10px;
-}
-
-.filters .hint {
-  color: var(--text-tertiary);
-  font-size: 11px;
-}
-
-.crash-bar {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  margin-bottom: 10px;
-  padding: 8px 12px;
-  border: 1px solid var(--danger-soft);
-  border-radius: var(--radius-sm);
-  background: var(--danger-soft);
-  color: var(--danger);
-  font-size: 12px;
-}
-
-.log-box {
-  position: relative;
-  flex: 1;
-  min-height: 0;
-  overflow: hidden;
-  border: 1px solid var(--border);
-  border-radius: var(--radius);
-  background: var(--surface-inset);
-}
-
-.log-line {
-  height: 19px;
-  padding: 0 12px;
-  overflow: hidden;
-  color: var(--text-secondary);
-  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
-  font-size: 11px;
-  line-height: 19px;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-}
-
-.level-V {
-  color: var(--text-tertiary);
-}
-
-.level-D {
-  color: var(--text-secondary);
-}
-
-.level-I {
-  color: var(--primary-ink);
-}
-
-.level-W {
-  color: var(--warning);
-}
-
-.level-E,
-.level-F {
-  color: var(--danger);
-}
-
-.log-empty {
-  position: absolute;
-  top: 50%;
-  left: 50%;
-  transform: translate(-50%, -50%);
-  color: var(--text-tertiary);
-  font-size: 12px;
-}
-</style>
