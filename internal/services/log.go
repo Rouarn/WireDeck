@@ -13,6 +13,7 @@ import (
 
 	"woyuxiaji.cn/wiredeck/internal/adb"
 	"woyuxiaji.cn/wiredeck/internal/model"
+	"woyuxiaji.cn/wiredeck/internal/platform"
 )
 
 const (
@@ -120,6 +121,7 @@ func (s *LogService) stream(ctx context.Context, id, serial string, filterArgs [
 	args = append(args, filterArgs...)
 
 	cmd := exec.CommandContext(ctx, s.server.BinaryPath(), args...)
+	platform.PrepareCmd(cmd)
 	cmd.Env = append(os.Environ(), "LANG=C", "LC_ALL=C")
 
 	stdout, err := cmd.StdoutPipe()

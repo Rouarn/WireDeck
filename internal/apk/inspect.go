@@ -11,6 +11,7 @@ import (
 	"strings"
 
 	"woyuxiaji.cn/wiredeck/internal/model"
+	"woyuxiaji.cn/wiredeck/internal/platform"
 )
 
 // ErrAapt2NotFound 表示找不到用于解析 APK 的 aapt2。
@@ -64,7 +65,9 @@ func Inspect(path string) (*model.ApkMeta, error) {
 		return nil, ErrAapt2NotFound
 	}
 
-	out, err := exec.Command(aapt2, "dump", "badging", path).Output()
+	cmd := exec.Command(aapt2, "dump", "badging", path)
+	platform.PrepareCmd(cmd)
+	out, err := cmd.Output()
 	if err != nil {
 		return nil, fmt.Errorf("解析 APK 失败: %w", err)
 	}

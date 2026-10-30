@@ -7,6 +7,8 @@ import (
 	"os/exec"
 	"path/filepath"
 	"runtime"
+
+	"woyuxiaji.cn/wiredeck/internal/platform"
 )
 
 // ScrcpyService 负责启动 scrcpy 投屏窗口（独立进程，不嵌入应用）。
@@ -34,6 +36,7 @@ func (s *ScrcpyService) Start(_ context.Context, serial, title string) error {
 	dir := filepath.Dir(exe)
 
 	cmd := exec.Command(exe, "--serial", serial, "--no-audio", "--window-title", "WireDeck · "+title)
+	platform.PrepareCmd(cmd)
 	cmd.Dir = dir
 
 	// 复用应用内置的 adb，避免 scrcpy 再带一份。

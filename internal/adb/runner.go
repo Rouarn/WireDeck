@@ -13,6 +13,8 @@ import (
 	"time"
 
 	"github.com/creack/pty"
+
+	"woyuxiaji.cn/wiredeck/internal/platform"
 )
 
 // DefaultTimeout 是单条 adb 命令的默认超时。
@@ -62,6 +64,7 @@ func (r *Runner) Run(ctx context.Context, timeout time.Duration, args ...string)
 	full := r.commandArgs(args...)
 
 	cmd := exec.CommandContext(runCtx, r.AdbPath, full...)
+	platform.PrepareCmd(cmd)
 	cmd.Env = append(os.Environ(), "LANG=C", "LC_ALL=C")
 
 	var stdout, stderr bytes.Buffer
@@ -135,6 +138,7 @@ func (r *Runner) RunRaw(ctx context.Context, timeout time.Duration, args ...stri
 	defer cancel()
 
 	cmd := exec.CommandContext(runCtx, r.AdbPath, r.commandArgs(args...)...)
+	platform.PrepareCmd(cmd)
 	cmd.Env = append(os.Environ(), "LANG=C", "LC_ALL=C")
 
 	var stdout, stderr bytes.Buffer
@@ -183,6 +187,7 @@ func (r *Runner) runWithProgress(
 	defer cancel()
 
 	cmd := exec.CommandContext(runCtx, r.AdbPath, r.commandArgs(args...)...)
+	platform.PrepareCmd(cmd)
 	cmd.Env = append(os.Environ(), "LANG=C", "LC_ALL=C", "TERM=xterm-256color")
 
 	ptmx, err := pty.StartWithSize(cmd, &pty.Winsize{Rows: 24, Cols: 120})
