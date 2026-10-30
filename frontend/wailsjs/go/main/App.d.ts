@@ -78,6 +78,8 @@ export function StartInstall(arg1:model.InstallRequest):Promise<string>;
 
 export function StartLogcat(arg1:string,arg2:string):Promise<string>;
 
+export function StartScrcpy(arg1:string):Promise<void>;
+
 export function StopLogcat(arg1:string):Promise<void>;
 
 export function UninstallApp(arg1:string,arg2:string,arg3:boolean):Promise<model.AppOpResult>;

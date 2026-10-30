@@ -31,6 +31,7 @@ type App struct {
 	files    *services.FileService
 	logs     *services.LogService
 	update   *services.UpdateService
+	scrcpy   *services.ScrcpyService
 }
 
 // NewApp 创建应用实例。
@@ -45,6 +46,7 @@ func NewApp() *App {
 	app.files = services.NewFileService(app.server, app.emit)
 	app.logs = services.NewLogService(app.server, app.emit)
 	app.update = services.NewUpdateService(appVersion)
+	app.scrcpy = services.NewScrcpyService()
 	return app
 }
 
@@ -498,6 +500,11 @@ func (a *App) OpenExternal(url string) error {
 	}
 	runtime.BrowserOpenURL(a.ctx, url)
 	return nil
+}
+
+// StartScrcpy 为指定设备启动 scrcpy 投屏窗口。
+func (a *App) StartScrcpy(serial string) error {
+	return a.scrcpy.Start(a.context(), serial)
 }
 
 // ExecShell 执行一条 adb shell 命令。

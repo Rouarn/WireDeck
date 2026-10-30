@@ -27,6 +27,13 @@ else
   echo "warning: 未找到 adb（$ADB_SRC），发布包将依赖系统 adb" >&2
 fi
 
+# 内置 scrcpy，用于投屏。
+if [ -d "resources/scrcpy" ]; then
+  mkdir -p "$RES/scrcpy"
+  cp -R resources/scrcpy/. "$RES/scrcpy/"
+  chmod +x "$RES/scrcpy/scrcpy" "$RES/scrcpy/adb" 2>/dev/null || true
+fi
+
 # 资源变更后原签名失效，重新做 ad-hoc 签名（Apple Silicon 要求至少 ad-hoc）。
 codesign --force --sign - "$APP"
 
