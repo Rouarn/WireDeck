@@ -21,6 +21,7 @@ import {
   ForceStopApp,
   LaunchApp,
   ListApps,
+  LoadAppLabels,
   PickDirectory,
   UninstallApp,
 } from '../../wailsjs/go/main/App'
@@ -43,6 +44,7 @@ const dialog = useDialog()
 
 const apps = ref<model.AppSummary[]>([])
 const loading = ref(false)
+const labelLoading = ref(false)
 const search = ref('')
 const scope = ref<'user' | 'system' | 'all'>('user')
 
@@ -132,8 +134,38 @@ async function load() {
   }
 }
 
-async function openDetail(pkg: string) {
+async function loadLabels() {
   if (!store.current) {
+    message.warning('请先选择设备')
+    return
+  }
+
+  const pkgs = apps.value.filter((app) => !app.label).map((app) => app.package)
+  if (!pkgs.length) {
+    message.info('所有应用都已有中文名')
+    return
+  }
+
+  labelLoading.value = true
+  try {
+    const mapping = await LoadAppLabels(store.current.serial, pkgs)
+    let count = 0
+    for (const app of apps.value) {
+      const label = mapping[app.package]
+      if (label) {
+        app.label = label
+        count += 1
+      }
+    }
+    message.success(`已加载 ${count} 个应用名称`)
+  } catch (e) {
+    message.error(e instanceof Error ? e.message : String(e))
+  } finally {
+    labelLoading.value = false
+  }
+}
+
+async function openDetail(pkg: string) {  if (!store.current) {
     return
   }
   showDetail.value = true
@@ -282,6 +314,7 @@ onMounted(() => {
       <SegmentedControl :options="scopeOptions" :value="scope" @update:value="setScope" />
       <span class="count">{{ visibleApps.length }} / {{ apps.length }}</span>
       <div class="spacer"></div>
+      <NButton size="small" :loading="labelLoading" @click="loadLabels">加载名称</NButton>
       <NButton size="small" :loading="loading" @click="load">刷新</NButton>
     </div>
 

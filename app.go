@@ -371,6 +371,14 @@ func (a *App) ClearAppLabelCache() error {
 	return a.apps.ClearLabels()
 }
 
+// LoadAppLabels 批量解析应用显示名，返回 包名 -> 名称。
+func (a *App) LoadAppLabels(serial string, pkgs []string) (map[string]string, error) {
+	if _, err := a.EnsureAdbReady(); err != nil {
+		return nil, err
+	}
+	return a.apps.LoadLabels(a.context(), serial, pkgs), nil
+}
+
 // PickFile 打开文件选择框。
 func (a *App) PickFile() (string, error) {
 	return runtime.OpenFileDialog(a.context(), runtime.OpenDialogOptions{

@@ -103,6 +103,45 @@ func (s *AppService) ClearLabels() error {
 	return nil
 }
 
+// LoadLabels 批量解析应用显示名，优先复用缓存；返回已解析的 包名 -> 名称。
+func (s *AppService) LoadLabels(ctx context.Context, serial string, pkgs []string) map[string]string {
+	result := make(map[string]string, len(pkgs))
+	total := len(pkgs)
+	if total == 0 {
+		return result
+	}
+
+	for i, pkg := range pkgs {
+		select {
+		case <-ctx.Done():
+			return result
+		default:
+		}
+
+		label := s.cachedLabel(pkg)
+		if label == "" {
+			label = s.resolveLabel(ctx, serial, pkg)
+			if label != "" {
+				s.setLabel(pkg, label)
+			}
+		}
+		if label != "" {
+			result[pkg] = label
+		}
+
+		if s.emit != nil {
+			s.emit("app:progress", model.AppProgress{
+				Pkg:     pkg,
+				Stage:   "labels",
+				Percent: (i + 1) * 100 / total,
+				Message: fmt.Sprintf("加载名称 %d/%d", i+1, total),
+			})
+		}
+	}
+
+	return result
+}
+
 func (s *AppService) cachedLabel(pkg string) string {
 	s.mu.RLock()
 	defer s.mu.RUnlock()
