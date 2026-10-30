@@ -31,7 +31,9 @@ fi
 if [ -d "resources/scrcpy" ]; then
   mkdir -p "$RES/scrcpy"
   cp -R resources/scrcpy/. "$RES/scrcpy/"
-  chmod +x "$RES/scrcpy/scrcpy" "$RES/scrcpy/adb" 2>/dev/null || true
+  # scrcpy 复用应用内置的 adb，避免打包两份。
+  rm -f "$RES/scrcpy/adb"
+  chmod +x "$RES/scrcpy/scrcpy" 2>/dev/null || true
 fi
 
 # 资源变更后原签名失效，重新做 ad-hoc 签名（Apple Silicon 要求至少 ad-hoc）。

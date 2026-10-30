@@ -33,17 +33,14 @@ func (s *ScrcpyService) Start(_ context.Context, serial, title string) error {
 	}
 
 	dir := filepath.Dir(exe)
-	adbPath := filepath.Join(dir, "adb")
-	if _, statErr := os.Stat(adbPath); statErr != nil {
-		adbPath = ""
-	}
 
 	cmd := exec.Command(exe, "--serial", serial, "--no-audio", "--window-title", "WireDeck · "+title)
 	cmd.Dir = dir
 
+	// 复用应用内置的 adb，避免 scrcpy 再带一份。
 	env := os.Environ()
-	if adbPath != "" {
-		env = append(env, "ADB="+adbPath, "PATH="+dir+string(os.PathListSeparator)+os.Getenv("PATH"))
+	if adbPath := findBundledAdb(); adbPath != "" {
+		env = append(env, "ADB="+adbPath)
 	}
 	cmd.Env = env
 
@@ -58,6 +55,25 @@ func (s *ScrcpyService) Start(_ context.Context, serial, title string) error {
 	go func() { _ = cmd.Wait() }()
 
 	return nil
+}
+
+// findBundledAdb 返回应用内置的 adb（发布包或开发目录）。
+func findBundledAdb() string {
+	if exe, err := os.Executable(); err == nil {
+		bundled := filepath.Join(filepath.Dir(exe), "..", "Resources", "platform-tools", "adb")
+		if info, statErr := os.Stat(bundled); statErr == nil && !info.IsDir() {
+			return bundled
+		}
+	}
+
+	if wd, err := os.Getwd(); err == nil {
+		dev := filepath.Join(wd, "resources", "platform-tools", "adb")
+		if info, statErr := os.Stat(dev); statErr == nil && !info.IsDir() {
+			return dev
+		}
+	}
+
+	return ""
 }
 
 // findScrcpy 按优先级查找 scrcpy：应用内置 → 项目 resources → PATH。
