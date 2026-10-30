@@ -218,6 +218,7 @@ onMounted(async () => {
           <NIcon :size="16"><CloudUploadOutline /></NIcon>
           <h3>本机文件</h3>
           <span class="hint">拖入文件或文件夹</span>
+          <NButton v-if="localFiles.length" size="small" quaternary @click="localFiles = []">清空</NButton>
           <NButton size="small" @click="chooseLocal">选择</NButton>
         </div>
         <div class="panel-body">
@@ -245,6 +246,7 @@ onMounted(async () => {
           <NIcon :size="16"><CloudDownloadOutline /></NIcon>
           <h3>设备文件</h3>
           <span class="hint">可多选</span>
+          <NButton v-if="remoteFiles.length" size="small" quaternary @click="remoteFiles = []">清空</NButton>
           <NButton size="small" @click="openPicker('file', 'pull', true)">浏览设备</NButton>
         </div>
         <div class="panel-body">

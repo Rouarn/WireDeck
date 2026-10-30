@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { computed, nextTick, onMounted, ref } from 'vue'
-import { NAlert, NButton, NEmpty, NIcon, NInput, NPopconfirm, NSpin, NTag, useMessage } from 'naive-ui'
+import { NAlert, NButton, NEmpty, NIcon, NInput, NPopconfirm, NSpin, NTag, useDialog, useMessage } from 'naive-ui'
 import { AddOutline, InformationCircleOutline, PhonePortraitOutline } from '@vicons/ionicons5'
 import { ConnectDevice, DisconnectDevice, DiscoverServices, EnableWireless, PairDevice, StartScrcpy } from '../../wailsjs/go/main/App'
 import type { model } from '../../wailsjs/go/models'
@@ -9,6 +9,7 @@ import { useDevicesStore } from '../stores/devices'
 
 const store = useDevicesStore()
 const message = useMessage()
+const dialog = useDialog()
 
 const host = ref('')
 const pairPort = ref('')
@@ -185,13 +186,35 @@ async function enableWireless(serial: string) {
   }
 }
 
-async function startScrcpy(serial: string, title?: string) {
+async function doStartScrcpy(device: model.Device) {
   try {
-    await StartScrcpy(serial, title || serial)
+    await StartScrcpy(device.serial, device.model || device.serial)
     message.success('投屏窗口已启动')
   } catch (e) {
     message.error(e instanceof Error ? e.message : String(e))
   }
+}
+
+async function startScrcpy(device: model.Device) {
+  // 小米 / 红米默认关闭「USB 调试（安全设置）」，投屏能看但不能控制；首次提示一次。
+  const isXiaomi = /xiaomi|redmi|poco/i.test(device.brand || '')
+  const tipKey = 'wiredeck.scrcpy.xiaomi-tip'
+
+  if (isXiaomi && !localStorage.getItem(tipKey)) {
+    localStorage.setItem(tipKey, '1')
+    dialog.info({
+      title: '投屏无法控制手机？',
+      content:
+        '小米 / 红米设备需要在「开发者选项 → USB 调试（安全设置）」中开启该开关，否则投屏画面正常，但鼠标键盘无法操作手机。',
+      positiveText: '继续投屏',
+      onPositiveClick: () => {
+        void doStartScrcpy(device)
+      },
+    })
+    return
+  }
+
+  await doStartScrcpy(device)
 }
 
 function fillFromService(service: model.MDNSService) {
@@ -283,7 +306,7 @@ onMounted(() => {
               size="small"
               quaternary
               :disabled="device.state !== 'device'"
-              @click="startScrcpy(device.serial, device.model || device.serial)"
+              @click="startScrcpy(device)"
             >
               投屏
             </NButton>
