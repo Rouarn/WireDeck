@@ -101,7 +101,7 @@ go test ./...                # 单元测试
 
 ## 技术栈
 
-Wails v2（系统 WebView）+ Go 后端 + Vue 3 + TypeScript + Vite + Pinia + Naive UI + UnoCSS；投屏使用内置的 scrcpy。
+Wails v2（系统 WebView）+ Go 后端 + Vue 3 + TypeScript + Vite + Pinia + Naive UI；投屏使用内置的 scrcpy。
 设备操作通过内置的 `platform-tools`（adb）执行，发布包自带，无需额外安装。
 
 ## 状态
