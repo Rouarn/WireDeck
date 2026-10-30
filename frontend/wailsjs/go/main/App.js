@@ -50,6 +50,10 @@ export function DiscoverServices() {
   return window['go']['main']['App']['DiscoverServices']();
 }
 
+export function DownloadDir() {
+  return window['go']['main']['App']['DownloadDir']();
+}
+
 export function EnableWireless(arg1) {
   return window['go']['main']['App']['EnableWireless'](arg1);
 }
@@ -154,8 +158,8 @@ export function StartLogcat(arg1, arg2) {
   return window['go']['main']['App']['StartLogcat'](arg1, arg2);
 }
 
-export function StartScrcpy(arg1) {
-  return window['go']['main']['App']['StartScrcpy'](arg1);
+export function StartScrcpy(arg1, arg2) {
+  return window['go']['main']['App']['StartScrcpy'](arg1, arg2);
 }
 
 export function StopLogcat(arg1) {

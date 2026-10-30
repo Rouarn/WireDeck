@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"os"
+	"path/filepath"
 	"strings"
 	"time"
 
@@ -502,9 +503,22 @@ func (a *App) OpenExternal(url string) error {
 	return nil
 }
 
-// StartScrcpy 为指定设备启动 scrcpy 投屏窗口。
-func (a *App) StartScrcpy(serial string) error {
-	return a.scrcpy.Start(a.context(), serial)
+// StartScrcpy 为指定设备启动 scrcpy 投屏窗口，title 用于窗口标题（通常是设备名）。
+func (a *App) StartScrcpy(serial, title string) error {
+	return a.scrcpy.Start(a.context(), serial, title)
+}
+
+// DownloadDir 返回本机下载目录，用于文件传输的默认保存路径。
+func (a *App) DownloadDir() string {
+	home, err := os.UserHomeDir()
+	if err != nil {
+		return ""
+	}
+	dir := filepath.Join(home, "Downloads")
+	if info, statErr := os.Stat(dir); statErr == nil && info.IsDir() {
+		return dir
+	}
+	return home
 }
 
 // ExecShell 执行一条 adb shell 命令。

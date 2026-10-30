@@ -185,9 +185,9 @@ async function enableWireless(serial: string) {
   }
 }
 
-async function startScrcpy(serial: string) {
+async function startScrcpy(serial: string, title?: string) {
   try {
-    await StartScrcpy(serial)
+    await StartScrcpy(serial, title || serial)
     message.success('投屏窗口已启动')
   } catch (e) {
     message.error(e instanceof Error ? e.message : String(e))
@@ -283,7 +283,7 @@ onMounted(() => {
               size="small"
               quaternary
               :disabled="device.state !== 'device'"
-              @click="startScrcpy(device.serial)"
+              @click="startScrcpy(device.serial, device.model || device.serial)"
             >
               投屏
             </NButton>

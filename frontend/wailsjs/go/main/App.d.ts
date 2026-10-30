@@ -26,6 +26,8 @@ export function DisconnectDevice(arg1:string):Promise<void>;
 
 export function DiscoverServices():Promise<Array<model.MDNSService>>;
 
+export function DownloadDir():Promise<string>;
+
 export function EnableWireless(arg1:string):Promise<model.ConnectResult>;
 
 export function EnsureAdbReady():Promise<model.AdbEnv>;
@@ -78,7 +80,7 @@ export function StartInstall(arg1:model.InstallRequest):Promise<string>;
 
 export function StartLogcat(arg1:string,arg2:string):Promise<string>;
 
-export function StartScrcpy(arg1:string):Promise<void>;
+export function StartScrcpy(arg1:string,arg2:string):Promise<void>;
 
 export function StopLogcat(arg1:string):Promise<void>;
 

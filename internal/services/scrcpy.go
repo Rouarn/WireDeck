@@ -19,9 +19,12 @@ func NewScrcpyService() *ScrcpyService {
 }
 
 // Start 为指定设备打开 scrcpy 窗口。
-func (s *ScrcpyService) Start(_ context.Context, serial string) error {
+func (s *ScrcpyService) Start(_ context.Context, serial, title string) error {
 	if serial == "" {
 		return fmt.Errorf("未选择设备")
+	}
+	if title == "" {
+		title = serial
 	}
 
 	exe, err := findScrcpy()
@@ -35,7 +38,7 @@ func (s *ScrcpyService) Start(_ context.Context, serial string) error {
 		adbPath = ""
 	}
 
-	cmd := exec.Command(exe, "--serial", serial, "--no-audio", "--window-title", "WireDeck 投屏")
+	cmd := exec.Command(exe, "--serial", serial, "--no-audio", "--window-title", "WireDeck · "+title)
 	cmd.Dir = dir
 
 	env := os.Environ()

@@ -2,7 +2,7 @@
 import { computed, onMounted, ref } from 'vue'
 import { NAlert, NButton, NIcon, NInput, useMessage } from 'naive-ui'
 import { CameraOutline, CloudDownloadOutline, CloudUploadOutline } from '@vicons/ionicons5'
-import { PickDirectory, PickFile, PullFile, PushFile, Screenshot } from '../../wailsjs/go/main/App'
+import { DownloadDir, PickDirectory, PickFile, PullFile, PushFile, Screenshot } from '../../wailsjs/go/main/App'
 import type { model } from '../../wailsjs/go/models'
 import { EventsOn } from '../../wailsjs/runtime/runtime'
 import DevicePathPicker from '../components/DevicePathPicker.vue'
@@ -183,7 +183,15 @@ function onProgress(p: FileProgressPayload) {
   transfer.value.percent = Math.max(transfer.value.percent, p.percent)
 }
 
-onMounted(() => {
+onMounted(async () => {
+  try {
+    const dir = await DownloadDir()
+    if (dir) {
+      pullLocalDir.value = dir
+    }
+  } catch {
+    // 忽略，保留手动选择
+  }
   EventsOn('file:progress', (p: FileProgressPayload) => onProgress(p))
   EventsOn('files:dropped', (payload: DropPayload | string[]) => {
     const paths = Array.isArray(payload) ? payload : payload.paths
