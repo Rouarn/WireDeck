@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { computed, nextTick, onMounted, ref } from 'vue'
-import { NAlert, NButton, NEmpty, NIcon, NInput, NSpin, NTag, useMessage } from 'naive-ui'
+import { NAlert, NButton, NEmpty, NIcon, NInput, NPopconfirm, NSpin, NTag, useMessage } from 'naive-ui'
 import { AddOutline, InformationCircleOutline, PhonePortraitOutline } from '@vicons/ionicons5'
 import { ConnectDevice, DisconnectDevice, DiscoverServices, EnableWireless, PairDevice, StartScrcpy } from '../../wailsjs/go/main/App'
 import type { model } from '../../wailsjs/go/models'
@@ -200,7 +200,12 @@ onMounted(() => {
 
     <NSpin :show="store.loading">
       <div class="device-grid">
-        <article v-for="device in devices" :key="device.serial" class="device-card">
+        <article
+          v-for="device in devices"
+          :key="device.serial"
+          class="device-card"
+          :class="{ current: store.current?.serial === device.serial }"
+        >
           <div class="card-head">
             <div class="device-avatar">
               <NIcon :size="20"><PhonePortraitOutline /></NIcon>
@@ -232,18 +237,32 @@ onMounted(() => {
           </div>
 
           <div class="card-actions">
-            <NButton size="small" type="primary" @click="store.select(device.serial)">设为当前</NButton>
-            <NButton size="small" quaternary @click="startScrcpy(device.serial)">投屏</NButton>
+            <span v-if="store.current?.serial === device.serial" class="current-tag">当前设备</span>
+            <NButton v-else size="small" type="primary" @click="store.select(device.serial)">设为当前</NButton>
+            <NButton
+              size="small"
+              quaternary
+              :disabled="device.state !== 'device'"
+              @click="startScrcpy(device.serial)"
+            >
+              投屏
+            </NButton>
             <NButton
               v-if="device.transport === 'usb'"
               size="small"
               quaternary
               :loading="busy"
+              :disabled="device.state !== 'device'"
               @click="enableWireless(device.serial)"
             >
               转为无线
             </NButton>
-            <NButton size="small" quaternary @click="disconnect(device.serial)">断开</NButton>
+            <NPopconfirm @positive-click="disconnect(device.serial)">
+              <template #trigger>
+                <NButton size="small" quaternary>断开</NButton>
+              </template>
+              确认断开 {{ device.model || device.serial }}？
+            </NPopconfirm>
           </div>
         </article>
 
@@ -387,6 +406,22 @@ onMounted(() => {
   border-radius: var(--radius);
   background: var(--surface);
   box-shadow: var(--shadow-sm);
+}
+
+.device-card.current {
+  border-color: var(--primary-border);
+  box-shadow: 0 0 0 1px var(--primary-border), var(--shadow-sm);
+}
+
+.current-tag {
+  display: inline-flex;
+  align-items: center;
+  padding: 0 8px;
+  border-radius: 6px;
+  background: var(--primary-soft);
+  color: var(--primary-ink);
+  font-size: 11px;
+  font-weight: 600;
 }
 
 .card-head {

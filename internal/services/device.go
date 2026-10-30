@@ -241,10 +241,10 @@ func isMDNSSerial(serial string) bool {
 // EnableWireless 将 USB 连接的设备切换为无线调试（tcpip 5555）并连接。
 func (s *DeviceService) EnableWireless(ctx context.Context, serial string) (model.ConnectResult, error) {
 	ip := s.wlanIP(ctx, serial)
-	if ip == "" {
+	if ip == "" || ip == "0.0.0.0" {
 		return model.ConnectResult{
 			OK:      false,
-			Message: "无法获取手机 Wi-Fi IP，请确认手机已连接 Wi-Fi",
+			Message: "无法获取手机 Wi-Fi IP，请确认手机已连接 Wi-Fi 且与电脑在同一网络",
 		}, nil
 	}
 
@@ -256,17 +256,34 @@ func (s *DeviceService) EnableWireless(ctx context.Context, serial string) (mode
 		return model.ConnectResult{OK: false, Message: strings.TrimSpace(res.Output())}, nil
 	}
 
-	// adbd 需要一点时间重启为 TCP 模式。
-	time.Sleep(2 * time.Second)
+	// adbd 重启为 TCP 模式需要几秒，期间连接会失败，这里轮询重试。
+	var lastMessage string
+	for attempt := 0; attempt < 6; attempt += 1 {
+		select {
+		case <-ctx.Done():
+			return model.ConnectResult{}, ctx.Err()
+		case <-time.After(1500 * time.Millisecond):
+		}
 
-	result, err := s.Connect(ctx, model.ConnectRequest{Host: ip, Port: 5555})
-	if err != nil {
-		return result, err
+		result, connErr := s.Connect(ctx, model.ConnectRequest{Host: ip, Port: 5555})
+		if connErr != nil {
+			lastMessage = connErr.Error()
+			continue
+		}
+		if result.OK {
+			s.RecordConnection(ip, 5555, "")
+			return result, nil
+		}
+		lastMessage = result.Message
 	}
-	if result.OK {
-		s.RecordConnection(ip, 5555, "")
-	}
-	return result, nil
+
+	return model.ConnectResult{
+		OK: false,
+		Message: fmt.Sprintf(
+			"已切换为 TCP 模式，但连接 %s:5555 失败（%s）。请确认手机 Wi-Fi 与电脑在同一网络，然后重试",
+			ip, lastMessage,
+		),
+	}, nil
 }
 
 // wlanIP 读取设备的 wlan0 IPv4 地址。
