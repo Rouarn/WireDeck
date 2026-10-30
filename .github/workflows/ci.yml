@@ -66,9 +66,30 @@ jobs:
           $env:Path = "$(go env GOPATH)\bin;$env:Path"
           wails build -platform windows/amd64 -o WireDeck.exe
 
+      - name: Prepare Windows runtime resources
+        shell: pwsh
+        run: |
+          $bin = "build/bin"
+          $pt = Join-Path $bin "platform-tools"
+          New-Item -ItemType Directory -Force -Path $pt | Out-Null
+          Invoke-WebRequest -Uri "https://dl.google.com/android/repository/platform-tools-latest-windows.zip" -OutFile "$env:TEMP\pt.zip"
+          Expand-Archive "$env:TEMP\pt.zip" -DestinationPath "$env:TEMP\pt" -Force
+          Copy-Item "$env:TEMP\pt\platform-toolsdb.exe" $pt
+          Copy-Item "$env:TEMP\pt\platform-tools\AdbWinApi.dll" $pt -ErrorAction SilentlyContinue
+          Copy-Item "$env:TEMP\pt\platform-tools\AdbWinUsbApi.dll" $pt -ErrorAction SilentlyContinue
+
+          $sc = Join-Path $bin "scrcpy"
+          New-Item -ItemType Directory -Force -Path $sc | Out-Null
+          Invoke-WebRequest -Uri "https://github.com/Genymobile/scrcpy/releases/download/v5.0.1/scrcpy-win64-v5.0.1.zip" -OutFile "$env:TEMP\scrcpy.zip"
+          Expand-Archive "$env:TEMP\scrcpy.zip" -DestinationPath "$env:TEMP\scrcpy" -Force
+          Copy-Item "$env:TEMP\scrcpy\scrcpy-win64-v5.0.1\*" $sc -Recurse -Force
+          Remove-Item (Join-Path $sc "adb.exe") -ErrorAction SilentlyContinue
+
+          Compress-Archive -Path "$bin\WireDeck.exe", $pt, $sc -DestinationPath "$bin\WireDeck-windows-amd64.zip" -Force
+
       - name: Upload Windows artifact
         uses: actions/upload-artifact@v4
         with:
           name: WireDeck-windows-amd64
-          path: build/bin/WireDeck.exe
+          path: build/bin/WireDeck-windows-amd64.zip
           if-no-files-found: error

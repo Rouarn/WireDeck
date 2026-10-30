@@ -4,6 +4,7 @@ import { NButton, NModal, NSpin, useMessage } from 'naive-ui'
 import QRCode from 'qrcode'
 import { CreatePairingQR, WaitQRPairing } from '../../wailsjs/go/main/App'
 import type { model } from '../../wailsjs/go/models'
+import { t } from '../i18n'
 
 const props = defineProps<{ show: boolean }>()
 
@@ -97,14 +98,14 @@ onBeforeUnmount(() => {
   <NModal
     :show="show"
     preset="card"
-    title="扫码配对"
+    :title="t('qr.title')"
     style="width: 460px"
     :bordered="false"
     @update:show="(value: boolean) => (value ? null : close())"
   >
     <div class="qr">
       <div class="qr-box">
-        <img v-if="qrData" :src="qrData" class="qr-image" alt="配对二维码" />
+        <img v-if="qrData" :src="qrData" class="qr-image" :alt="t('qr.alt')" />
         <NSpin v-else size="small" />
       </div>
 
@@ -113,12 +114,12 @@ onBeforeUnmount(() => {
       <p v-if="error" class="error">{{ error }}</p>
 
       <div class="actions">
-        <NButton size="small" @click="close">取消</NButton>
-        <NButton size="small" type="primary" @click="refresh">刷新二维码</NButton>
+        <NButton size="small" @click="close">{{ t('common.cancel') }}</NButton>
+        <NButton size="small" type="primary" @click="refresh">{{ t('qr.refresh') }}</NButton>
       </div>
 
       <p class="tip">
-        手机端：设置 → 开发者选项 → 无线调试 → 「使用二维码配对设备」，用手机扫描上方二维码。
+        {{ t('qr.hint') }}
       </p>
     </div>
   </NModal>

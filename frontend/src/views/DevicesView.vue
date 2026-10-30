@@ -6,6 +6,7 @@ import { ConnectDevice, DisconnectDevice, DiscoverServices, EnableWireless, Pair
 import type { model } from '../../wailsjs/go/models'
 import QRPairDialog from '../components/QRPairDialog.vue'
 import { useDevicesStore } from '../stores/devices'
+import { t } from '../i18n'
 
 const store = useDevicesStore()
 const message = useMessage()
@@ -61,9 +62,9 @@ function tagType(state: string): 'success' | 'warning' | 'error' {
 }
 
 function stateLabel(state: string): string {
-  if (state === 'device') return '已连接'
-  if (state === 'unauthorized') return '待授权'
-  if (state === 'offline') return '离线'
+  if (state === 'device') return t('devices.state.connected')
+  if (state === 'unauthorized') return t('devices.state.unauthorized')
+  if (state === 'offline') return t('devices.state.offline')
   return state
 }
 
@@ -72,12 +73,12 @@ function signalLabel(rssi: number): string {
     return '—'
   }
   if (rssi >= -55) {
-    return '强'
+    return t('devices.signal.strong')
   }
   if (rssi >= -70) {
-    return '中'
+    return t('devices.signal.medium')
   }
-  return '弱'
+  return t('devices.signal.weak')
 }
 
 function lastSeenLabel(ts: number): string {
@@ -86,16 +87,16 @@ function lastSeenLabel(ts: number): string {
   }
   const minutes = Math.floor((Date.now() - ts) / 60000)
   if (minutes < 1) {
-    return '刚刚'
+    return t('devices.justNow')
   }
   if (minutes < 60) {
-    return `${minutes} 分钟前`
+    return t('devices.minutesAgo', { n: minutes })
   }
   const hours = Math.floor(minutes / 60)
   if (hours < 24) {
-    return `${hours} 小时前`
+    return t('devices.hoursAgo', { n: hours })
   }
-  return `${Math.floor(hours / 24)} 天前`
+  return t('devices.daysAgo', { n: Math.floor(hours / 24) })
 }
 
 async function discover() {
@@ -189,7 +190,7 @@ async function enableWireless(serial: string) {
 async function doStartScrcpy(device: model.Device) {
   try {
     await StartScrcpy(device.serial, device.model || device.serial)
-    message.success('投屏窗口已启动')
+    message.success(t('devices.mirrorStarted'))
   } catch (e) {
     message.error(e instanceof Error ? e.message : String(e))
   }
@@ -244,12 +245,12 @@ onMounted(() => {
 
     <div v-if="devices.length" class="notice">
       <NIcon :size="14"><InformationCircleOutline /></NIcon>
-      <span>已检测到 {{ devices.length }} 台设备，可直接安装或管理。</span>
+      <span>{{ t('devices.detected', { n: devices.length }) }}</span>
     </div>
 
     <div class="section-head">
-      <h2>已连接</h2>
-      <span class="count">{{ devices.length }} 台</span>
+      <h2>{{ t('devices.connected') }}</h2>
+      <span class="count">{{ t('devices.count', { n: devices.length }) }}</span>
     </div>
 
     <NSpin :show="store.loading">
@@ -277,21 +278,21 @@ onMounted(() => {
 
           <div class="meta-grid">
             <div>
-              <span class="meta-label">序列号</span>
+              <span class="meta-label">{{ t('devices.serial') }}</span>
               <span class="meta-value"><code :title="device.serial">{{ device.serial }}</code></span>
             </div>
             <div>
-              <span class="meta-label">IP 地址</span>
+              <span class="meta-label">{{ t('devices.ip') }}</span>
               <span class="meta-value">{{ device.ip || '—' }}</span>
             </div>
             <div>
-              <span class="meta-label">信号</span>
+              <span class="meta-label">{{ t('devices.signal') }}</span>
               <span class="meta-value">
                 {{ device.transport === 'wifi' ? signalLabel(device.rssi) : '—' }}
               </span>
             </div>
             <div>
-              <span class="meta-label">状态</span>
+              <span class="meta-label">{{ t('devices.status') }}</span>
               <span class="meta-value">
                 {{ stateLabel(device.state) }}
                 <template v-if="device.state !== 'device'"> · {{ lastSeenLabel(device.lastSeen) }}</template>
@@ -300,8 +301,8 @@ onMounted(() => {
           </div>
 
           <div class="card-actions">
-            <span v-if="store.current?.serial === device.serial" class="current-tag">当前设备</span>
-            <NButton v-else size="small" type="primary" @click="store.select(device.serial)">设为当前</NButton>
+            <span v-if="store.current?.serial === device.serial" class="current-tag">{{ t('devices.current') }}</span>
+            <NButton v-else size="small" type="primary" @click="store.select(device.serial)">{{ t('devices.setCurrent') }}</NButton>
             <NTooltip>
               <template #trigger>
                 <NButton
@@ -310,10 +311,10 @@ onMounted(() => {
                   :disabled="device.state !== 'device'"
                   @click="startScrcpy(device)"
                 >
-                  投屏
+                  {{ t('devices.mirror') }}
                 </NButton>
               </template>
-              投屏后若鼠标 / 键盘无效：小米、红米设备需在「开发者选项 → USB 调试（安全设置）」中开启开关。
+              {{ t('devices.mirrorTip') }}
             </NTooltip>
             <NButton
               v-if="device.transport === 'usb'"
@@ -323,50 +324,50 @@ onMounted(() => {
               :disabled="device.state !== 'device'"
               @click="enableWireless(device.serial)"
             >
-              转为无线
+              {{ t('devices.wireless') }}
             </NButton>
             <NPopconfirm v-if="device.transport === 'wifi'" @positive-click="disconnect(device.serial)">
               <template #trigger>
-                <NButton size="small" quaternary>断开</NButton>
+                <NButton size="small" quaternary>{{ t('devices.disconnect') }}</NButton>
               </template>
-              确认断开 {{ device.model || device.serial }}？
+              {{ t('devices.disconnectConfirm', { name: device.model || device.serial }) }}
             </NPopconfirm>
           </div>
         </article>
 
         <button class="add-card" @click="togglePairing">
           <NIcon :size="18"><AddOutline /></NIcon>
-          <strong>添加设备</strong>
-          <span>无线配对或插入数据线</span>
+          <strong>{{ t('devices.add') }}</strong>
+          <span>{{ t('devices.addHint') }}</span>
         </button>
       </div>
 
       <NEmpty
         v-if="!devices.length && !store.loading"
         class="empty"
-        description="暂无设备。用数据线连接手机，或在手机上开启无线调试后配对。"
+        :description="t('devices.empty')"
       />
     </NSpin>
 
     <section v-if="showPairing" ref="pairingRef" class="pairing">
       <div class="pairing-head">
         <div>
-          <h3>无线调试配对</h3>
-          <p class="pairing-sub">手机停留在「无线调试」页面，并与电脑处于同一局域网</p>
+          <h3>{{ t('devices.pairTitle') }}</h3>
+          <p class="pairing-sub">{{ t('devices.pairSub') }}</p>
         </div>
-        <NButton size="small" type="primary" @click="qrShow = true">扫码配对</NButton>
+        <NButton size="small" type="primary" @click="qrShow = true">{{ t('devices.qrPair') }}</NButton>
       </div>
 
       <div class="pairing-body">
         <div v-if="visibleServices.length" class="services">
-          <span class="services-label">发现的服务</span>
+          <span class="services-label">{{ t('devices.services') }}</span>
           <button
             v-for="service in visibleServices"
             :key="service.name + service.kind"
             class="service-chip"
             @click="fillFromService(service)"
           >
-            {{ service.kind === 'pairing' ? '配对' : service.kind === 'connect' ? '连接' : '其他' }}
+            {{ service.kind === 'pairing' ? t('devices.kindPair') : service.kind === 'connect' ? t('devices.kindConnect') : t('devices.kindOther') }}
             · {{ service.address }}
           </button>
         </div>
@@ -374,43 +375,43 @@ onMounted(() => {
         <div class="pair-step" :class="{ done: paired }">
           <div class="step-head">
             <span class="step-no">{{ paired ? '✓' : '1' }}</span>
-            <span class="step-title">配对</span>
-            <span class="step-hint">手机「使用配对码配对设备」中的 IP、端口与 6 位配对码</span>
+            <span class="step-title">{{ t('devices.stepPair') }}</span>
+            <span class="step-hint">{{ t('devices.stepPairHint') }}</span>
           </div>
           <div class="pair-fields">
             <label class="field">
-              <span>IP 地址</span>
+              <span>{{ t('devices.ip') }}</span>
               <NInput v-model:value="host" size="small" placeholder="192.168.1.23" />
             </label>
             <label class="field">
-              <span>配对端口</span>
+              <span>{{ t('devices.pairPort') }}</span>
               <NInput v-model:value="pairPort" size="small" placeholder="37123" />
             </label>
             <label class="field">
-              <span>配对码</span>
-              <NInput v-model:value="pairCode" size="small" placeholder="6 位数字" maxlength="6" />
+              <span>{{ t('devices.pairCode') }}</span>
+              <NInput v-model:value="pairCode" size="small" :placeholder="t('devices.pairCodePlaceholder')" maxlength="6" />
             </label>
           </div>
           <div class="step-actions">
-            <NButton size="small" type="primary" :loading="busy" @click="pair">配对</NButton>
+            <NButton size="small" type="primary" :loading="busy" @click="pair">{{ t('devices.pairBtn') }}</NButton>
           </div>
         </div>
 
         <div class="pair-step">
           <div class="step-head">
             <span class="step-no">2</span>
-            <span class="step-title">连接</span>
-            <span class="step-hint">无线调试主页「IP 地址和端口」中的端口</span>
+            <span class="step-title">{{ t('devices.stepConnect') }}</span>
+            <span class="step-hint">{{ t('devices.connectHint') }}</span>
           </div>
           <div class="pair-fields single">
             <label class="field">
-              <span>连接端口</span>
+              <span>{{ t('devices.connectPort') }}</span>
               <NInput v-model:value="connectPort" size="small" placeholder="40123" />
             </label>
           </div>
           <div class="step-actions">
-            <NButton size="small" :loading="busy" @click="connect">连接</NButton>
-            <NButton size="small" quaternary :loading="busy" @click="discover">重新发现</NButton>
+            <NButton size="small" :loading="busy" @click="connect">{{ t('devices.connectBtn') }}</NButton>
+            <NButton size="small" quaternary :loading="busy" @click="discover">{{ t('devices.rediscover') }}</NButton>
           </div>
         </div>
 

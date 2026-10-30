@@ -4,6 +4,7 @@ import { NButton, NIcon, NInput, useMessage } from 'naive-ui'
 import { CopyOutline, PlayOutline, TrashOutline } from '@vicons/ionicons5'
 import { CopyText, ExecShell } from '../../wailsjs/go/main/App'
 import { useDevicesStore } from '../stores/devices'
+import { t } from '../i18n'
 
 interface ShellRecord {
   id: number
@@ -120,21 +121,21 @@ async function copyAll() {
   <div class="shell">
     <div class="toolbar">
       <span class="device">
-        {{ store.current?.model || store.current?.serial || '未选择设备' }}
+        {{ store.current?.model || store.current?.serial || t('common.unknown') }}
       </span>
       <div class="spacer"></div>
       <NButton size="small" quaternary :disabled="!records.length" @click="copyAll">
         <template #icon><NIcon><CopyOutline /></NIcon></template>
-        复制全部
+        {{ t('shell.copyAll') }}
       </NButton>
       <NButton size="small" quaternary :disabled="!records.length" @click="clear">
         <template #icon><NIcon><TrashOutline /></NIcon></template>
-        清空
+        {{ t('shell.clear') }}
       </NButton>
     </div>
 
     <div class="quick">
-      <span class="quick-label">快捷命令</span>
+      <span class="quick-label">{{ t('shell.quick') }}</span>
       <button
         v-for="item in quickCommands"
         :key="item.command"
@@ -147,7 +148,7 @@ async function copyAll() {
 
     <div ref="outputBox" class="output">
       <div v-if="!records.length" class="output-empty">
-        输入命令开始，例如 <code>getprop ro.product.model</code>
+        {{ t('shell.empty') }}
       </div>
       <div v-for="record in records" :key="record.id" class="record">
         <div class="record-head">
@@ -169,12 +170,12 @@ async function copyAll() {
       <NInput
         v-model:value="command"
         size="small"
-        placeholder="输入 adb shell 命令，按 Enter 执行"
+        :placeholder="t('shell.placeholder')"
         @keyup.enter="run"
       />
       <NButton size="small" type="primary" :loading="busy" :disabled="!store.current" @click="run">
         <template #icon><NIcon><PlayOutline /></NIcon></template>
-        执行
+        {{ t('shell.run') }}
       </NButton>
     </div>
   </div>

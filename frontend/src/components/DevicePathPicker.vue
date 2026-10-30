@@ -4,6 +4,7 @@ import { NButton, NIcon, NInput, NModal, NSpin, useMessage } from 'naive-ui'
 import { ChevronUpOutline, DocumentOutline, FolderOutline } from '@vicons/ionicons5'
 import { ListDeviceFiles } from '../../wailsjs/go/main/App'
 import type { model } from '../../wailsjs/go/models'
+import { t } from '../i18n'
 
 const props = defineProps<{
   show: boolean
@@ -117,18 +118,18 @@ watch(
   <NModal
     :show="show"
     preset="card"
-    title="选择设备路径"
+    :title="t('picker.title')"
     style="width: 680px"
     :bordered="false"
     @update:show="(value: boolean) => emit('update:show', value)"
   >
     <div class="picker">
       <div class="bar">
-        <NButton size="small" quaternary title="上级目录" @click="goUp">
+        <NButton size="small" quaternary :title="t('picker.up')" @click="goUp">
           <template #icon><NIcon><ChevronUpOutline /></NIcon></template>
         </NButton>
         <NInput v-model:value="currentPath" size="small" @keyup.enter="load" />
-        <NButton size="small" @click="load">前往</NButton>
+        <NButton size="small" @click="load">{{ t('picker.go') }}</NButton>
       </div>
 
       <div class="quick">
@@ -148,9 +149,9 @@ watch(
           >
             <NIcon :size="16" :component="item.isDir ? FolderOutline : DocumentOutline" />
             <span class="name">{{ item.name }}</span>
-            <span class="size">{{ item.isDir ? '目录' : formatSize(item.size) }}</span>
+            <span class="size">{{ item.isDir ? t('picker.dir') : formatSize(item.size) }}</span>
           </div>
-          <div v-if="!files.length && !loading" class="empty">目录为空</div>
+          <div v-if="!files.length && !loading" class="empty">{{ t('picker.empty') }}</div>
         </NSpin>
       </div>
 
@@ -158,15 +159,15 @@ watch(
         <span class="hint">
           {{
             mode === 'dir'
-              ? '选择当前目录作为目标'
+              ? t('picker.selectDirHint')
               : multi
-                ? `已选 ${selectedPaths.length} 个文件`
-                : '选择一个文件后确认'
+                ? t('picker.selectedCount', { n: selectedPaths.length })
+                : t('picker.selectFileHint')
           }}
         </span>
-        <NButton size="small" @click="emit('update:show', false)">取消</NButton>
+        <NButton size="small" @click="emit('update:show', false)">{{ t('common.cancel') }}</NButton>
         <NButton size="small" type="primary" :disabled="!canConfirm" @click="confirm">
-          {{ mode === 'dir' ? '选择此目录' : multi ? '选择这些文件' : '选择此文件' }}
+          {{ mode === 'dir' ? t('picker.confirmDir') : multi ? t('picker.confirmSelected') : t('picker.confirmFile') }}
         </NButton>
       </div>
     </div>

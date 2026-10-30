@@ -51,7 +51,7 @@ onMounted(async () => {
         <div class="brand-mark">W</div>
         <div>
           <div class="brand-name">WireDeck</div>
-          <div class="brand-version">v0.1 · 无线 ADB 控制台</div>
+          <div class="brand-version">{{ t('app.tagline') }}</div>
         </div>
       </div>
 
@@ -87,10 +87,10 @@ onMounted(async () => {
             <strong>{{ store.current.model || store.current.serial }}</strong>
             · {{ store.current.transport === 'wifi' ? 'Wi-Fi' : 'USB' }}
           </span>
-          <span v-else>未选择设备</span>
+          <span v-else>{{ t('common.unknown') }}</span>
         </div>
         <button class="topbar-btn" :disabled="store.loading" @click="store.refresh()">
-          {{ store.loading ? '刷新中' : '刷新' }}
+          {{ store.loading ? t('common.refreshing') : t('common.refresh') }}
         </button>
       </header>
 

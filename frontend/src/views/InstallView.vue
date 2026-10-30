@@ -11,6 +11,7 @@ import {
 import { EventsOn } from '../../wailsjs/runtime/runtime'
 import { model } from '../../wailsjs/go/models'
 import { useDevicesStore } from '../stores/devices'
+import { t } from '../i18n'
 
 interface PendingApk {
   path: string
@@ -247,16 +248,16 @@ onMounted(() => {
         <NIcon :size="20"><CloudUploadOutline /></NIcon>
       </div>
       <div class="drop-text">
-        <div class="drop-title">拖入 APK 开始安装</div>
-        <div class="drop-sub">支持批量；文件只在本机读取，不会上传。</div>
+        <div class="drop-title">{{ t('install.dropTitle') }}</div>
+        <div class="drop-sub">{{ t('install.dropSub') }}</div>
       </div>
-      <NButton size="small" @click.stop="pick">选择文件</NButton>
+      <NButton size="small" @click.stop="pick">{{ t('install.chooseFile') }}</NButton>
     </div>
 
     <section v-if="pending.length" class="panel">
       <div class="panel-head">
-        <h3>待安装</h3>
-        <span class="hint">{{ pending.length }} 个文件</span>
+        <h3>{{ t('install.pending') }}</h3>
+        <span class="hint">{{ t('install.fileCount', { n: pending.length }) }}</span>
       </div>
       <div class="pending-list">
         <div v-for="(item, index) in pending" :key="item.path" class="pending-row">
@@ -268,30 +269,30 @@ onMounted(() => {
             </div>
             <div v-else-if="item.error" class="file-meta error">{{ item.error }}</div>
           </div>
-          <NButton size="tiny" quaternary @click="removeAt(index)">移除</NButton>
+          <NButton size="tiny" quaternary @click="removeAt(index)">{{ t('install.remove') }}</NButton>
         </div>
       </div>
     </section>
 
     <div class="options">
-      <NCheckbox v-model:checked="options.replace">覆盖安装 -r</NCheckbox>
-      <NCheckbox v-model:checked="options.allowDowngrade">允许降级 -d</NCheckbox>
-      <NCheckbox v-model:checked="options.grantPermissions">授予运行时权限 -g</NCheckbox>
-      <NCheckbox v-model:checked="options.allowTest">允许测试包 -t</NCheckbox>
+      <NCheckbox v-model:checked="options.replace">{{ t('install.optReplace') }}</NCheckbox>
+      <NCheckbox v-model:checked="options.allowDowngrade">{{ t('install.optDowngrade') }}</NCheckbox>
+      <NCheckbox v-model:checked="options.grantPermissions">{{ t('install.optGrant') }}</NCheckbox>
+      <NCheckbox v-model:checked="options.allowTest">{{ t('install.optTest') }}</NCheckbox>
     </div>
 
     <section class="panel queue">
       <div class="panel-head">
-        <h3>安装队列</h3>
-        <span class="hint">同设备串行 · 跨设备并行</span>
+        <h3>{{ t('install.queue') }}</h3>
+        <span class="hint">{{ t('install.queueHint') }}</span>
       </div>
       <table v-if="tasks.length" class="table">
         <thead>
           <tr>
-            <th>文件</th>
-            <th>目标设备</th>
-            <th>进度</th>
-            <th>状态</th>
+            <th>{{ t('install.colFile') }}</th>
+            <th>{{ t('install.colDevice') }}</th>
+            <th>{{ t('install.colProgress') }}</th>
+            <th>{{ t('install.colStatus') }}</th>
           </tr>
         </thead>
         <tbody>
@@ -321,8 +322,8 @@ onMounted(() => {
                   {{ statusText(task) }}
                 </NTag>
                 <template v-else>
-                  <NTag size="small" type="info" :bordered="false">进行中</NTag>
-                  <NButton size="tiny" quaternary @click="cancel(task.taskId)">取消</NButton>
+                  <NTag size="small" type="info" :bordered="false">{{ t('install.running') }}</NTag>
+                  <NButton size="tiny" quaternary @click="cancel(task.taskId)">{{ t('install.cancel') }}</NButton>
                 </template>
               </div>
               <div v-if="task.done && !task.ok && task.advice" class="hint-text">
@@ -332,21 +333,21 @@ onMounted(() => {
                 v-if="task.done && !task.ok && task.code && !isCanceled(task)"
                 class="hint-text code"
               >
-                错误码：{{ task.code }}
+                {{ t('install.errorCode', { code: task.code }) }}
               </div>
             </td>
           </tr>
         </tbody>
       </table>
-      <NEmpty v-else class="empty" description="暂无安装任务。拖入 APK 或点击选择文件。" />
+      <NEmpty v-else class="empty" :description="t('install.emptyQueue')" />
     </section>
 
     <div class="actions">
       <NButton type="primary" :disabled="!canInstall" :loading="busy" @click="start">
-        安装到 {{ store.current?.model || store.current?.serial || '当前设备' }}
+        {{ t('install.installingTo', { name: store.current?.model || store.current?.serial || t('common.thisDevice') }) }}
       </NButton>
       <span class="actions-hint">
-        {{ pending.length ? `共 ${pending.length} 个待安装` : '尚未选择文件' }}
+        {{ pending.length ? t('install.pendingCount', { n: pending.length }) : t('install.noPending') }}
       </span>
     </div>
   </div>

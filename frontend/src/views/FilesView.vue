@@ -7,6 +7,7 @@ import type { model } from '../../wailsjs/go/models'
 import { EventsOn } from '../../wailsjs/runtime/runtime'
 import DevicePathPicker from '../components/DevicePathPicker.vue'
 import { useDevicesStore } from '../stores/devices'
+import { t } from '../i18n'
 
 interface FileProgressPayload {
   stage: string
@@ -85,7 +86,7 @@ async function chooseDir() {
 
 function openPicker(mode: 'file' | 'dir', target: 'push' | 'pull', multi = false) {
   if (!store.current) {
-    message.warning('请先在「设备」页选择设备')
+    message.warning(t('common.selectDevice'))
     return
   }
   pickerMode.value = mode
@@ -111,11 +112,11 @@ function onPickerSelectMany(paths: string[]) {
 
 async function doPush() {
   if (!store.current) {
-    message.warning('请先在「设备」页选择设备')
+    message.warning(t('common.selectDevice'))
     return
   }
   if (!localFiles.value.length || !pushRemote.value.trim()) {
-    message.warning('请选择本地文件并填写设备上的目标路径')
+    message.warning(t('files.needLocalAndTarget'))
     return
   }
 
@@ -123,10 +124,10 @@ async function doPush() {
   const total = localFiles.value.length
   try {
     for (let i = 0; i < total; i += 1) {
-      transfer.value = { active: true, label: `推送 ${i + 1}/${total}`, percent: 0 }
+      transfer.value = { active: true, label: t('files.pushing', { i: i + 1, total }), percent: 0 }
       await PushFile(store.current.serial, localFiles.value[i], pushRemote.value.trim())
     }
-    message.success(`已推送 ${total} 个文件`)
+    message.success(t('files.pushed', { n: total }))
   } catch (e) {
     message.error(e instanceof Error ? e.message : String(e))
   } finally {
@@ -137,11 +138,11 @@ async function doPush() {
 
 async function doPull() {
   if (!store.current) {
-    message.warning('请先在「设备」页选择设备')
+    message.warning(t('common.selectDevice'))
     return
   }
   if (!remoteFiles.value.length || !pullLocalDir.value) {
-    message.warning('请选择设备文件并指定保存目录')
+    message.warning(t('files.needRemoteAndDir'))
     return
   }
 
@@ -149,10 +150,10 @@ async function doPull() {
   const total = remoteFiles.value.length
   try {
     for (let i = 0; i < total; i += 1) {
-      transfer.value = { active: true, label: `拉取 ${i + 1}/${total}`, percent: 0 }
+      transfer.value = { active: true, label: t('files.pulling', { i: i + 1, total }), percent: 0 }
       await PullFile(store.current.serial, remoteFiles.value[i], pullLocalDir.value)
     }
-    message.success(`已拉取 ${total} 个文件`)
+    message.success(t('files.pulled', { n: total }))
   } catch (e) {
     message.error(e instanceof Error ? e.message : String(e))
   } finally {
@@ -163,13 +164,13 @@ async function doPull() {
 
 async function takeShot() {
   if (!store.current) {
-    message.warning('请先在「设备」页选择设备')
+    message.warning(t('common.selectDevice'))
     return
   }
   shooting.value = true
   try {
     shot.value = await Screenshot(store.current.serial)
-    message.success('截图已保存')
+    message.success(t('files.shotSaved'))
   } catch (e) {
     message.error(e instanceof Error ? e.message : String(e))
   } finally {
@@ -203,7 +204,7 @@ onMounted(async () => {
 <template>
   <div class="files">
     <NAlert v-if="!store.current" type="warning" class="alert">
-      请先在「设备」页选择一台设备。
+      {{ t('files.selectDevice') }}
     </NAlert>
 
     <div v-if="transfer.active" class="transfer-bar">
@@ -216,26 +217,26 @@ onMounted(async () => {
       <section class="panel side">
         <div class="panel-head">
           <NIcon :size="16"><CloudUploadOutline /></NIcon>
-          <h3>本机文件</h3>
-          <span class="hint">拖入文件或文件夹</span>
-          <NButton v-if="localFiles.length" size="small" quaternary @click="localFiles = []">清空</NButton>
-          <NButton size="small" @click="chooseLocal">选择</NButton>
+          <h3>{{ t('files.localTitle') }}</h3>
+          <span class="hint">{{ t('files.dragHint') }}</span>
+          <NButton v-if="localFiles.length" size="small" quaternary @click="localFiles = []">{{ t('files.clear') }}</NButton>
+          <NButton size="small" @click="chooseLocal">{{ t('files.select') }}</NButton>
         </div>
         <div class="panel-body">
-          <div class="drop-hint">把文件拖到这里，或点右上角「选择」追加</div>
+          <div class="drop-hint">{{ t('files.dropHintLocal') }}</div>
           <ul class="file-list">
             <li v-for="(file, index) in localFiles" :key="file">
               <span class="file-name" :title="file">{{ baseName(file) }}</span>
-              <button class="remove" title="移除" @click="localFiles.splice(index, 1)">×</button>
+              <button class="remove" :title="t('files.remove')" @click="localFiles.splice(index, 1)">×</button>
             </li>
-            <li v-if="!localFiles.length" class="empty">还没有选择文件</li>
+            <li v-if="!localFiles.length" class="empty">{{ t('files.emptyList') }}</li>
           </ul>
           <div class="row-line">
-            <span class="row-label">目标路径</span>
-            <NInput v-model:value="pushRemote" size="small" placeholder="/sdcard/Download/" />
-            <NButton size="small" @click="openPicker('dir', 'push')">浏览</NButton>
+            <span class="row-label">{{ t('files.targetPath') }}</span>
+            <NInput v-model:value="pushRemote" size="small" :placeholder="t('files.targetPathHint')" />
+            <NButton size="small" @click="openPicker('dir', 'push')">{{ t('files.browse') }}</NButton>
             <NButton size="small" type="primary" :loading="pushing" :disabled="!canPush" @click="doPush">
-              推送{{ localFiles.length > 1 ? ` ${localFiles.length} 个` : '' }}
+              {{ localFiles.length > 1 ? t('files.pushN', { n: localFiles.length }) : t('files.push') }}
             </NButton>
           </div>
         </div>
@@ -244,26 +245,26 @@ onMounted(async () => {
       <section class="panel side">
         <div class="panel-head">
           <NIcon :size="16"><CloudDownloadOutline /></NIcon>
-          <h3>设备文件</h3>
-          <span class="hint">可多选</span>
-          <NButton v-if="remoteFiles.length" size="small" quaternary @click="remoteFiles = []">清空</NButton>
-          <NButton size="small" @click="openPicker('file', 'pull', true)">浏览设备</NButton>
+          <h3>{{ t('files.remoteTitle') }}</h3>
+          <span class="hint">{{ t('files.multiHint') }}</span>
+          <NButton v-if="remoteFiles.length" size="small" quaternary @click="remoteFiles = []">{{ t('files.clear') }}</NButton>
+          <NButton size="small" @click="openPicker('file', 'pull', true)">{{ t('files.browseDevice') }}</NButton>
         </div>
         <div class="panel-body">
-          <div class="drop-hint">点击「浏览设备」选择文件，可多选</div>
+          <div class="drop-hint">{{ t('files.dropHintRemote') }}</div>
           <ul class="file-list">
             <li v-for="(file, index) in remoteFiles" :key="file">
               <span class="file-name" :title="file">{{ baseName(file) }}</span>
-              <button class="remove" title="移除" @click="remoteFiles.splice(index, 1)">×</button>
+              <button class="remove" :title="t('files.remove')" @click="remoteFiles.splice(index, 1)">×</button>
             </li>
-            <li v-if="!remoteFiles.length" class="empty">还没有选择文件</li>
+            <li v-if="!remoteFiles.length" class="empty">{{ t('files.emptyList') }}</li>
           </ul>
           <div class="row-line">
-            <span class="row-label">保存到</span>
-            <NInput :value="pullLocalDir" size="small" readonly placeholder="选择目录" />
-            <NButton size="small" @click="chooseDir">选择</NButton>
+            <span class="row-label">{{ t('files.saveTo') }}</span>
+            <NInput :value="pullLocalDir" size="small" readonly :placeholder="t('files.chooseDir')" />
+            <NButton size="small" @click="chooseDir">{{ t('files.chooseDir') }}</NButton>
             <NButton size="small" type="primary" :loading="pulling" :disabled="!canPull" @click="doPull">
-              拉取{{ remoteFiles.length > 1 ? ` ${remoteFiles.length} 个` : '' }}
+              {{ remoteFiles.length > 1 ? t('files.pullN', { n: remoteFiles.length }) : t('files.pull') }}
             </NButton>
           </div>
         </div>
@@ -273,18 +274,18 @@ onMounted(async () => {
     <section class="panel">
       <div class="panel-head">
         <NIcon :size="16"><CameraOutline /></NIcon>
-        <h3>截图</h3>
-        <span class="hint">保存到 ~/Pictures/WireDeck</span>
+        <h3>{{ t('files.screenshot') }}</h3>
+        <span class="hint">{{ t('files.screenshotHint') }}</span>
         <NButton size="small" type="primary" :loading="shooting" :disabled="!store.current" @click="takeShot">
-          截取屏幕
+          {{ t('files.takeShot') }}
         </NButton>
       </div>
       <div class="panel-body">
         <div v-if="shot" class="shot">
-          <img :src="shot.dataUrl" class="shot-image" alt="截图预览" />
+          <img :src="shot.dataUrl" class="shot-image" :alt="t('files.shotPreview')" />
           <div class="shot-path">{{ shot.path }}</div>
         </div>
-        <div v-else class="shot-empty">还没有截图</div>
+        <div v-else class="shot-empty">{{ t('files.noShot') }}</div>
       </div>
     </section>
 

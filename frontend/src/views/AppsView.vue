@@ -30,6 +30,7 @@ import VirtualList from '../components/VirtualList.vue'
 import SegmentedControl from '../components/SegmentedControl.vue'
 import { useDevicesStore } from '../stores/devices'
 import { useLabelStore } from '../stores/labels'
+import { t } from '../i18n'
 
 interface AppProgressPayload {
   pkg: string
@@ -48,11 +49,11 @@ const labels = useLabelStore()
 const search = ref('')
 const scope = ref<'user' | 'system' | 'all'>('user')
 
-const scopeOptions: { label: string; value: 'user' | 'system' | 'all' }[] = [
-  { label: '第三方', value: 'user' },
-  { label: '系统', value: 'system' },
-  { label: '全部', value: 'all' },
-]
+const scopeOptions = computed<{ label: string; value: 'user' | 'system' | 'all' }[]>(() => [
+  { label: t('apps.scopeUser'), value: 'user' },
+  { label: t('apps.scopeSystem'), value: 'system' },
+  { label: t('apps.scopeAll'), value: 'all' },
+])
 
 function setScope(value: 'user' | 'system' | 'all') {
   if (scope.value === value) {
@@ -82,9 +83,9 @@ const visibleApps = computed(() => {
 })
 
 const moreOptions = [
-  { label: '启动应用', key: 'launch' },
-  { label: '强制停止', key: 'stop' },
-  { label: '清除数据', key: 'clear' },
+  { label: t('apps.menuLaunch'), key: 'launch' },
+  { label: t('apps.menuStop'), key: 'stop' },
+  { label: t('apps.menuClear'), key: 'clear' },
 ]
 
 const avatarPalette = [
@@ -298,14 +299,14 @@ onMounted(() => {
 <template>
   <div class="apps">
     <NAlert v-if="!store.current" type="warning" class="alert">
-      请先在「设备」页选择一台设备。
+      {{ t('apps.selectDevice') }}
     </NAlert>
 
     <div class="toolbar">
       <NInput
         v-model:value="search"
         size="small"
-        placeholder="搜索应用名称或包名"
+        :placeholder="t('apps.searchPlaceholder')"
         clearable
         class="search-input"
         style="width: 260px"
@@ -318,21 +319,21 @@ onMounted(() => {
       <span class="count">{{ visibleApps.length }} / {{ apps.length }}</span>
       <div class="spacer"></div>
       <NButton size="small" :loading="labels.job.running" @click="loadLabels">
-        {{ labels.job.running ? labels.job.message || '加载中…' : '加载名称' }}
+        {{ labels.job.running ? labels.job.message || t('apps.loadingNames') : t('apps.loadNames') }}
       </NButton>
-      <NButton size="small" :loading="loading" @click="load">刷新</NButton>
+      <NButton size="small" :loading="loading" @click="load">{{ t('apps.refresh') }}</NButton>
     </div>
 
     <div v-if="exporting" class="export-bar">
-      <span class="export-label">正在导出…</span>
+      <span class="export-label">{{ t('apps.exporting') }}</span>
       <div class="export-progress"><i :style="{ width: `${exportProgress}%` }"></i></div>
       <span class="export-percent">{{ exportProgress }}%</span>
     </div>
 
     <section class="panel">
       <div class="table-head">
-        <span>应用</span>
-        <span class="head-ops">操作</span>
+        <span>{{ t('apps.colApp') }}</span>
+        <span class="head-ops">{{ t('apps.colOps') }}</span>
       </div>
       <div class="table-body">
         <VirtualList v-if="visibleApps.length" :items="visibleApps" :item-height="48">
@@ -354,29 +355,29 @@ onMounted(() => {
                 </div>
               </div>
               <div class="ops">
-                <NButton size="tiny" quaternary @click="openDetail(item.package)">详情</NButton>
-                <NButton size="tiny" quaternary @click="exportApp(item.package)">导出</NButton>
+                <NButton size="tiny" quaternary @click="openDetail(item.package)">{{ t('apps.detail') }}</NButton>
+                <NButton size="tiny" quaternary @click="exportApp(item.package)">{{ t('apps.export') }}</NButton>
                 <NPopconfirm @positive-click="uninstall(item.package)">
                   <template #trigger>
-                    <NButton size="tiny" quaternary type="error">卸载</NButton>
+                    <NButton size="tiny" quaternary type="error">{{ t('apps.uninstall') }}</NButton>
                   </template>
-                  确认卸载 {{ item.package }}？此操作不可撤销。
+                  {{ t('apps.uninstallConfirm', { pkg: item.package }) }}
                 </NPopconfirm>
                 <NDropdown :options="moreOptions" @select="(key) => onMore(String(key), item.package)">
-                  <NButton size="tiny" quaternary>更多</NButton>
+                  <NButton size="tiny" quaternary>{{ t('apps.more') }}</NButton>
                 </NDropdown>
               </div>
             </div>
           </template>
         </VirtualList>
         <div v-else class="empty">
-          {{ store.current ? '没有匹配的应用' : '请先选择设备' }}
+          {{ store.current ? t('apps.noMatch') : t('apps.selectDeviceShort') }}
         </div>
       </div>
     </section>
 
     <NDrawer v-model:show="showDetail" :width="600">
-      <NDrawerContent title="应用详情" closable :native-scrollbar="false">
+      <NDrawerContent :title="t('apps.detailTitle')" closable :native-scrollbar="false">
         <NSpin :show="detailLoading">
           <div v-if="detail" class="detail">
             <div class="detail-hero">
@@ -386,20 +387,20 @@ onMounted(() => {
                 <div class="hero-pkg">{{ detail.package }}</div>
               </div>
               <div class="hero-actions">
-                <NButton size="small" @click="onMore('launch', detail.package)">启动</NButton>
-                <NButton size="small" @click="exportApp(detail.package)">导出</NButton>
+                <NButton size="small" @click="onMore('launch', detail.package)">{{ t('apps.launch') }}</NButton>
+                <NButton size="small" @click="exportApp(detail.package)">{{ t('apps.export') }}</NButton>
                 <NPopconfirm @positive-click="uninstallAndClose(detail.package)">
                   <template #trigger>
-                    <NButton size="small" type="error" ghost>卸载</NButton>
+                    <NButton size="small" type="error" ghost>{{ t('apps.uninstall') }}</NButton>
                   </template>
-                  确认卸载 {{ detail.package }}？此操作不可撤销。
+                  {{ t('apps.uninstallConfirm', { pkg: detail.package }) }}
                 </NPopconfirm>
               </div>
             </div>
 
             <div class="detail-grid">
               <div class="grid-item">
-                <span class="grid-label">版本</span>
+                <span class="grid-label">{{ t('apps.version') }}</span>
                 <span class="grid-value">{{ detail.versionName }} ({{ detail.versionCode }})</span>
               </div>
               <div class="grid-item">
@@ -407,39 +408,39 @@ onMounted(() => {
                 <span class="grid-value">min {{ detail.minSdk }} · target {{ detail.targetSdk }}</span>
               </div>
               <div class="grid-item">
-                <span class="grid-label">首次安装</span>
+                <span class="grid-label">{{ t('apps.firstInstall') }}</span>
                 <span class="grid-value">{{ detail.firstInstall || '—' }}</span>
               </div>
               <div class="grid-item">
-                <span class="grid-label">最近更新</span>
+                <span class="grid-label">{{ t('apps.lastUpdate') }}</span>
                 <span class="grid-value">{{ detail.lastUpdate || '—' }}</span>
               </div>
               <div class="grid-item wide">
-                <span class="grid-label">数据目录</span>
+                <span class="grid-label">{{ t('apps.dataDir') }}</span>
                 <span class="grid-value mono">{{ detail.dataDir || '—' }}</span>
               </div>
             </div>
 
             <div class="detail-section">
               <div class="section-header">
-                <span>已授予权限 <em>{{ detail.permissions.length }}</em></span>
+                <span>{{ t('apps.grantedPerms') }} <em>{{ detail.permissions.length }}</em></span>
                 <NButton
                   v-if="detail.permissions.length > 6"
                   text
                   size="tiny"
                   @click="showAllPerms = !showAllPerms"
                 >
-                  {{ showAllPerms ? '收起' : '展开全部' }}
+                  {{ showAllPerms ? t('apps.collapse') : t('apps.expandAll') }}
                 </NButton>
               </div>
               <ul v-if="detail.permissions.length" class="perm-list">
                 <li v-for="perm in visiblePerms" :key="perm">{{ perm }}</li>
               </ul>
-              <div v-else class="empty-perm">该应用没有已授予的运行时权限</div>
+              <div v-else class="empty-perm">{{ t('apps.noPerms') }}</div>
             </div>
           </div>
           <div v-else-if="detailLoading" class="detail-loading">
-            <div class="loading-title">正在读取应用信息…</div>
+            <div class="loading-title">{{ t('apps.loading') }}</div>
             <div class="loading-progress">
               <i :style="{ width: `${detailProgress}%` }"></i>
             </div>

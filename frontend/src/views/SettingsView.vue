@@ -112,28 +112,28 @@ async function openUpdate() {
   <div class="settings">
     <section class="panel">
       <div class="panel-head">
-        <h3>版本更新</h3>
-        <span class="hint">当前 v{{ version || '—' }}</span>
+        <h3>{{ t('settings.update') }}</h3>
+        <span class="hint">{{ t('settings.currentVersion', { v: version || '—' }) }}</span>
       </div>
       <div class="panel-body">
         <div class="row">
           <span class="label">状态</span>
           <span v-if="updateInfo">
-            {{ updateInfo.hasUpdate ? `发现新版本 v${updateInfo.latest}` : '已是最新版本' }}
+            {{ updateInfo.hasUpdate ? t('settings.newVersion', { version: updateInfo.latest }) : t('settings.upToDate') }}
           </span>
-          <span v-else>未检查</span>
+          <span v-else>{{ t('settings.notChecked') }}</span>
         </div>
         <div class="row">
           <span class="label">操作</span>
           <div class="row-actions">
-            <NButton size="small" :loading="checking" @click="checkUpdate">检查更新</NButton>
+            <NButton size="small" :loading="checking" @click="checkUpdate">{{ t('settings.checkUpdate') }}</NButton>
             <NButton
               v-if="updateInfo?.hasUpdate"
               size="small"
               type="primary"
               @click="openUpdate"
             >
-              打开下载页
+              {{ t('settings.openDownload') }}
             </NButton>
           </div>
         </div>
@@ -162,23 +162,23 @@ async function openUpdate() {
 
     <section class="panel">
       <div class="panel-head">
-        <h3>adb 运行环境</h3>
+        <h3>{{ t('settings.adb') }}</h3>
       </div>
       <div class="panel-body">
         <div class="row">
           <span class="label">状态</span>
-          <span>{{ devices.adb ? '已就绪' : '未就绪' }}</span>
+          <span>{{ devices.adb ? t('settings.ready') : t('settings.notReady') }}</span>
         </div>
         <div class="row">
-          <span class="label">路径</span>
+          <span class="label">{{ t('settings.adbPath') }}</span>
           <code>{{ devices.adb?.binaryPath || '—' }}</code>
         </div>
         <div class="row">
-          <span class="label">版本</span>
+          <span class="label">{{ t('settings.adbVersion') }}</span>
           <span>{{ devices.adb?.version || '—' }}</span>
         </div>
         <div class="row">
-          <span class="label">server 端口</span>
+          <span class="label">{{ t('settings.adbPort') }}</span>
           <span>{{ devices.adb?.serverPort || '—' }}</span>
         </div>
       </div>
@@ -186,8 +186,8 @@ async function openUpdate() {
 
     <section class="panel">
       <div class="panel-head">
-        <h3>配对身份</h3>
-        <span class="hint">手机端显示</span>
+        <h3>{{ t('settings.pairing') }}</h3>
+        <span class="hint">{{ t('settings.pairingHint') }}</span>
       </div>
       <div class="panel-body">
         <p class="desc">
@@ -204,26 +204,26 @@ sudo scutil --set HostName ""         # 恢复</pre>
 
     <section class="panel">
       <div class="panel-head">
-        <h3>应用名称缓存</h3>
-        <span class="hint">用于列表显示中文名</span>
+        <h3>{{ t('settings.cache') }}</h3>
+        <span class="hint">{{ t('settings.cacheHint') }}</span>
       </div>
       <div class="panel-body">
         <div class="row">
-          <span class="label">条目数</span>
-          <span>{{ cacheInfo?.count ?? 0 }} 条</span>
+          <span class="label">{{ t('settings.cacheCount') }}</span>
+          <span>{{ t('settings.cacheCountValue', { n: cacheInfo?.count ?? 0 }) }}</span>
         </div>
         <div class="row">
-          <span class="label">占用空间</span>
+          <span class="label">{{ t('settings.cacheSize') }}</span>
           <span>{{ cacheInfo ? formatSize(cacheInfo.size) : '—' }}</span>
         </div>
         <div class="row">
-          <span class="label">文件位置</span>
+          <span class="label">{{ t('settings.cachePath') }}</span>
           <code>{{ cacheInfo?.path || '—' }}</code>
         </div>
         <p class="desc muted">
-          缓存只保存「包名 → 应用名」的映射，不包含 APK。手机上卸载应用后，对应记录不会自动删除，可在此清理。
+          {{ t('settings.cacheNote') }}
         </p>
-        <NButton size="small" @click="clearCache">清理缓存</NButton>
+        <NButton size="small" @click="clearCache">{{ t('settings.cacheClear') }}</NButton>
       </div>
     </section>
   </div>

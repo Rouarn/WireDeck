@@ -7,6 +7,7 @@ import type { model } from '../../wailsjs/go/models'
 import { EventsOn } from '../../wailsjs/runtime/runtime'
 import VirtualList from '../components/VirtualList.vue'
 import { useDevicesStore } from '../stores/devices'
+import { t } from '../i18n'
 
 interface LogcatBatchPayload {
   streamId: string
@@ -231,19 +232,19 @@ onBeforeUnmount(() => {
 <template>
   <div class="logs">
     <div class="toolbar">
-      <span class="count">{{ visibleLines.length }} / {{ lines.length }} 行</span>
+      <span class="count">{{ t('logs.lineCount', { visible: visibleLines.length, total: lines.length }) }}</span>
       <div class="spacer"></div>
       <NButton size="small" type="primary" :disabled="running || !store.current" @click="startLog">
         <template #icon><NIcon><PlayOutline /></NIcon></template>
-        开始
+        {{ t('logs.start') }}
       </NButton>
       <NButton size="small" :disabled="!running" @click="stopLog">
         <template #icon><NIcon><StopOutline /></NIcon></template>
-        停止
+        {{ t('logs.stop') }}
       </NButton>
-      <NButton size="small" quaternary @click="togglePause">{{ paused ? '继续' : '暂停' }}</NButton>
-      <NButton size="small" quaternary @click="clearLog">清空</NButton>
-      <NButton size="small" quaternary :disabled="!lines.length" @click="exportLog">导出</NButton>
+      <NButton size="small" quaternary @click="togglePause">{{ paused ? t('logs.resume') : t('logs.pause') }}</NButton>
+      <NButton size="small" quaternary @click="clearLog">{{ t('logs.clear') }}</NButton>
+      <NButton size="small" quaternary :disabled="!lines.length" @click="exportLog">{{ t('logs.export') }}</NButton>
     </div>
 
     <div class="filters">
@@ -252,20 +253,20 @@ onBeforeUnmount(() => {
         size="small"
         filterable
         clearable
-        placeholder="全部应用"
+        :placeholder="t('logs.allApps')"
         :options="appOptions"
         style="width: 240px"
       />
       <NSelect v-model:value="level" size="small" :options="levelOptions" style="width: 140px" />
-      <NInput v-model:value="keyword" size="small" clearable placeholder="关键字过滤" style="width: 200px" />
-      <span class="hint">最多保留最近 2000 行 · 虚拟滚动</span>
+      <NInput v-model:value="keyword" size="small" clearable :placeholder="t('logs.keyword')" style="width: 200px" />
+      <span class="hint">{{ t('logs.keepHint') }}</span>
     </div>
 
     <div v-if="crashActive" class="crash-bar">
-      <span>检测到崩溃 / ANR，已收集 {{ crashBuffer.length }} 行日志</span>
+      <span>{{ t('logs.crashDetected', { n: crashBuffer.length }) }}</span>
       <div class="spacer"></div>
-      <NButton size="tiny" type="primary" @click="copyCrash">复制日志</NButton>
-      <NButton size="tiny" quaternary @click="dismissCrash">忽略</NButton>
+      <NButton size="tiny" type="primary" @click="copyCrash">{{ t('logs.copyCrash') }}</NButton>
+      <NButton size="tiny" quaternary @click="dismissCrash">{{ t('logs.ignore') }}</NButton>
     </div>
 
     <div class="log-box">
@@ -275,7 +276,7 @@ onBeforeUnmount(() => {
         </template>
       </VirtualList>
       <div v-if="!visibleLines.length" class="log-empty">
-        {{ running ? '等待日志…' : '点击「开始」读取实时日志' }}
+        {{ running ? t('logs.waiting') : t('logs.idleHint') }}
       </div>
     </div>
   </div>
