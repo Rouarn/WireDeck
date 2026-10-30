@@ -7,9 +7,15 @@
     <meta name="description" content="WireDeck 安装、连接与功能使用说明。" />
     <meta property="og:type" content="website" />
     <meta property="og:title" content="使用文档 — WireDeck" />
-    <meta property="og:description" content="WireDeck 安装、连接手机与功能使用说明。" />
+    <meta
+      property="og:description"
+      content="WireDeck 安装、连接手机与功能使用说明。"
+    />
     <meta property="og:url" content="https://wiredeck.woyuxiaji.cn/docs.html" />
-    <meta property="og:image" content="https://wiredeck.woyuxiaji.cn/assets/og-image.png" />
+    <meta
+      property="og:image"
+      content="https://wiredeck.woyuxiaji.cn/assets/og-image.png"
+    />
     <meta name="twitter:card" content="summary_large_image" />
     <link rel="stylesheet" href="style.css?v=202610303" />
     <link rel="icon" href="assets/icon.png?v=202610306" />
@@ -22,14 +28,21 @@
       </a>
       <nav class="nav-links">
         <a href="index.html#features">功能</a>
-        <a href="index.html#install">安装</a>
         <a href="docs.html">文档</a>
         <a href="changelog.html">更新日志</a>
-        <a href="https://github.com/Rouarn/wiredeck" target="_blank" rel="noreferrer">GitHub</a>
+        <a
+          href="https://github.com/Rouarn/wiredeck"
+          target="_blank"
+          rel="noreferrer"
+          >GitHub</a
+        >
       </nav>
       <div class="nav-right">
         <span class="ver">v0.2.1</span>
-        <a href="https://github.com/Rouarn/wiredeck/releases/latest/download/WireDeck-0.2.1.dmg">下载</a>
+        <a
+          href="https://github.com/Rouarn/wiredeck/releases/download/v0.2.1/WireDeck-0.2.1.dmg"
+          >下载</a
+        >
       </div>
     </header>
 
@@ -40,7 +53,13 @@
 
         <h2>安装</h2>
         <ol>
-          <li>从 <a href="https://github.com/Rouarn/wiredeck/releases/latest">GitHub Releases</a> 下载 DMG。</li>
+          <li>
+            从
+            <a href="https://github.com/Rouarn/wiredeck/releases/latest"
+              >GitHub Releases</a
+            >
+            下载 DMG。
+          </li>
           <li>双击打开，把 WireDeck 拖进「应用程序」。</li>
           <li>首次打开时右键 → 打开（应用未公证，直接双击会被系统拦截）。</li>
         </ol>
@@ -65,16 +84,24 @@
 
         <h3>方式二：配对码</h3>
         <ol>
-          <li>手机：无线调试 → 使用配对码配对设备，记下 IP、配对端口与 6 位配对码。</li>
+          <li>
+            手机：无线调试 → 使用配对码配对设备，记下 IP、配对端口与 6
+            位配对码。
+          </li>
           <li>应用：填入信息，点「配对」。</li>
           <li>再用无线调试主页显示的端口，点「连接」。</li>
         </ol>
 
         <h2>常见问题</h2>
         <h3>看不到 USB 连接的手机</h3>
-        <p>确认手机已开启「USB 调试」，并在手机上点「允许」授权弹窗。应用使用标准 adb 端口，与系统共享设备。</p>
+        <p>
+          确认手机已开启「USB 调试」，并在手机上点「允许」授权弹窗。应用使用标准
+          adb 端口，与系统共享设备。
+        </p>
         <h3>扫码后一直等待</h3>
-        <p>确认手机与电脑在同一局域网；扫码后不要刷新二维码，等待 10 秒左右。</p>
+        <p>
+          确认手机与电脑在同一局域网；扫码后不要刷新二维码，等待 10 秒左右。
+        </p>
         <h3>提示无法打开应用</h3>
         <p>按上面的 Gatekeeper 步骤放行，或执行 <code>xattr</code> 命令。</p>
 

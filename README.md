@@ -4,7 +4,7 @@
 
 扫码配对即连，应用管理、APK 安装、文件传输、实时日志与 Shell，全部在一个窗口里完成。
 
-[官网](https://wiredeck.woyuxiaji.cn) · [下载](https://github.com/Rouarn/wiredeck/releases/latest) · [使用文档](https://wiredeck.woyuxiaji.cn/docs.html) · [更新日志](https://wiredeck.woyuxiaji.cn/changelog.html)
+[官网](https://wiredeck.woyuxiaji.cn) · [下载](https://github.com/Rouarn/wiredeck/releases) · [使用文档](https://wiredeck.woyuxiaji.cn/docs.html) · [更新日志](https://wiredeck.woyuxiaji.cn/changelog.html)
 
 ![WireDeck 设备页](docs/screenshot-devices.png)
 
@@ -30,7 +30,7 @@ WireDeck 把这些步骤封装成图形界面——手机扫一下电脑上的�
 
 ## 安装
 
-1. 从 [Releases](https://github.com/Rouarn/wiredeck/releases/latest) 下载 DMG；
+1. 从 [Releases](https://github.com/Rouarn/wiredeck/releases) 下载 DMG；
 2. 打开 DMG，把 WireDeck 拖进「应用程序」；
 3. 首次打开：右键 WireDeck → 打开。应用未经过 Apple 公证，直接双击会被系统拦截。
 
