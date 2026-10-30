@@ -142,7 +142,14 @@ func (s *FileService) Push(ctx context.Context, serial, local, remote string) er
 		return fmt.Errorf("本地文件不存在: %s", local)
 	}
 
-	return s.server.PushWithProgress(ctx, serial, local, remote, func(pct int) {
+	// 显式拼接远端完整路径：避免 Windows 下 adb 从本地路径推导文件名时
+	// 对中文 / 括号处理不一致，出现截断或丢扩展名。
+	target := remote
+	if strings.HasSuffix(remote, "/") {
+		target = remote + filepath.Base(local)
+	}
+
+	return s.server.PushWithProgress(ctx, serial, local, target, func(pct int) {
 		s.emitProgress("push", pct)
 	})
 }

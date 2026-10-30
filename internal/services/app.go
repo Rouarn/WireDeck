@@ -404,9 +404,12 @@ func (s *AppService) Export(ctx context.Context, serial, pkg, outDir string) ([]
 			split = filepath.Base(remote)
 		}
 
-		target := filepath.Join(outDir, exportFileName(pkg, label, split))
+		target := uniqueFilePath(outDir, exportFileName(pkg, label, split))
+		// adb 在 Windows 上处理含中文/括号的本地路径不稳定，先拉到 ASCII 临时文件，
+		// 再由程序重命名，确保最终文件名完整且带 .apk。
+		tempTarget := filepath.Join(outDir, fmt.Sprintf(".wiredeck-pull-%d.tmp", time.Now().UnixNano()))
 
-		pullErr := s.server.PullWithProgress(ctx, serial, remote, target, func(pct int) {
+		pullErr := s.server.PullWithProgress(ctx, serial, remote, tempTarget, func(pct int) {
 			if s.emit != nil {
 				s.emit("app:progress", model.AppProgress{
 					Pkg:     pkg,
@@ -417,7 +420,12 @@ func (s *AppService) Export(ctx context.Context, serial, pkg, outDir string) ([]
 			}
 		})
 		if pullErr != nil {
+			_ = os.Remove(tempTarget)
 			return localFiles, pullErr
+		}
+		if renameErr := os.Rename(tempTarget, target); renameErr != nil {
+			_ = os.Remove(tempTarget)
+			return localFiles, fmt.Errorf("保存导出文件失败: %w", renameErr)
 		}
 		localFiles = append(localFiles, target)
 		if split == "" {
@@ -431,7 +439,7 @@ func (s *AppService) Export(ctx context.Context, serial, pkg, outDir string) ([]
 			label = meta.Label
 			s.setLabel(pkg, label)
 
-			renamed := filepath.Join(outDir, exportFileName(pkg, label, ""))
+			renamed := uniqueFilePath(outDir, exportFileName(pkg, label, ""))
 			if renamed != baseTarget {
 				if err := os.Rename(baseTarget, renamed); err == nil {
 					for i := range localFiles {
@@ -457,6 +465,19 @@ func exportFileName(pkg, label, split string) string {
 		base += "-" + split
 	}
 	return base + ".apk"
+}
+
+// uniqueFilePath 生成不冲突的文件路径（重名时追加序号）。
+func uniqueFilePath(dir, name string) string {
+	target := filepath.Join(dir, name)
+	ext := filepath.Ext(name)
+	base := strings.TrimSuffix(name, ext)
+	for i := 2; ; i++ {
+		if _, err := os.Stat(target); os.IsNotExist(err) {
+			return target
+		}
+		target = filepath.Join(dir, fmt.Sprintf("%s (%d)%s", base, i, ext))
+	}
 }
 
 func sanitizeFileName(name string) string {
