@@ -30,6 +30,7 @@ type App struct {
 	apps     *services.AppService
 	files    *services.FileService
 	logs     *services.LogService
+	update   *services.UpdateService
 }
 
 // NewApp 创建应用实例。
@@ -43,6 +44,7 @@ func NewApp() *App {
 	app.apps = services.NewAppService(app.server, app.emit)
 	app.files = services.NewFileService(app.server, app.emit)
 	app.logs = services.NewLogService(app.server, app.emit)
+	app.update = services.NewUpdateService(appVersion)
 	return app
 }
 
@@ -476,6 +478,25 @@ func (a *App) ExportLogcat(content string) (string, error) {
 // CopyText 将文本写入系统剪贴板。
 func (a *App) CopyText(text string) error {
 	runtime.ClipboardSetText(a.context(), text)
+	return nil
+}
+
+// AppVersion 返回当前应用版本。
+func (a *App) AppVersion() string {
+	return appVersion
+}
+
+// CheckUpdate 检查 GitHub Releases 是否有新版本。
+func (a *App) CheckUpdate() (model.UpdateInfo, error) {
+	return a.update.Check(a.context())
+}
+
+// OpenExternal 用系统默认浏览器打开链接。
+func (a *App) OpenExternal(url string) error {
+	if a.ctx == nil {
+		return fmt.Errorf("应用未就绪")
+	}
+	runtime.BrowserOpenURL(a.ctx, url)
 	return nil
 }
 

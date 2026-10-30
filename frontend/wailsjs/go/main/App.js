@@ -10,8 +10,16 @@ export function AppLabelCacheInfo() {
   return window['go']['main']['App']['AppLabelCacheInfo']();
 }
 
+export function AppVersion() {
+  return window['go']['main']['App']['AppVersion']();
+}
+
 export function CancelInstall(arg1) {
   return window['go']['main']['App']['CancelInstall'](arg1);
+}
+
+export function CheckUpdate() {
+  return window['go']['main']['App']['CheckUpdate']();
 }
 
 export function ClearAppData(arg1, arg2) {
@@ -92,6 +100,10 @@ export function ListDevices() {
 
 export function LoadAppLabels(arg1, arg2) {
   return window['go']['main']['App']['LoadAppLabels'](arg1, arg2);
+}
+
+export function OpenExternal(arg1) {
+  return window['go']['main']['App']['OpenExternal'](arg1);
 }
 
 export function PairByQRCode(arg1) {

@@ -362,6 +362,28 @@ export namespace model {
 	        this.exitCode = source["exitCode"];
 	    }
 	}
+	export class UpdateInfo {
+	    current: string;
+	    latest: string;
+	    hasUpdate: boolean;
+	    url: string;
+	    notes: string;
+	    published: string;
+	
+	    static createFrom(source: any = {}) {
+	        return new UpdateInfo(source);
+	    }
+	
+	    constructor(source: any = {}) {
+	        if ('string' === typeof source) source = JSON.parse(source);
+	        this.current = source["current"];
+	        this.latest = source["latest"];
+	        this.hasUpdate = source["hasUpdate"];
+	        this.url = source["url"];
+	        this.notes = source["notes"];
+	        this.published = source["published"];
+	    }
+	}
 
 }
 

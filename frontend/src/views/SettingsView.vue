@@ -1,11 +1,14 @@
 <script setup lang="ts">
 import { onMounted, ref } from 'vue'
-import { NButton, useDialog } from 'naive-ui'
 import {
   AppLabelCacheInfo as fetchLabelCacheInfo,
+  AppVersion,
+  CheckUpdate,
   ClearAppLabelCache,
   GetHostIdentity,
+  OpenExternal,
 } from '../../wailsjs/go/main/App'
+import { NButton, useDialog, useMessage } from 'naive-ui'
 import type { model } from '../../wailsjs/go/models'
 import SegmentedControl from '../components/SegmentedControl.vue'
 import { useThemeStore } from '../stores/theme'
@@ -17,6 +20,10 @@ const devices = useDevicesStore()
 const dialog = useDialog()
 const identity = ref<model.HostIdentity | null>(null)
 const cacheInfo = ref<model.LabelCacheInfo | null>(null)
+const version = ref('')
+const updateInfo = ref<model.UpdateInfo | null>(null)
+const checking = ref(false)
+const message = useMessage()
 
 const themeOptions: { label: string; value: ThemeMode }[] = [
   { label: '跟随系统', value: 'system' },
@@ -58,16 +65,73 @@ function clearCache() {
 
 onMounted(async () => {
   try {
+    version.value = await AppVersion()
+  } catch {
+    version.value = ''
+  }
+  try {
     identity.value = await GetHostIdentity()
   } catch {
     identity.value = null
   }
   await refreshCacheInfo()
 })
+
+async function checkUpdate() {
+  checking.value = true
+  try {
+    updateInfo.value = await CheckUpdate()
+    if (updateInfo.value.hasUpdate) {
+      message.success(`发现新版本 v${updateInfo.value.latest}`)
+    } else {
+      message.info('已是最新版本')
+    }
+  } catch (e) {
+    message.error(e instanceof Error ? e.message : String(e))
+  } finally {
+    checking.value = false
+  }
+}
+
+async function openUpdate() {
+  if (updateInfo.value?.url) {
+    await OpenExternal(updateInfo.value.url)
+  }
+}
 </script>
 
 <template>
   <div class="settings">
+    <section class="panel">
+      <div class="panel-head">
+        <h3>版本更新</h3>
+        <span class="hint">当前 v{{ version || '—' }}</span>
+      </div>
+      <div class="panel-body">
+        <div class="row">
+          <span class="label">状态</span>
+          <span v-if="updateInfo">
+            {{ updateInfo.hasUpdate ? `发现新版本 v${updateInfo.latest}` : '已是最新版本' }}
+          </span>
+          <span v-else>未检查</span>
+        </div>
+        <div class="row">
+          <span class="label">操作</span>
+          <div class="row-actions">
+            <NButton size="small" :loading="checking" @click="checkUpdate">检查更新</NButton>
+            <NButton
+              v-if="updateInfo?.hasUpdate"
+              size="small"
+              type="primary"
+              @click="openUpdate"
+            >
+              打开下载页
+            </NButton>
+          </div>
+        </div>
+      </div>
+    </section>
+
     <section class="panel">
       <div class="panel-head">
         <h3>外观</h3>
@@ -216,6 +280,11 @@ sudo scutil --set HostName ""         # 恢复</pre>
   overflow-wrap: anywhere;
   word-break: break-all;
   color: var(--text);
+}
+
+.row-actions {
+  display: flex;
+  gap: 8px;
 }
 
 .desc {

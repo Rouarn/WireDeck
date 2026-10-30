@@ -6,7 +6,11 @@ export function AppDetail(arg1:string,arg2:string):Promise<model.AppDetail>;
 
 export function AppLabelCacheInfo():Promise<model.LabelCacheInfo>;
 
+export function AppVersion():Promise<string>;
+
 export function CancelInstall(arg1:string):Promise<void>;
+
+export function CheckUpdate():Promise<model.UpdateInfo>;
 
 export function ClearAppData(arg1:string,arg2:string):Promise<model.AppOpResult>;
 
@@ -47,6 +51,8 @@ export function ListDeviceFiles(arg1:string,arg2:string):Promise<Array<model.Dev
 export function ListDevices():Promise<Array<model.Device>>;
 
 export function LoadAppLabels(arg1:string,arg2:Array<string>):Promise<Record<string, string>>;
+
+export function OpenExternal(arg1:string):Promise<void>;
 
 export function PairByQRCode(arg1:string):Promise<model.PairResult>;
 

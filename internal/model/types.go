@@ -144,6 +144,16 @@ type LabelCacheInfo struct {
 	Size  int64  `json:"size"`
 }
 
+// UpdateInfo 是检查更新的结果。
+type UpdateInfo struct {
+	Current   string `json:"current"`
+	Latest    string `json:"latest"`
+	HasUpdate bool   `json:"hasUpdate"`
+	URL       string `json:"url"`
+	Notes     string `json:"notes"`
+	Published string `json:"published"`
+}
+
 // AppProgress 是应用详情解析 / 导出的进度事件。
 type AppProgress struct {
 	Pkg     string `json:"pkg"`
