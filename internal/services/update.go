@@ -12,7 +12,7 @@ import (
 	"woyuxiaji.cn/wiredeck/internal/model"
 )
 
-const releasesAPI = "https://api.github.com/repos/Rouarn/wiredeck/releases?per_page=10"
+const releasesAPI = "https://api.github.com/repos/Rouarn/WireDeck/releases?per_page=10"
 
 // UpdateService 负责检查 GitHub Releases 上的新版本。
 type UpdateService struct {
