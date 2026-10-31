@@ -225,8 +225,11 @@ function statusType(task: TaskRow): 'success' | 'default' | 'error' {
 }
 
 onMounted(() => {
-  EventsOn('files:dropped', (paths: string[]) => {
-    void addFiles(paths)
+  EventsOn('files:dropped', (payload: { paths?: string[] } | string[]) => {
+    const paths = Array.isArray(payload) ? payload : payload?.paths
+    if (paths?.length) {
+      void addFiles(paths)
+    }
   })
   EventsOn('task:progress', (p: TaskProgressPayload) => onProgress(p))
   EventsOn('task:done', (r: InstallResultPayload) => onDone(r))
