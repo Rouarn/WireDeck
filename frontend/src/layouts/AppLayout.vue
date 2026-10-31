@@ -48,7 +48,7 @@ onMounted(async () => {
   <div class="shell">
     <aside class="sidebar">
       <div class="brand">
-        <div class="brand-mark">W</div>
+        <div class="brand-mark"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 2C12.9 7.4 16.6 11.1 22 12C16.6 12.9 12.9 16.6 12 22C11.1 16.6 7.4 12.9 2 12C7.4 11.1 11.1 7.4 12 2Z"/></svg></div>
         <div>
           <div class="brand-name">WireDeck</div>
           <div class="brand-version">{{ t('app.tagline') }}</div>
@@ -131,11 +131,18 @@ onMounted(async () => {
   justify-content: center;
   width: 28px;
   height: 28px;
+  color: #fff;
   border-radius: 8px;
   background: var(--primary);
   color: #fff;
   font-size: 14px;
   font-weight: 700;
+}
+
+.brand-mark svg {
+  width: 16px;
+  height: 16px;
+  fill: currentColor;
 }
 
 .brand-name {
