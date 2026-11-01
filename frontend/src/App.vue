@@ -3,6 +3,7 @@ import { computed } from 'vue'
 import { NConfigProvider, NDialogProvider, NMessageProvider, darkTheme, zhCN, dateZhCN } from 'naive-ui'
 import type { GlobalThemeOverrides } from 'naive-ui'
 import AppLayout from './layouts/AppLayout.vue'
+import LaunchSplash from './components/LaunchSplash.vue'
 import { useThemeStore } from './stores/theme'
 
 const theme = useThemeStore()
@@ -36,4 +37,6 @@ const overrides = computed<GlobalThemeOverrides>(() => ({
       </NDialogProvider>
     </NMessageProvider>
   </NConfigProvider>
+
+  <LaunchSplash />
 </template>
