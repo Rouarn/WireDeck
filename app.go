@@ -20,7 +20,7 @@ import (
 )
 
 // appVersion 当前版本号，与 wails.json 的 info.productVersion 保持一致。
-const appVersion = "1.0.1"
+const appVersion = "1.0.2"
 
 // App 是 Wails 绑定的根对象。导出方法会自动生成前端 TypeScript 绑定。
 type App struct {
